@@ -23,6 +23,9 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Real data: `pytest -m realdata` (ERP CORE golden + cross-check; data cached in `EEGUNIFY_DATA` or `~/.cache/eegunify`); refresh golden files with `--update-golden` after reviewing the diff
 - Fetch: `eegunify fetch erpcore -s 015`, `eegunify fetch openneuro ds005841 -s 001`
 - Validation harness: `eegunify validate-datasets [--max-mb N] [--only dsXXXX] [--dry-run]` → `derivatives/validation/summary.{tsv,md}`; results written up in `docs/validation_results.md`
+- Export for MATLAB: `eegunify export <config> --to eeglab`; `matlab/load_canonical.m` (EEGLAB via bva-io, else FieldTrip readers). MATLAB tests: `pytest -m realdata` with `EEGUNIFY_MATLAB_SETUP=<.../setup_eeg_toolboxes.m>` and `matlab` on PATH (skipped otherwise, e.g. CI)
+- Config reference: `eegunify config schema --markdown --out docs/config_reference.md` (a test fails if stale; every field needs a docstring)
+- README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
 ## Architecture (data flow)
@@ -125,5 +128,14 @@ into `events.tsv` as `beh_<col>`; QA `BEHAVIOR_ALIGNMENT`. The format support ma
 - Cross-format tests (`tests/integration/test_formats.py`) are the strongest reader checks: ANT vs its
   BrainVision export, Curry 7/8 vs the BDF original.
 - `.txt` maps to the CSV reader (OpenBCI GUI writes `OpenBCI-RAW-*.txt`).
+- Config field docs are attribute docstrings (`use_attribute_docstrings=True`); pydantic drops a field
+  description identical to its model's class docstring, so word them differently.
+- `read_raw_bids` labels events `trial_type/value` (`stimulus/face/12`) when a trial type has several
+  codes: select with MNE tag matching (`epochs["stimulus/face"]`), never exact names.
+- ERP CORE visual stimuli appear 26 ms after the trigger (LCD delay): `events.onset_shift_ms` in
+  `erpcore_n170.yaml`; the ERP CORE cross-check expects stimulus onsets = theirs + 26 ms.
+- All text I/O passes `encoding="utf-8"` and relative paths shown or stored use `.as_posix()` (Windows CI;
+  an AST test enforces the encoding rule).
+- MATLAB subprocesses need `stdin=subprocess.DEVNULL`.
 - Pre-commit pins ruff/mypy. Keep their `rev:` in sync with the versions in `uv.lock`, or the hooks and CI
   will disagree.

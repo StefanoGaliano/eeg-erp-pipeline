@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
+from fnmatch import fnmatch
 from pathlib import Path
 
 import mne
@@ -238,6 +239,14 @@ def extract_events(
     # Boolean array, not list: an empty list would select zero *columns* in pandas.
     table = table.assign(trial_type=trial_types)[np.asarray(keep, dtype=bool)]
     table = table.reset_index(drop=True)
+    if cfg.onset_shift_ms and not table.empty:
+        shift = np.zeros(len(table))
+        for pattern, ms in cfg.onset_shift_ms.items():
+            hit = table["trial_type"].astype(str).map(lambda tt, p=pattern: fnmatch(tt, p))
+            shift[hit.to_numpy(bool) & (shift == 0)] = ms / 1000
+        table["onset"] = table["onset"].to_numpy(float) + shift
+        table["sample"] = np.round(table["onset"] * raw.info["sfreq"]).astype(int)
+        log.info("shifted %d events by onset_shift_ms", int((shift != 0).sum()))
     table = table.sort_values("onset", kind="stable").reset_index(drop=True)
     if unmapped and cfg.mapping:
         log.warning("unmapped event codes (%s): %s", cfg.unmapped, unmapped)

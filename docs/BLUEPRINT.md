@@ -256,7 +256,7 @@ montage:
   on_missing: warn               # raise | warn | ignore
 
 events:
-  source: auto                   # auto | stim_channel | annotations | marker_stream | marker_file
+  source: auto                   # auto | stim_channel | annotations | bids_events
   stim_channel: null             # e.g. Status
   mapping:                       # code -> trial_type. Ranges and lists allowed.
     "1-40":   stimulus/face

@@ -166,6 +166,40 @@ def qa(
     _run(config, subject, root, write_bids=False)
 
 
+@app.command()
+def export(
+    config: Annotated[Path, typer.Argument(exists=True, help="Dataset YAML config.")],
+    to: Annotated[str, typer.Option(help="Target format (eeglab).")] = "eeglab",
+    subject: Annotated[
+        list[str] | None, typer.Option("--subject", "-s", help="Repeatable.")
+    ] = None,
+    overwrite: Annotated[bool, typer.Option(help="Replace existing exports.")] = False,
+    root: Annotated[Path, typer.Option(help="Project root.")] = Path("."),
+) -> None:
+    """Export converted recordings for MATLAB (derivatives/eegunify-eeglab/)."""
+    from eegunify.config.loader import ConfigError, load_config, resolve_for_subject
+    from eegunify.export import export_eeglab
+
+    if to != "eeglab":
+        console.print(f"[red]unsupported export format {to!r} (supported: eeglab)")
+        raise typer.Exit(EXIT_USAGE)
+    try:
+        cfg = load_config(config)
+    except ConfigError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    failed = False
+    for sub in subject or cfg.recordings.subjects:
+        try:
+            out = export_eeglab(resolve_for_subject(cfg, sub), sub, root.resolve(), overwrite)
+            console.print(f"[green]ok[/] {out}")
+        except (FileNotFoundError, FileExistsError) as err:
+            console.print(f"[red]sub-{sub}: {err}")
+            failed = True
+    if failed:
+        raise typer.Exit(EXIT_FAILED)
+
+
 @app.command(name="app")
 def run_app(
     root: Annotated[Path, typer.Option(help="Project root shown in the app.")] = Path("."),
@@ -330,11 +364,15 @@ def config_init(
 @config_app.command("schema")
 def config_schema(
     out: Annotated[Path | None, typer.Option(help="Write to a file instead of stdout.")] = None,
+    markdown: Annotated[
+        bool, typer.Option("--markdown", help="Markdown reference (docs/config_reference.md).")
+    ] = False,
 ) -> None:
-    """Print the JSON Schema of the config file format."""
+    """Print the JSON Schema of the config file format (or a Markdown reference)."""
+    from eegunify.config.reference import markdown as to_markdown
     from eegunify.config.schema import Config
 
-    text = json.dumps(Config.model_json_schema(), indent=2)
+    text = to_markdown().rstrip() if markdown else json.dumps(Config.model_json_schema(), indent=2)
     if out:
         out.write_text(text + "\n", encoding="utf-8")
         console.print(f"wrote {out}")

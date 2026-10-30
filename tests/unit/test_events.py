@@ -45,3 +45,21 @@ def test_every_code_maps_to_at_most_one_condition(code: int) -> None:
     hits = [tt for lo, hi, tt in m.ranges if lo <= code <= hi]
     assert len(hits) <= 1
     assert m.lookup(code) == (hits[0] if hits else None)
+
+
+def test_onset_shift_only_matching_trial_types() -> None:
+    import mne
+    import numpy as np
+
+    from eegunify.config.schema import EventsSection
+    from eegunify.events.extract import extract_events
+
+    info = mne.create_info(["Cz"], 1000.0, "eeg")
+    raw = mne.io.RawArray(np.zeros((1, 5000)), info, verbose="error")
+    raw.set_annotations(mne.Annotations([1.0, 2.0], [0, 0], ["1", "201"]))
+    cfg = EventsSection(
+        mapping={"1": "stimulus/face", "201": "response/correct"}, onset_shift_ms={"stimulus/*": 26}
+    )
+    table = extract_events(raw, cfg).table
+    assert table["onset"].tolist() == [1.026, 2.0]
+    assert table["sample"].tolist() == [1026, 2000]

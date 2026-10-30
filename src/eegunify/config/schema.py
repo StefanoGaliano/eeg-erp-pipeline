@@ -32,28 +32,47 @@ _RANGE_RE = re.compile(r"^\s*(\d+)\s*-\s*(\d+)\s*$")
 
 
 class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # Attribute docstrings become field descriptions (docs/config_reference.md).
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
 
 class Anonymize(_Strict):
+    """Shift the measurement date back for anonymization (MNE-BIDS ``anonymize``)."""
+
     daysback: int = Field(ge=0)
+    """Days to subtract from the recording date (same for every subject)."""
 
 
 class DatasetSection(_Strict):
+    """What the dataset is and where it lives (paths relative to the project root)."""
+
     name: str
+    """Dataset name, written to ``dataset_description.json``."""
     bids_root: str = "rawdata"
+    """Output folder for the canonical BIDS dataset."""
     source_root: str
+    """Folder holding the original recordings (never modified)."""
     task: str = Field(pattern=r"^[A-Za-z0-9]+$")
+    """BIDS task label (letters and digits only)."""
     authors: list[str] = Field(default_factory=list)
+    """Dataset authors for ``dataset_description.json``."""
     license: str | None = None
+    """Data license, e.g. ``CC0`` or ``CC-BY-4.0``."""
     anonymize: Anonymize | None = None
+    """Shift measurement dates back; ``null`` keeps them."""
 
 
 class RecordingsSection(_Strict):
+    """Which files make up the dataset."""
+
     pattern: str
+    """Path of one subject's recording relative to ``source_root``, with ``{subject}``."""
     subjects: list[str] = Field(min_length=1)
+    """Subject labels (alphanumeric, without ``sub-``)."""
     session: str | None = None
+    """BIDS session label for the output, if any."""
     run: str | None = None
+    """BIDS run label for the output, if any."""
 
     @field_validator("pattern")
     @classmethod
@@ -80,16 +99,22 @@ class CsvHints(_Strict):
     """
 
     sfreq: float | None = Field(default=None, gt=0)
+    """Sampling rate in Hz (default: from an OpenBCI header or the time column)."""
     channel_columns: list[str] | None = None
     """Columns holding EEG/EOG data (default: OpenBCI ``EXG Channel N`` columns, else every
     numeric column except time, marker and sample-index columns)."""
     channel_names: list[str] | None = None
     """Names for those columns, in order (e.g. the 10-20 position of each OpenBCI pin)."""
     unit: Literal["V", "mV", "uV"] = "uV"
+    """Unit of the values in the file."""
     delimiter: str | None = None
+    """Column separator (default: sniffed from the first lines)."""
     comment: str = "%"
+    """Lines starting with this are header comments."""
     time_column: str | None = None
+    """Column with time in seconds (default: ``time``/``timestamp`` if present)."""
     marker_column: str | None = None
+    """Column with event codes; non-zero values become events (default: auto)."""
 
     @model_validator(mode="after")
     def _names_match(self) -> CsvHints:
@@ -103,24 +128,37 @@ class CsvHints(_Strict):
 
 
 class FormatHints(_Strict):
+    """Format-specific settings; each applies to one reader only."""
+
     neuroscan_data_format: Literal["auto", "int16", "int32"] = "auto"
+    """Neuroscan ``.cnt`` sample width; ``auto`` keeps the width with plausible amplitudes."""
     bdf_status_mask: int = 0xFF
+    """Bits of the BioSemi Status channel (or ``STATUS/<n>`` markers) that carry triggers."""
     xdf_eeg_stream: dict[str, str] = Field(default_factory=lambda: {"type": "EEG"})
+    """Which XDF stream is the EEG, by ``type`` and/or ``name``."""
     xdf_marker_stream: dict[str, str] = Field(default_factory=lambda: {"type": "Markers"})
+    """Which XDF stream holds the markers (optional; missing means no events)."""
     csv: CsvHints = Field(default_factory=CsvHints)
+    """CSV / OpenBCI settings."""
 
 
 class FormatSection(_Strict):
+    """How the recordings are read."""
+
     name: FormatName = "auto"
+    """Reader to use; ``auto`` detects it from the extension (and magic bytes for ``.cnt``)."""
     hints: FormatHints = Field(default_factory=FormatHints)
+    """Format-specific settings."""
 
 
 class UnitsSection(_Strict):
-    #: ``auto`` trusts the file header. Otherwise: the unit the values *actually* are in, when
-    #: the header is wrong. The data are rescaled by that factor (``uV`` -> x1e-6) and the
-    #: correction is logged in provenance. ``eegunify inspect`` suggests the right value.
+    """Amplitude units and the plausibility check."""
+
     declared: Literal["auto", "V", "mV", "uV"] = "auto"
+    """``auto`` trusts the header. Otherwise the unit the values are really in when the header
+    is wrong; data are rescaled and the factor logged. ``eegunify inspect`` suggests it."""
     expected_eeg_range_uV: tuple[float, float] = (0.5, 500.0)
+    """Plausible median robust SD of EEG channels, in µV (unit check and QA)."""
 
     @model_validator(mode="after")
     def _ordered(self) -> UnitsSection:
@@ -131,23 +169,42 @@ class UnitsSection(_Strict):
 
 
 class ReferenceSection(_Strict):
+    """Online reference and ground as recorded (Phase 1 never re-references)."""
+
     online: str = "n/a"
+    """E.g. ``Cz``, ``linked mastoids``; BioSemi defaults to ``CMS/DRL (reference-free)``."""
     ground: str | None = None
+    """Ground electrode, if known."""
 
 
 class ChannelsSection(_Strict):
+    """Channel names, types and bad channels (applied after automatic normalization)."""
+
     rename: dict[str, str] = Field(default_factory=dict)
+    """Explicit renames, keyed by original or normalized name."""
     types: dict[str, ChannelType] = Field(default_factory=dict)
+    """Channel types that override the automatic inference (e.g. ``EXG3: eog``)."""
     drop: list[str] = Field(default_factory=list)
+    """Channels to leave out of the output."""
     bads: dict[str, list[str]] | list[str] = Field(default_factory=dict)
+    """Bad channels: a list for all subjects, or ``{"sub-01": [...]}`` per subject."""
     aliases_extra: dict[str, str] = Field(default_factory=dict)
+    """Extra name aliases on top of the old 10-20 ones (``T3`` -> ``T7``, ...)."""
 
 
 class MontageSection(_Strict):
+    """Electrode positions."""
+
     source: Literal["standard", "file", "embedded", "none"] = "standard"
+    """``standard`` layout, a position ``file``, positions ``embedded`` in the recording, or
+    ``none`` (also drops embedded positions)."""
     standard_name: str = "standard_1005"
+    """Any MNE built-in montage, e.g. ``biosemi64``, ``GSN-HydroCel-128``."""
     file: str | None = None
+    """Position file (``.elc``, ``.sfp``, ``.bvct``, ...) relative to the recording's folder;
+    may contain ``{subject}``."""
     on_missing: Literal["raise", "warn", "ignore"] = "warn"
+    """What to do with EEG channels that get no position."""
 
     @model_validator(mode="after")
     def _file_needed(self) -> MontageSection:
@@ -157,18 +214,30 @@ class MontageSection(_Strict):
 
 
 class EventsSection(_Strict):
-    #: ``bids_events``: the source's own BIDS ``*_events.tsv`` (for files without triggers).
-    #: ``auto`` falls back to it when the recording itself has no events.
-    source: Literal[
-        "auto", "stim_channel", "annotations", "bids_events", "marker_stream", "marker_file"
-    ] = "auto"
+    """Event extraction and code -> condition mapping."""
+
+    source: Literal["auto", "stim_channel", "annotations", "bids_events"] = "auto"
+    """``auto``: stim channel, else file markers, else the source's BIDS ``*_events.tsv``.
+    ``bids_events`` forces the sidecar (for files without triggers)."""
     stim_channel: str | None = None
+    """Trigger channel name (default: the first stim channel)."""
     mapping: dict[str, str] = Field(default_factory=dict)
+    """Code (``"5"``), inclusive range (``"1-40"``) or marker label -> trial type
+    (``stimulus/face``). Ranges must not overlap."""
     unmapped: Literal["keep_as_code", "drop", "error"] = "keep_as_code"
+    """What to do with codes missing from ``mapping``."""
     ignore_codes: list[int] = Field(default_factory=lambda: [0])
+    """Codes that are never events."""
     min_duration_samples: int = Field(default=1, ge=1)
+    """Debounce for stim channels: shorter pulses are ignored."""
     expected_counts: dict[str, int] = Field(default_factory=dict)
+    """Trial type -> expected count per subject (QA ``EVENTS_EXPECTED_COUNT``)."""
     count_tolerance: float = Field(default=0.05, ge=0, le=1)
+    """Allowed relative deviation from ``expected_counts``."""
+    onset_shift_ms: dict[str, float] = Field(default_factory=dict)
+    """Known trigger-to-stimulus delays, by trial-type glob (e.g. ``{"stimulus/*": 26}`` for an
+    LCD monitor that shows the image 26 ms after the trigger). Responses are usually not
+    shifted. Applied to onsets and samples and recorded in provenance."""
 
     @field_validator("mapping", mode="before")
     @classmethod
@@ -200,6 +269,8 @@ class EventsSection(_Strict):
 
 
 class AlignOn(_Strict):
+    """Which EEG events and log rows are aligned, and how."""
+
     eeg_trial_types: list[str] = Field(default_factory=lambda: ["*"])
     """Glob patterns of EEG trial types that correspond to log rows (e.g. ``stimulus/*``)."""
     beh_filter: str | None = None
@@ -210,13 +281,18 @@ class AlignOn(_Strict):
 
 
 class BehaviorSection(_Strict):
+    """Behavioural log merged into ``events.tsv``."""
+
     source: Literal["psychopy", "presentation", "eprime", "none"] = "none"
+    """Log format, or ``none``."""
     file: str | None = None
     """Path relative to ``dataset.source_root``; may contain ``{subject}`` and glob ``*``."""
     align_on: AlignOn = Field(default_factory=AlignOn)
+    """Alignment settings."""
     columns: list[str] = Field(default_factory=list)
     """Log columns appended to ``events.tsv`` (as ``beh_<column>``)."""
     max_drift_ms: float = Field(default=20.0, gt=0)
+    """Largest EEG-vs-log timing residual accepted for a match."""
 
     @model_validator(mode="after")
     def _file_needed(self) -> BehaviorSection:
@@ -229,16 +305,27 @@ class Config(_Strict):
     """A complete, validated per-dataset configuration."""
 
     schema_version: Literal[1] = 1
+    """Config format version."""
     dataset: DatasetSection
+    """Name, paths, BIDS task, authors, license."""
     recordings: RecordingsSection
+    """Which files and subjects."""
     format: FormatSection = Field(default_factory=FormatSection)
+    """Reader selection and format-specific hints."""
     units: UnitsSection = Field(default_factory=UnitsSection)
+    """Unit correction and the plausibility range."""
     reference: ReferenceSection = Field(default_factory=ReferenceSection)
+    """Online reference and ground as recorded."""
     channels: ChannelsSection = Field(default_factory=ChannelsSection)
+    """Renames, types, drops and bad channels."""
     montage: MontageSection = Field(default_factory=MontageSection)
+    """Electrode positions: standard layout, position file, embedded, or none."""
     events: EventsSection = Field(default_factory=EventsSection)
+    """Event extraction, mapping, expected counts, onset shifts."""
     behavior: BehaviorSection = Field(default_factory=BehaviorSection)
+    """Behavioural log alignment."""
     overrides: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    """Per-subject patches: ``{"sub-01": {"channels": {...}}}``."""
 
     @field_validator("overrides")
     @classmethod

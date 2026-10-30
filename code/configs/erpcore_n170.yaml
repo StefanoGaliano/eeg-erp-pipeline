@@ -35,3 +35,7 @@ events:
     stimulus/scrambled_face: 80
     stimulus/scrambled_car: 80
   count_tolerance: 0.0
+  # Stimuli appeared on the LCD monitor 26 ms after their trigger; ERP CORE shifts stimulus
+  # (not response) codes by +26 ms (ERPLAB "Shifting Event Codes" tutorial, Luck lab).
+  onset_shift_ms:
+    "stimulus/*": 26

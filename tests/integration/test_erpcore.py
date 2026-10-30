@@ -14,6 +14,7 @@ import json
 import shutil
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -93,6 +94,10 @@ def test_events_match_erpcore_authors(converted: Path, data_cache: Path) -> None
         sep="\t",
     )
     assert ours["value"].astype(int).tolist() == theirs["value"].astype(int).tolist()
-    assert (ours["onset"] - theirs["onset"]).abs().max() < 1e-3  # theirs rounded to 0.1 ms
+    # Stimuli carry the 26 ms monitor delay (events.onset_shift_ms); responses are untouched.
+    stim = ours["trial_type"].str.startswith("stimulus/")
+    expected = theirs["onset"] + np.where(stim, 0.026, 0.0)
+    assert (ours["onset"] - expected).abs().max() < 1e-3  # theirs rounded to 0.1 ms
     # ERP CORE writes EEGLAB's 1-based latency in `sample`; BIDS defines it 0-based.
-    assert (theirs["sample"] - ours["sample"]).eq(1).all()
+    resp = ~stim
+    assert (theirs["sample"][resp] - ours["sample"][resp]).eq(1).all()

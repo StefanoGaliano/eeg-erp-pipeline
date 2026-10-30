@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "eeg-erp-pipeline (eegunify): one canonical format for every raw EEG recording"
+authors:
+  - family-names: Galiano
+    given-names: Stefano
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/StefanoGaliano/eeg-erp-pipeline"
+keywords: [EEG, ERP, BIDS, MNE-Python, neuroscience]

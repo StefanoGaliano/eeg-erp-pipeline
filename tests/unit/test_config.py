@@ -76,3 +76,27 @@ def test_load_config_errors(tmp_path: Path) -> None:
     p.write_text("- a list", encoding="utf-8")
     with pytest.raises(ConfigError, match="mapping"):
         load_config(p)
+
+
+def test_config_reference_is_up_to_date() -> None:
+    """docs/config_reference.md is generated; regenerate with
+    `eegunify config schema --markdown --out docs/config_reference.md`."""
+    from eegunify.config.reference import markdown
+
+    doc = Path(__file__).parents[2] / "docs" / "config_reference.md"
+    assert doc.read_text(encoding="utf-8") == markdown(), "docs/config_reference.md is stale"
+
+
+def test_every_config_field_is_documented() -> None:
+    from eegunify.config import schema
+
+    missing = [
+        f"{model.__name__}.{name}"
+        for model in (getattr(schema, n) for n in dir(schema))
+        if isinstance(model, type)
+        and issubclass(model, schema._Strict)
+        and model is not schema._Strict
+        for name, field in model.model_fields.items()
+        if not field.description
+    ]
+    assert not missing, missing
