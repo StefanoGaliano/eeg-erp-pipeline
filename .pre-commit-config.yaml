@@ -21,4 +21,4 @@ repos:
       - id: mypy
         args: []
         pass_filenames: false
-        additional_dependencies: [typer, rich, pydantic, pandas-stubs, types-PyYAML, numpy]
+        additional_dependencies: [typer, rich, pydantic, pandas-stubs, types-PyYAML, numpy, matplotlib, streamlit]

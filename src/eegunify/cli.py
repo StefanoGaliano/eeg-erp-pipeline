@@ -109,18 +109,7 @@ def inspect(
         console.print(f"  [yellow]warning[/] [rule {w.rule}] {w.message}")
 
 
-@app.command()
-def convert(
-    config: Annotated[Path, typer.Argument(exists=True, help="Dataset YAML config.")],
-    subject: Annotated[
-        list[str] | None, typer.Option("--subject", "-s", help="Repeatable.")
-    ] = None,
-    overwrite: Annotated[bool, typer.Option(help="Replace existing BIDS output.")] = False,
-    root: Annotated[
-        Path, typer.Option(help="Project root (paths in the config are relative to it).")
-    ] = Path("."),
-) -> None:
-    """Convert a dataset to canonical BIDS-EEG in rawdata/."""
+def _run(config: Path, subject: list[str] | None, root: Path, **kwargs: bool) -> None:
     from eegunify.config.loader import ConfigError, load_config
     from eegunify.pipeline import convert as run
 
@@ -129,17 +118,52 @@ def convert(
     except ConfigError as err:
         console.print(f"[red]{err}")
         raise typer.Exit(EXIT_USAGE) from err
-    results = run(cfg, subjects=subject, overwrite=overwrite, project_root=root)
-    table = Table("subject", "status", "output / error", title=cfg.dataset.name)
+    results = run(cfg, subjects=subject, project_root=root, **kwargs)
+    colours = {"PASS": "green", "WARN": "yellow", "FAIL": "red"}
+    table = Table("subject", "status", "QA", "output / error", title=cfg.dataset.name)
     for r in results:
+        qa = f"[{colours[r.qa_status]}]{r.qa_status}" if r.qa_status else "-"
         if r.error:
-            table.add_row(r.subject, "[red]FAIL", r.error)
+            table.add_row(r.subject, "[red]FAIL", qa, r.error)
         else:
             status = f"[yellow]{len(r.warnings)} warn" if r.warnings else "[green]ok"
-            table.add_row(r.subject, status, str(r.output))
+            table.add_row(r.subject, status, qa, str(r.output or r.qa_report))
     console.print(table)
-    if any(r.error for r in results):
+    if any(r.error or r.qa_status == "FAIL" for r in results):
         raise typer.Exit(EXIT_FAILED)
+
+
+@app.command()
+def convert(
+    config: Annotated[Path, typer.Argument(exists=True, help="Dataset YAML config.")],
+    subject: Annotated[
+        list[str] | None, typer.Option("--subject", "-s", help="Repeatable.")
+    ] = None,
+    overwrite: Annotated[bool, typer.Option(help="Replace existing BIDS output.")] = False,
+    no_qa: Annotated[bool, typer.Option("--no-qa", help="Skip the QA report.")] = False,
+    root: Annotated[
+        Path, typer.Option(help="Project root (paths in the config are relative to it).")
+    ] = Path("."),
+) -> None:
+    """Convert a dataset to canonical BIDS-EEG in rawdata/ and write QA reports.
+
+    Exits with 1 if any recording fails to convert or its QA status is FAIL.
+    """
+    _run(config, subject, root, overwrite=overwrite, qa=not no_qa)
+
+
+@app.command()
+def qa(
+    config: Annotated[Path, typer.Argument(exists=True, help="Dataset YAML config.")],
+    subject: Annotated[
+        list[str] | None, typer.Option("--subject", "-s", help="Repeatable.")
+    ] = None,
+    root: Annotated[
+        Path, typer.Option(help="Project root (paths in the config are relative to it).")
+    ] = Path("."),
+) -> None:
+    """Rerun QA from the source recordings without writing BIDS (e.g. after a config change)."""
+    _run(config, subject, root, write_bids=False)
 
 
 @config_app.command("validate")

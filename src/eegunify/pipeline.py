@@ -10,7 +10,7 @@ import mne
 from mne.io.constants import FIFF
 
 from eegunify import provenance
-from eegunify.bids_writer import write_recording
+from eegunify.bids_writer import bids_path_for, write_recording
 from eegunify.canonical import Recording, Violation, validate
 from eegunify.channels.montage import apply_montage
 from eegunify.channels.naming import normalize_names
@@ -173,10 +173,30 @@ class ConvertResult:
     output: Path | None
     warnings: list[Violation]
     error: str | None = None
+    qa_status: str | None = None
+    """PASS / WARN / FAIL, or None when QA was skipped or the recording failed."""
+    qa_report: Path | None = None
 
 
 def source_path(cfg: Config, subject: str, project_root: Path) -> Path:
     return project_root / cfg.dataset.source_root / cfg.recordings.pattern.format(subject=subject)
+
+
+def _run_qa(rec: Recording, cfg: Config, project_root: Path) -> tuple[str, Path]:
+    from eegunify.qa import run_checks
+    from eegunify.qa.report import update_summary, write_report
+
+    qa_root = project_root / "derivatives" / "eegunify-qa"
+    basename = bids_path_for(cfg, rec.subject, project_root).basename.removesuffix("_eeg.vhdr")
+    result = run_checks(rec, cfg)
+    report = write_report(rec, result, qa_root / f"sub-{rec.subject}", basename)
+    update_summary(qa_root / "summary.tsv", rec, result, basename, report)
+    for check in result.checks:
+        if check.level != "pass":
+            log.warning(
+                "sub-%s QA %s %s: %s", rec.subject, check.level.upper(), check.id, check.message
+            )
+    return result.status.upper(), report
 
 
 def convert(
@@ -185,10 +205,13 @@ def convert(
     subjects: list[str] | None = None,
     overwrite: bool = False,
     project_root: Path | None = None,
+    qa: bool = True,
+    write_bids: bool = True,
 ) -> list[ConvertResult]:
-    """Convert every (or the selected) subject of a dataset config to BIDS.
+    """Convert every (or the selected) subject of a dataset config to BIDS, then run QA.
 
-    A failing subject is reported in its :class:`ConvertResult` and does not stop the others.
+    With ``write_bids=False`` only QA runs (the ``eegunify qa`` command). A failing subject is
+    reported in its :class:`ConvertResult` and does not stop the others.
     """
     project_root = (project_root or Path.cwd()).resolve()
     base = config if isinstance(config, Config) else load_config(config)
@@ -199,15 +222,21 @@ def convert(
         src = source_path(cfg, subject, project_root)
         try:
             rec, warnings = read_recording(src, cfg, subject=subject, project_root=project_root)
-            bp = write_recording(
-                rec,
-                cfg,
-                bids_root=project_root / cfg.dataset.bids_root,
-                derivatives_root=project_root / "derivatives",
-                overwrite=overwrite,
-            )
-            results.append(ConvertResult(subject, src, Path(bp.fpath), warnings))
-        except Exception as err:
+            out = None
+            if write_bids:
+                bp = write_recording(
+                    rec,
+                    cfg,
+                    bids_root=project_root / cfg.dataset.bids_root,
+                    derivatives_root=project_root / "derivatives",
+                    overwrite=overwrite,
+                )
+                out = Path(bp.fpath)
+            res = ConvertResult(subject, src, out, warnings)
+            if qa:
+                res.qa_status, res.qa_report = _run_qa(rec, cfg, project_root)
+            results.append(res)
+        except Exception as err:  # reported per subject; the CLI sets the exit code
             log.error("sub-%s failed: %s", subject, err)
             results.append(ConvertResult(subject, src, None, [], f"{type(err).__name__}: {err}"))
     return results

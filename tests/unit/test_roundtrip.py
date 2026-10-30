@@ -11,10 +11,10 @@ import mne_bids
 import numpy as np
 import pandas as pd
 import pytest
-from tests.synthetic.generate import CODES, SFREQ, STATUS_HIGH_BITS, Truth
 
 from eegunify.canonical import CanonicalError
 from eegunify.pipeline import convert, read_recording
+from tests.synthetic.generate import CODES, SFREQ, STATUS_HIGH_BITS, Truth
 
 FORMATS = ["brainvision", "edf", "eeglab", "bdf"]
 # Max abs amplitude error in µV: float formats are exact to float32; EDF is 16-bit over the
@@ -192,9 +192,8 @@ def test_brainvision_header_with_stale_filenames(tmp_path: Path, truth: Truth) -
 
 def test_units_declared_corrects_wrong_header(tmp_path: Path, truth: Truth) -> None:
     """µV values labelled as V (seen in ds005274) are fixed by ``units.declared: uV``."""
-    from tests.synthetic.generate import to_raw
-
     from eegunify.pipeline import default_config
+    from tests.synthetic.generate import to_raw
 
     raw = to_raw(truth)
     raw._data *= 1e6
@@ -210,3 +209,35 @@ def test_units_declared_corrects_wrong_header(tmp_path: Path, truth: Truth) -> N
     np.testing.assert_allclose(
         rec.raw.get_data(picks=list(truth.eeg)) * 1e6, truth.data_uV[: len(truth.eeg)], atol=1e-3
     )
+
+
+def test_two_tasks_same_subject(synthetic_files: dict[str, Path], make_project) -> None:  # type: ignore[no-untyped-def]
+    """Several tasks per subject must not collide on electrodes.tsv (seen in ds005841)."""
+    import yaml
+
+    root, cfg_path = make_project(synthetic_files["brainvision"], "brainvision")
+    assert convert(cfg_path, project_root=root)[0].error is None
+    cfg = yaml.safe_load(cfg_path.read_text())
+    cfg["dataset"]["task"] = "cars"
+    cfg_path.write_text(yaml.safe_dump(cfg))
+    [res] = convert(cfg_path, project_root=root)
+    assert res.error is None, res.error
+    eeg_dir = root / "rawdata" / "sub-01" / "eeg"
+    assert len(list(eeg_dir.glob("*_electrodes.tsv"))) == 2
+
+
+def test_montage_none_drops_embedded_positions(tmp_path: Path, truth: Truth) -> None:
+    """Embedded positions without fiducials broke the BIDS write (seen in ds004745)."""
+    from eegunify.pipeline import default_config
+    from tests.synthetic.generate import to_raw
+
+    raw = to_raw(truth)
+    from eegunify.channels.montage import _standard
+
+    raw.set_montage(_standard("standard_1020"), on_missing="ignore")
+    out = tmp_path / "with_pos.set"
+    mne.export.export_raw(out, raw, fmt="eeglab", verbose="error")
+    cfg = default_config(out)
+    cfg.montage.source = "none"
+    rec, _ = read_recording(out, cfg)
+    assert rec.raw.get_montage() is None

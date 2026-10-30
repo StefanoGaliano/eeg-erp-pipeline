@@ -18,6 +18,7 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Coverage: `pytest --cov=eegunify`
 - Lint/format/types: `ruff check . && ruff format --check . && mypy` (mypy is strict; config in pyproject)
 - Try on a file: `eegunify inspect <file>`; convert a dataset: `eegunify convert <config.yaml> [-s 001] [--overwrite] [--root .]`
+- QA only, no BIDS write: `eegunify qa <config.yaml>`; skip QA on convert with `--no-qa`
 - `eegunify config validate <yaml>`, `eegunify config schema`
 
 ## Architecture (data flow)
@@ -39,11 +40,15 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 6. `bids_writer.write_recording` calls MNE-BIDS, then patches the sidecars: `events.tsv` `value` = original
    code, `channels.tsv` `original_name`, `_eeg.json` `EEGReference` plus an `eegunify` block. The full
    provenance goes to `derivatives/eegunify-qa/`.
+7. QA (`qa/checks.run_checks`) runs on the in-memory `Recording`, not on the written files. It produces
+   `QACheck`s with **stable IDs** (listed in the `qa/checks.py` docstring) plus a channel table.
+   `qa/report.py` writes `derivatives/eegunify-qa/sub-*/<basename>_qa.{html,json}` and upserts a row in
+   `derivatives/eegunify-qa/summary.tsv`. QA statistics use at most `MAX_SECONDS` of data.
 
 `pipeline.convert` loops over the subjects of a config (after `config.resolve_for_subject` applies
 overrides). A failing subject is reported in its `ConvertResult` and doesn't stop the others. The CLI
 (`cli.py`) imports heavy modules lazily and maps outcomes to exit codes: 0 ok, 1 recording failed,
-2 config/usage, 3 reader error.
+2 config/usage, 3 reader error. A QA FAIL also exits with 1.
 
 Tests: `tests/synthetic/generate.py` writes a signal with known content in each format (`Truth` holds
 exact samples, codes and µV data). Round-trip tests compare against it. The `make_project` fixture in
@@ -72,5 +77,10 @@ exact samples, codes and µV data). Round-trip tests compare against it. The `ma
   as BioSemi EXG are still written in µV.
 - MNE 1.13 deprecates `standard_1005`/`standard_1020` in favour of `colin27_*`. Use the fallbacks in
   `channels/naming.py` and `channels/montage.py`.
+- QA "clipping" counts only samples stuck at an extreme (equal to the previous sample). Clean sines touch
+  their min/max every cycle, so a plain "at the extreme" count gives false positives.
+- MNE-BIDS writes one `electrodes.tsv` per subject unless `electrodes_tsv_task=True`, and several tasks per
+  subject then collide. `montage.source: none` must also drop embedded positions: positions without
+  fiducials can't be written.
 - Pre-commit pins ruff/mypy. Keep their `rev:` in sync with the versions in `uv.lock`, or the hooks and CI
   will disagree.

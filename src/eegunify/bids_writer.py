@@ -101,6 +101,9 @@ def write_recording(
         format="BrainVision",
         allow_preload=True,
         anonymize=anonymize,
+        # One electrodes.tsv per task: a subject with several tasks would otherwise collide
+        # on a single per-subject file (e.g. ds005841, 6 tasks per subject).
+        electrodes_tsv_task=True,
         overwrite=overwrite,
         verbose="error",
     )

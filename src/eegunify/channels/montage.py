@@ -42,7 +42,9 @@ def apply_montage(
         EEG channels that have no position after applying the montage.
     """
     if cfg.source == "none":
-        pass
+        # Also discard positions embedded in the file: they are often in a device frame without
+        # fiducials, which MNE-BIDS cannot write.
+        raw.set_montage(None)
     elif cfg.source == "embedded":
         if raw.get_montage() is None:
             msg = "montage.source is 'embedded' but the file carries no positions"
