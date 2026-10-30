@@ -1,0 +1,45 @@
+# Real-world validation registry (see docs/validation_datasets.md).
+# eegunify's validation harness downloads ONE subject per entry and runs `eegunify convert`.
+# OpenNeuro entries were verified via the OpenNeuro API on 2026-10-30; others: confirm url + format when pinning hashes.
+datasets:
+  - {id: ds007096, source: openneuro, format: set, paradigm: N170, subjects: 1}
+  - {id: ds007056, source: openneuro, format: set, paradigm: P300, subjects: 1}
+  - {id: ds007137, source: openneuro, format: set, paradigm: N2pc, subjects: 1}
+  - {id: ds002718, source: openneuro, format: set, paradigm: faces, subjects: 1}
+  - {id: ds003645, source: openneuro, format: bdf, paradigm: faces, subjects: 1}
+  - {id: ds003505, source: openneuro, format: bdf, paradigm: VEP, subjects: 1}
+  - {id: ds005863, source: openneuro, format: brainvision, paradigm: oddball, subjects: 1}
+  - {id: ds003825, source: openneuro, format: brainvision, paradigm: rsvp, subjects: 1}
+  - {id: ds004357, source: openneuro, format: brainvision, paradigm: rsvp, subjects: 1}
+  - {id: ds004018, source: openneuro, format: brainvision, paradigm: rsvp, subjects: 1}
+  - {id: ds005642, source: openneuro, format: bdf, paradigm: faces, subjects: 1}
+  - {id: ds005648, source: openneuro, format: bdf, paradigm: objects, subjects: 1}
+  - {id: ds007012, source: openneuro, format: bdf, paradigm: objects, subjects: 1}
+  - {id: ds005811, source: openneuro, format: set, paradigm: objects, subjects: 1}
+  - {id: ds007172, source: openneuro, format: brainvision, paradigm: faces, subjects: 1}
+  - {id: ds004324, source: openneuro, format: edf, paradigm: faces, subjects: 1}
+  - {id: ds008092, source: openneuro, format: edf, paradigm: objects, subjects: 1, tag: consumer-headset}
+  - {id: ds005106, source: openneuro, format: set, paradigm: objects, subjects: 1}
+  - {id: ds006171, source: openneuro, format: bdf, paradigm: detection, subjects: 1}
+  - {id: ds006563, source: openneuro, format: set, paradigm: attention, subjects: 1}
+  - {id: ds003190, source: openneuro, format: brainvision, paradigm: P300, subjects: 1}
+  - {id: ds001810, source: openneuro, format: brainvision, paradigm: attention, subjects: 1, tag: sessions}
+  - {id: ds005586, source: openneuro, format: brainvision, paradigm: objects, subjects: 1}
+  - {id: ds002578, source: openneuro, format: set, paradigm: oddball, subjects: 1, tag: 256ch}
+  - {id: ds005841, source: openneuro, format: bdf, paradigm: VR, subjects: 1}
+  - {id: ds004621, source: openneuro, format: brainvision, paradigm: battery, subjects: 1}
+  - {id: ds006768, source: openneuro, format: edf, paradigm: attention, subjects: 1, tag: gz-compressed}
+  - {id: ds006979, source: openneuro, format: mixed, paradigm: VWM, subjects: 1, tag: mixed-formats}
+  - {id: ds004745, source: openneuro, format: set, paradigm: SSVEP, subjects: 1}
+  - {id: ds005028, source: openneuro, format: edf, paradigm: P300, subjects: 1, tag: bci2000-dat}
+  - {id: ds004362, source: openneuro, format: set, paradigm: motor, subjects: 1, tag: cross-format-with-physionet}
+  - {id: erpcore, source: osf, url: 'https://doi.org/10.18115/D5JW4R', format: set, paradigm: N170+P3+N2pc, subjects: 1, headline: true}
+  - {id: mne-ssvep, source: mne, fetcher: mne.datasets.ssvep, format: brainvision, paradigm: SSVEP}
+  - {id: mne-sample, source: mne, fetcher: mne.datasets.sample, format: fif, paradigm: visual+auditory}
+  - {id: mne-testing, source: mne, fetcher: mne.datasets.testing, format: many, paradigm: format-coverage}
+  - {id: wang2021-ssvep, source: zenodo, url: 'https://zenodo.org/records/18873228', format: neuroscan-cnt, paradigm: SSVEP, subjects: 1}
+  - {id: tsinghua-beta, source: web, url: 'http://bci.med.tsinghua.edu.cn/download.html', format: mat, paradigm: SSVEP, expect: unsupported-epoched}
+  - {id: bciciv-2a, source: bbci, url: 'https://bbci.de/competition/iv/', format: gdf, paradigm: motor-imagery, subjects: 1}
+  - {id: physionet-eegmmidb, source: physionet, url: 'https://physionet.org/content/eegmmidb/1.0.0/', format: edf, paradigm: motor, subjects: 1, tag: cross-format-with-ds004362}
+  - {id: consumer-eeg-eyetracking, source: zenodo, url: 'https://zenodo.org/records/14860368', format: xdf, paradigm: mixed, subjects: 1}
+  - {id: things-eeg2, source: osf, url: 'https://osf.io/3jk45', format: verify, paradigm: rsvp, subjects: 1}

@@ -476,6 +476,7 @@ EEG-to-ERP pipeline. Phase 1 = `eegunify`: converts any vendor EEG format to BID
 12. **QA:** checks.py (all IDs), plots.py, report.py, summary.tsv; tests assert check IDs on deliberately broken synthetic data (V-as-µV, flat O2, missing PO8, wrong event counts).
 13. **XDF reader** (stream selection, clock sync, marker stream -> events) + synthetic XDF test.
 14. **Datasets fetcher** (pooch, pinned hashes) + `fetch` CLI; ERP CORE N170 config; integration workflow; golden files generated and committed.
+14b. **Real-world validation harness:** `eegunify validate-datasets code/configs/validation_datasets.yaml` downloads one subject per entry (openneuro-py / pooch), converts it, and writes `derivatives/validation/summary.tsv` (dataset, format, convert ok, QA pass/warn/fail counts, error). The catalog is in `docs/validation_datasets.md` (40 datasets, mostly visual). It runs from the weekly integration workflow, never in the fast CI. The README support matrix is generated from its results.
 15. **Tier 2 readers** (GDF, ANT, Neuroscan with .cnt disambiguation, Curry, EGI) with `realdata` tests on MNE testing data.
 16. **Generic CSV/OpenBCI reader** with config-declared columns.
 17. **Behavior module** (PsychoPy, Presentation, E-Prime tab export) + alignment + QA section; synthetic tests.
