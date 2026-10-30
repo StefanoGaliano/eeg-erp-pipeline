@@ -61,10 +61,12 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "NPY", "PD", "RUF"]
+# Physical-unit suffixes (`_uV`, `_V`) are kept in their conventional case.
+ignore = ["N802", "N803", "N815"]
 
 [tool.mypy]
 strict = true
-python_version = "3.11"
+python_version = "3.12"  # numpy stubs use 3.12 syntax; runtime still supports 3.11
 files = ["src"]
 
 [[tool.mypy.overrides]]

@@ -7,4 +7,14 @@ try:
 except PackageNotFoundError:  # pragma: no cover - package not installed
     __version__ = "0.0.0"
 
-__all__ = ["__version__"]
+
+def __getattr__(name: str) -> object:
+    # Lazy public API so ``import eegunify`` stays fast (MNE import is heavy).
+    if name in ("read_recording", "convert"):
+        from eegunify import pipeline
+
+        return getattr(pipeline, name)
+    raise AttributeError(f"module 'eegunify' has no attribute {name!r}")
+
+
+__all__ = ["__version__", "convert", "read_recording"]

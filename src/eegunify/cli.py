@@ -1,7 +1,19 @@
-"""Command-line interface (``eegunify``)."""
+"""Command-line interface (``eegunify``).
+
+Exit codes: 0 ok, 1 a recording failed, 2 config/usage error, 3 reader error.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.logging import RichHandler
+from rich.table import Table
 
 from eegunify import __version__
 
@@ -10,7 +22,24 @@ app = typer.Typer(
     help="Convert raw EEG recordings (any vendor format) into canonical BIDS-EEG.",
     no_args_is_help=True,
 )
+config_app = typer.Typer(help="Validate configs and print their schema.", no_args_is_help=True)
+app.add_typer(config_app, name="config")
 console = Console()
+
+EXIT_FAILED, EXIT_USAGE, EXIT_READER = 1, 2, 3
+
+
+@app.callback()
+def main(
+    verbose: Annotated[bool, typer.Option("--verbose", "-v", help="Debug logging.")] = False,
+    quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Errors only.")] = False,
+) -> None:
+    """eegunify: one canonical format for every raw EEG recording."""
+    level = logging.DEBUG if verbose else logging.ERROR if quiet else logging.INFO
+    logging.basicConfig(
+        level=level, format="%(message)s", handlers=[RichHandler(console=console)], force=True
+    )
+    logging.getLogger("mne").setLevel(logging.WARNING)
 
 
 @app.command()
@@ -24,6 +53,120 @@ def version() -> None:
     console.print(f"mne-bids {mne_bids.__version__}")
 
 
-@app.callback()
-def main() -> None:
-    """eegunify: one canonical format for every raw EEG recording."""
+@app.command()
+def inspect(
+    path: Annotated[Path, typer.Argument(exists=True, help="Recording to inspect.")],
+    fmt: Annotated[str | None, typer.Option("--format", help="Override detection.")] = None,
+) -> None:
+    """Read one recording and summarise channels, sampling rate, events and checks. No writes."""
+    from eegunify.canonical import CanonicalError
+    from eegunify.detect import UnknownFormatError
+    from eegunify.pipeline import default_config, read_recording
+
+    cfg = default_config(path)
+    if fmt:
+        cfg.format.name = fmt  # type: ignore[assignment]
+    try:
+        rec, warnings = read_recording(path, cfg)
+    except UnknownFormatError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    except CanonicalError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_FAILED) from err
+    except Exception as err:
+        console.print(f"[red]could not read {path}: {type(err).__name__}: {err}")
+        raise typer.Exit(EXIT_READER) from err
+
+    raw = rec.raw
+    console.print(
+        f"[bold]{path.name}[/]  format=[cyan]{rec.format}[/]  "
+        f"sfreq={raw.info['sfreq']:g} Hz  duration={raw.times[-1]:.1f} s"
+    )
+    types: dict[str, list[str]] = {}
+    for name, t in zip(raw.ch_names, raw.get_channel_types(), strict=True):
+        types.setdefault(t, []).append(name)
+    for t, names in sorted(types.items()):
+        console.print(
+            f"  {t:5s} {len(names):3d}: {', '.join(names[:12])}"
+            + (" ..." if len(names) > 12 else "")
+        )
+    renamed = {o: n for o, n in rec.rename_log.items() if o != n}
+    if renamed:
+        console.print(
+            f"  renamed {len(renamed)}: "
+            + ", ".join(f"{o}->{n}" for o, n in list(renamed.items())[:8])
+            + (" ..." if len(renamed) > 8 else "")
+        )
+    console.print(f"  units: {rec.units.explanation}")
+    console.print(f"  reference: {rec.reference}")
+    counts = rec.events.table["trial_type"].value_counts()
+    table = Table("trial_type", "n", title=f"events ({rec.events.method})")
+    for tt, n in counts.items():
+        table.add_row(str(tt), str(n))
+    console.print(table)
+    for w in warnings:
+        console.print(f"  [yellow]warning[/] [rule {w.rule}] {w.message}")
+
+
+@app.command()
+def convert(
+    config: Annotated[Path, typer.Argument(exists=True, help="Dataset YAML config.")],
+    subject: Annotated[
+        list[str] | None, typer.Option("--subject", "-s", help="Repeatable.")
+    ] = None,
+    overwrite: Annotated[bool, typer.Option(help="Replace existing BIDS output.")] = False,
+    root: Annotated[
+        Path, typer.Option(help="Project root (paths in the config are relative to it).")
+    ] = Path("."),
+) -> None:
+    """Convert a dataset to canonical BIDS-EEG in rawdata/."""
+    from eegunify.config.loader import ConfigError, load_config
+    from eegunify.pipeline import convert as run
+
+    try:
+        cfg = load_config(config)
+    except ConfigError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    results = run(cfg, subjects=subject, overwrite=overwrite, project_root=root)
+    table = Table("subject", "status", "output / error", title=cfg.dataset.name)
+    for r in results:
+        if r.error:
+            table.add_row(r.subject, "[red]FAIL", r.error)
+        else:
+            status = f"[yellow]{len(r.warnings)} warn" if r.warnings else "[green]ok"
+            table.add_row(r.subject, status, str(r.output))
+    console.print(table)
+    if any(r.error for r in results):
+        raise typer.Exit(EXIT_FAILED)
+
+
+@config_app.command("validate")
+def config_validate(
+    config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],
+) -> None:
+    """Check a config against the schema; lists every error by its YAML path."""
+    from eegunify.config.loader import ConfigError, load_config
+
+    try:
+        cfg = load_config(config)
+    except ConfigError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    console.print(f"[green]valid[/]: {cfg.dataset.name} ({len(cfg.recordings.subjects)} subjects)")
+
+
+@config_app.command("schema")
+def config_schema(
+    out: Annotated[Path | None, typer.Option(help="Write to a file instead of stdout.")] = None,
+) -> None:
+    """Print the JSON Schema of the config file format."""
+    from eegunify.config.schema import Config
+
+    text = json.dumps(Config.model_json_schema(), indent=2)
+    if out:
+        out.write_text(text + "\n", encoding="utf-8")
+        console.print(f"wrote {out}")
+    else:
+        typer.echo(text)
