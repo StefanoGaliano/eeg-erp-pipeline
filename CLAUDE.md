@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 EEG-to-ERP pipeline, visual-task focus. Phase 1 = `eegunify`: converts any vendor EEG format into one
 canonical BIDS-EEG form (BrainVision files, float32, µV) that every later stage consumes.
-**`docs/BLUEPRINT.md` is the source of truth** for the architecture, milestones (M0–M5) and later phases
+**`docs/BLUEPRINT.md` (Phase 1) and `docs/BLUEPRINT_PHASES.md` (ERP phases, A2, Phase M, BCI) are the source of truth** for the architecture, milestones (M0–M5) and later phases
 (ERP phases, Phase M = MATLAB parity, Phase A = Streamlit app).
 `docs/validation_datasets.md` + `code/configs/validation_datasets.yaml` list 40 real open datasets for testing.
 

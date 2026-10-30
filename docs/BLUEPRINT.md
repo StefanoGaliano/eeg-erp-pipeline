@@ -404,6 +404,8 @@ Also: `pre-commit.ci` or pre-commit in lint job; Dependabot for actions and pip;
 
 ## 15. Downstream phases (sketch) and the contract they rely on
 
+> **Superseded by [BLUEPRINT_PHASES.md](BLUEPRINT_PHASES.md)** (full design of the ERP phases, A2, Phase M and the BCI direction). The table below is kept for history; its N170 window is replaced by the `n170@erpcore` preset.
+
 All downstream stages read via `mne_bids.read_raw_bids(BIDSPath(root="rawdata", ...))` and rely only on section 5 invariants + `events.tsv` `trial_type` hierarchy. Outputs go to `derivatives/eegunify-<stage>/` as BIDS-derivatives with `desc-` entities and FIF payloads.
 
 | Phase | Stage | Input contract | Output |
