@@ -16,10 +16,10 @@ from eegunify.canonical import CanonicalError
 from eegunify.pipeline import convert, read_recording
 from tests.synthetic.generate import CODES, SFREQ, STATUS_HIGH_BITS, Truth
 
-FORMATS = ["brainvision", "edf", "eeglab", "bdf"]
+FORMATS = ["brainvision", "edf", "eeglab", "bdf", "xdf"]
 # Max abs amplitude error in µV: float formats are exact to float32; EDF is 16-bit over the
 # exported physical range, BDF 24-bit over ±262 mV.
-TOLERANCE_UV = {"brainvision": 1e-3, "eeglab": 1e-3, "edf": 0.05, "bdf": 0.05}
+TOLERANCE_UV = {"brainvision": 1e-3, "eeglab": 1e-3, "edf": 0.05, "bdf": 0.05, "xdf": 1e-3}
 
 
 def _truth_for(fmt: str, truth: Truth, truth64: Truth) -> Truth:
@@ -241,3 +241,28 @@ def test_montage_none_drops_embedded_positions(tmp_path: Path, truth: Truth) -> 
     cfg.montage.source = "none"
     rec, _ = read_recording(out, cfg)
     assert rec.raw.get_montage() is None
+
+
+def test_sidecar_metadata(synthetic_files: dict[str, Path], make_project) -> None:  # type: ignore[no-untyped-def]
+    """Manufacturer must describe the hardware, not the BrainVision output (seen in ERP CORE)."""
+    root, cfg_path = make_project(synthetic_files["bdf"], "bdf")
+    [res] = convert(cfg_path, project_root=root)
+    assert res.error is None
+    sidecar = json.loads(res.output.with_suffix(".json").read_text())  # type: ignore[union-attr]
+    assert sidecar["Manufacturer"] == "BioSemi"
+
+
+def test_bids_source_sidecar_inherited(tmp_path: Path, truth: Truth) -> None:
+    from eegunify.pipeline import default_config
+    from tests.synthetic.generate import write_eeglab
+
+    src = write_eeglab(tmp_path / "sub-01_task-x_eeg", truth)
+    (tmp_path / "sub-01_task-x_eeg.json").write_text(
+        json.dumps(
+            {"Manufacturer": "Biosemi", "PowerLineFrequency": 60, "TaskDescription": "faces"}
+        )
+    )
+    rec, _ = read_recording(src, default_config(src))
+    assert rec.sidecar["Manufacturer"] == "Biosemi"
+    assert rec.sidecar["TaskDescription"] == "faces"
+    assert rec.raw.info["line_freq"] == 60.0

@@ -1,0 +1,38 @@
+{
+ "ECGChannelCount": 0,
+ "EEGChannelCount": 30,
+ "EEGGround": "n/a",
+ "EEGPlacementScheme": "10-20",
+ "EEGReference": "CMS/DRL (reference-free)",
+ "EMGChannelCount": 0,
+ "EOGChannelCount": 3,
+ "InstitutionAddress": "6363 Alvarado Court, Suite 250, San Diego, CA 92120 ",
+ "InstitutionName": "San Diego State University",
+ "Instructions": "In this task, you will be presented with an image of an object (a face or car) or a texture. Your task is to respond whether the image is an object or a texture. If the image is an object, press the [OBJECT_BUTTON] with your dominant hand. If the image is a texture, press the [SCRAMBLED_BUTTON] with your dominant hand. Please respond as quickly and accurately as possible",
+ "Manufacturer": "Biosemi",
+ "ManufacturersModelName": "ActiveTwo",
+ "MiscChannelCount": 0,
+ "PowerLineFrequency": 60.0,
+ "RecordingDuration": 575.9990234375,
+ "RecordingType": "continuous",
+ "SamplingFrequency": 1024.0,
+ "SoftwareFilters": "n/a",
+ "TaskDescription": "The N170 was elicited in a face perception task modified from Rossion & Caharel (2011) using their stimuli. In this task, an image of a face, car, scrambled face, or scrambled car was presented on each trial in the center of the screen, and participants responded whether the stimulus was an object (face or car) or a texture (scrambled face or scrambled car).",
+ "TaskName": "N170",
+ "TriggerChannelCount": 0,
+ "eegunify": {
+  "event_extraction": "annotations",
+  "reader": "mne.io.read_raw_eeglab",
+  "source_files": [
+   {
+    "name": "sub-015_ses-N170_task-N170_eeg.set",
+    "sha256": "6bcb59ff507eefab826374491dc1cb3f0d4b1756d2c29e30b455ca4077c2a1f3"
+   },
+   {
+    "name": "sub-015_ses-N170_task-N170_eeg.fdt",
+    "sha256": "7a6b07498ad6e933abd2b06ceb319f31fe1bf08f118bb12f81e63f4ec670e1fa"
+   }
+  ],
+  "source_format": "eeglab"
+ }
+}

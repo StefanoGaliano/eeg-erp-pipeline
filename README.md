@@ -10,6 +10,10 @@ A single pipeline from **any raw EEG recording to ERPs**, focused on visual para
 LSL XDF, GDF, ANT, Neuroscan, Curry, EGI, CSV) into one canonical BIDS-EEG representation. Every later
 step reads only that representation. Each converted recording also gets a QA report.
 
+> **Tested on real data:** of 21 open datasets converted with automatic configs, 19 convert and
+> 2 are refused for genuine defects in their files: [validation results](docs/validation_results.md).
+> ERP CORE N170 events match the dataset authors' own files exactly.
+>
 > Work in progress: see [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the architecture and roadmap.
 > A native MATLAB (EEGLAB/FieldTrip) implementation with matching outputs is planned after the Python one.
 

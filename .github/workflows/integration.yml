@@ -1,0 +1,69 @@
+name: Integration (real data)
+
+# Real public EEG data is large and the servers are slow, so this runs weekly and on demand,
+# never on every push. Downloads are cached between runs.
+on:
+  schedule:
+    - cron: "17 4 * * 1"   # Mondays 04:17 UTC
+  workflow_dispatch:
+    inputs:
+      max_mb:
+        description: "Validation harness: skip subjects larger than this (MB)"
+        default: "150"
+
+jobs:
+  erpcore:
+    name: ERP CORE N170 golden test
+    runs-on: ubuntu-latest
+    env:
+      EEGUNIFY_DATA: ${{ github.workspace }}/.eegunify-data
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked --extra dev
+      - uses: actions/cache@v4
+        with:
+          path: .eegunify-data
+          key: erpcore-n170-015-v2
+      - name: Golden files + comparison with ERP CORE's own events.tsv
+        run: uv run pytest -m realdata -v
+      - name: Convert for the QA report artifact
+        run: |
+          mkdir -p sourcedata
+          ln -s "$EEGUNIFY_DATA/erpcore" sourcedata/erpcore
+          uv run eegunify convert code/configs/erpcore_n170.yaml -s 015
+      - uses: actions/upload-artifact@v4
+        with:
+          name: erpcore-n170-qa
+          path: derivatives/eegunify-qa/
+
+  validation:
+    name: 40-dataset validation harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked --extra dev
+      - uses: actions/cache@v4
+        with:
+          path: derivatives/validation/data
+          key: validation-data-${{ hashFiles('code/configs/validation_datasets.yaml') }}
+          restore-keys: validation-data-
+      - name: Fetch one subject per dataset, convert, QA
+        run: >
+          uv run eegunify -q validate-datasets
+          --max-mb ${{ github.event.inputs.max_mb || '150' }}
+      - name: Job summary
+        run: cat derivatives/validation/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validation-summary
+          path: |
+            derivatives/validation/summary.tsv
+            derivatives/validation/summary.md
+            derivatives/validation/projects/*/derivatives/eegunify-qa/

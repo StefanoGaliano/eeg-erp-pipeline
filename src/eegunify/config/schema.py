@@ -126,7 +126,11 @@ class MontageSection(_Strict):
 
 
 class EventsSection(_Strict):
-    source: Literal["auto", "stim_channel", "annotations", "marker_stream", "marker_file"] = "auto"
+    #: ``bids_events``: the source's own BIDS ``*_events.tsv`` (for files without triggers).
+    #: ``auto`` falls back to it when the recording itself has no events.
+    source: Literal[
+        "auto", "stim_channel", "annotations", "bids_events", "marker_stream", "marker_file"
+    ] = "auto"
     stim_channel: str | None = None
     mapping: dict[str, str] = Field(default_factory=dict)
     unmapped: Literal["keep_as_code", "drop", "error"] = "keep_as_code"

@@ -85,8 +85,12 @@ class BrainVisionReader:
         files = _referenced_files(path)
         if len(files) == 3:
             raw = mne.io.read_raw_brainvision(path, preload=True, verbose="error")
-            return ReadResult(raw, files, "mne.io.read_raw_brainvision")
+            return ReadResult(
+                raw, files, "mne.io.read_raw_brainvision", manufacturer="Brain Products"
+            )
         with tempfile.TemporaryDirectory(prefix="eegunify-vhdr-") as tmp:
             fixed, files, notes = _repair_header(path, Path(tmp))
             raw = mne.io.read_raw_brainvision(fixed, preload=True, verbose="error")
-        return ReadResult(raw, files, "mne.io.read_raw_brainvision", notes=notes)
+        return ReadResult(
+            raw, files, "mne.io.read_raw_brainvision", manufacturer="Brain Products", notes=notes
+        )

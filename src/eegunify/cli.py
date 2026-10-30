@@ -195,6 +195,96 @@ def run_app(
     raise typer.Exit(subprocess.call(cmd))
 
 
+fetch_app = typer.Typer(
+    help="Download public EEG data (only the files needed).", no_args_is_help=True
+)
+app.add_typer(fetch_app, name="fetch")
+
+
+@fetch_app.command("erpcore")
+def fetch_erpcore_cmd(
+    component: Annotated[str, typer.Option(help="N170, P3, N2pc, MMN, N400, ERN or LRP.")] = "N170",
+    subject: Annotated[
+        list[str] | None, typer.Option("--subject", "-s", help="015-019; repeatable.")
+    ] = None,
+    dest: Annotated[Path, typer.Option(help="Download folder.")] = Path("sourcedata/erpcore"),
+) -> None:
+    """ERP CORE (BIDS, OSF): extracts one component for the chosen subjects from the archive."""
+    from eegunify.datasets import fetch_erpcore
+
+    try:
+        paths = fetch_erpcore(dest, component, subject or ["015"])
+    except ValueError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    for p in paths:
+        console.print(f"[green]ok[/] {p}")
+
+
+@fetch_app.command("openneuro")
+def fetch_openneuro_cmd(
+    dataset: Annotated[str, typer.Argument(help="Accession, e.g. ds005841.")],
+    subject: Annotated[str | None, typer.Option("--subject", "-s", help="Default: first.")] = None,
+    tag: Annotated[str | None, typer.Option(help="Snapshot tag (default: latest).")] = None,
+    dest: Annotated[Path, typer.Option(help="Download folder.")] = Path("sourcedata"),
+    max_mb: Annotated[float | None, typer.Option(help="Refuse if larger than this.")] = None,
+) -> None:
+    """One subject's EEG files from an OpenNeuro snapshot."""
+    from eegunify.datasets import fetch_openneuro
+
+    try:
+        tag, sub, paths = fetch_openneuro(
+            dataset, dest, subject, tag, int(max_mb * 1e6) if max_mb else None
+        )
+    except (ValueError, RuntimeError) as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    console.print(f"[green]ok[/] {dataset}@{tag} sub-{sub}: {len(paths)} files in {dest / dataset}")
+
+
+@app.command("validate-datasets")
+def validate_datasets(
+    registry: Annotated[Path, typer.Argument(exists=True, help="validation_datasets.yaml")] = Path(
+        "code/configs/validation_datasets.yaml"
+    ),
+    workdir: Annotated[Path, typer.Option(help="Downloads, projects, summary.")] = Path(
+        "derivatives/validation"
+    ),
+    only: Annotated[list[str] | None, typer.Option(help="Dataset id; repeatable.")] = None,
+    max_mb: Annotated[float, typer.Option(help="Skip subjects larger than this.")] = 300.0,
+    dry_run: Annotated[bool, typer.Option(help="Only list subjects and sizes.")] = False,
+) -> None:
+    """Fetch one subject per dataset, convert with an auto-drafted config, summarise QA."""
+    from eegunify.validation import load_registry, plan, validate_entry, write_summary
+
+    entries = [e for e in load_registry(registry) if not only or e["id"] in only]
+    if dry_run:
+        table = Table("id", "source", "format", "subject", "MB")
+        for e in entries:
+            try:
+                sub, mb = plan(e)
+            except Exception as err:
+                sub, mb = f"[red]{type(err).__name__}", None
+            table.add_row(
+                e["id"],
+                e["source"],
+                str(e.get("format", "")),
+                sub,
+                f"{mb:.0f}" if mb is not None else "-",
+            )
+        console.print(table)
+        return
+    workdir.mkdir(parents=True, exist_ok=True)
+    outcomes = []
+    for e in entries:
+        console.print(f"[bold]{e['id']}[/] ({e['source']}) ...")
+        outcomes.append(validate_entry(e, workdir, max_mb))
+        o = outcomes[-1]
+        console.print(f"  {o.status or o.stage} {o.error[:120]}")
+        write_summary(outcomes, workdir)  # incremental: survives interruption
+    console.print(f"summary: {workdir / 'summary.tsv'}")
+
+
 @config_app.command("validate")
 def config_validate(
     config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],

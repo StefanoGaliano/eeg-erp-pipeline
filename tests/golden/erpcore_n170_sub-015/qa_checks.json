@@ -1,0 +1,13 @@
+{
+ "CHANNEL_CLIPPED": "pass",
+ "CHANNEL_FLAT": "pass",
+ "CHANNEL_NOISY": "pass",
+ "CHANNEL_NO_POSITION": "pass",
+ "EVENTS_EXPECTED_COUNT": "pass",
+ "EVENTS_NONE": "pass",
+ "EVENTS_UNMAPPED": "pass",
+ "LINE_NOISE": "pass",
+ "REFERENCE_UNKNOWN": "pass",
+ "ROI_MISSING": "pass",
+ "UNITS_RANGE": "pass"
+}

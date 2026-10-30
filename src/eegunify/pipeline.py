@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import mne
 from mne.io.constants import FIFF
@@ -23,6 +25,35 @@ from eegunify.readers import get_reader
 from eegunify.units import TO_VOLTS, check_units
 
 log = logging.getLogger(__name__)
+
+
+#: ``_eeg.json`` keys copied from a source that is already BIDS (OpenNeuro, ERP CORE). MNE-BIDS
+#: would otherwise fill e.g. ``Manufacturer`` from the *output* format (BrainVision).
+INHERITED_SIDECAR_KEYS = (
+    "Manufacturer",
+    "ManufacturersModelName",
+    "InstitutionName",
+    "InstitutionAddress",
+    "TaskDescription",
+    "Instructions",
+    "CapManufacturer",
+    "CapManufacturersModelName",
+    "EEGPlacementScheme",
+    "HardwareFilters",
+)
+
+
+def read_source_sidecar(path: Path) -> dict[str, Any]:
+    """The source's own BIDS ``*_eeg.json`` (``sub-01_task-x_eeg.set`` -> ``..._eeg.json``)."""
+    sidecar = path.with_suffix(".json")
+    if not path.stem.endswith("_eeg") or not sidecar.is_file():
+        return {}
+    try:
+        data = json.loads(sidecar.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.warning("could not parse source sidecar %s", sidecar.name)
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def default_config(path: Path, subject: str = "01") -> Config:
@@ -115,7 +146,13 @@ def read_recording(
     if drop:
         raw.drop_channels(drop)
 
-    events = extract_events(raw, cfg.events, bdf_status_mask=result.status_mask)
+    events = extract_events(
+        raw,
+        cfg.events,
+        bdf_status_mask=result.status_mask,
+        annotation_status_mask=cfg.format.hints.bdf_status_mask,
+        source_path=path,
+    )
 
     bads = cfg.bads_for(subject)
     unknown = [b for b in bads if b not in raw.ch_names]
@@ -133,9 +170,20 @@ def read_recording(
         )
     units = check_units(raw, cfg.units.expected_eeg_range_uV)
 
+    source_sidecar = read_source_sidecar(path)
     reference = cfg.reference.online
     if reference == "n/a" and result.default_reference:
         reference = result.default_reference
+    sidecar = {k: v for k, v in source_sidecar.items() if k in INHERITED_SIDECAR_KEYS}
+    if "Manufacturer" not in sidecar:
+        sidecar["Manufacturer"] = result.manufacturer or "n/a"
+    line_freq = source_sidecar.get("PowerLineFrequency")
+    if not isinstance(line_freq, (int, float)):
+        from eegunify.qa.checks import detect_line_freq
+
+        line_freq = detect_line_freq(raw)
+    if line_freq:
+        raw.info["line_freq"] = float(line_freq)
 
     rec = Recording(
         raw=raw,
@@ -159,8 +207,13 @@ def read_recording(
         )
         | {"unit_correction_factor": unit_factor},
         notes=result.notes,
+        sidecar=sidecar,
     )
-    warnings = validate(rec, montage_expected=cfg.montage.source != "none")
+    warnings = validate(
+        rec,
+        montage_expected=cfg.montage.source != "none",
+        expected_range_uV=cfg.units.expected_eeg_range_uV,
+    )
     for w in warnings:
         log.warning("sub-%s [rule %d] %s", subject, w.rule, w.message)
     return rec, warnings

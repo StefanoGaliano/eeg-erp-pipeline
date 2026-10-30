@@ -20,6 +20,9 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Try on a file: `eegunify inspect <file>`; convert a dataset: `eegunify convert <config.yaml> [-s 001] [--overwrite] [--root .]`
 - QA only, no BIDS write: `eegunify qa <config.yaml>`; skip QA on convert with `--no-qa`
 - `eegunify config init <file> --out code/configs/x.yaml` (draft), `eegunify config validate <yaml>`, `eegunify config schema`
+- Real data: `pytest -m realdata` (ERP CORE golden + cross-check; data cached in `EEGUNIFY_DATA` or `~/.cache/eegunify`); refresh golden files with `--update-golden` after reviewing the diff
+- Fetch: `eegunify fetch erpcore -s 015`, `eegunify fetch openneuro ds005841 -s 001`
+- Validation harness: `eegunify validate-datasets [--max-mb N] [--only dsXXXX] [--dry-run]` → `derivatives/validation/summary.{tsv,md}`; results written up in `docs/validation_results.md`
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
 ## Architecture (data flow)
@@ -61,6 +64,15 @@ Tests: `tests/synthetic/generate.py` writes a signal with known content in each 
 exact samples, codes and µV data). Round-trip tests compare against it. The `make_project` fixture in
 `tests/conftest.py` builds a throwaway project (sourcedata + config).
 
+Data sources (`datasets.py`): ERP CORE files are pulled out of the 1.9 GB OSF zip with HTTP range
+requests (`HTTPRangeFile` + `zipfile`), never the whole archive. OpenNeuro subjects are listed through
+GraphQL, by snapshot tag. Every download is recorded with its sha256 in `eegunify_manifest.json`; a file
+already present with the recorded hash is not fetched again. `validation.py` runs each catalog entry
+end to end with an auto-drafted config, and every failure becomes a row in the summary, not a crash.
+
+Event sources (`events/extract.py`, `auto` mode): stim channel → if empty, file markers → if still
+empty, the source's BIDS `*_events.tsv`. `STATUS/<n>` markers are masked like BioSemi Status.
+
 ## Rules
 
 - NEVER modify or write into `sourcedata/` (a test checks this with hashes). NEVER commit EEG data: the data
@@ -92,5 +104,13 @@ exact samples, codes and µV data). Round-trip tests compare against it. The `ma
 - Paths inside a project: use `os.path.abspath`, not `Path.resolve()`, and walk with `os.walk(followlinks=True)`.
   Datasets are often symlinked into `sourcedata/`, and resolving them moves them outside the project root.
 - `AppTest` runs the script outside coverage's view, so `app/main.py` is omitted from coverage (see pyproject).
+- `pyproject` addopts deselect `realdata`; plain `pytest` never touches the network.
+- ERP CORE's own `events.tsv` stores EEGLAB's 1-based latency in `sample`; ours is 0-based (BIDS). The
+  golden test asserts `theirs - ours == 1`.
+- MNE-BIDS fills `Manufacturer` from the *output* format (BrainVision). `pipeline` copies hardware/task
+  keys from a BIDS source's own `_eeg.json` (`INHERITED_SIDECAR_KEYS`) or uses the reader's manufacturer.
+- Unit rule 1 refuses a file only when it's > 10x outside the range *and* a 10^3/10^6 factor explains it.
+- XDF: `pyxdf.load_xdf(..., dejitter_timestamps=True)` (not `dejitter_timeseries`). The test writer in
+  `tests/synthetic/xdf_writer.py` puts the marker stream on another clock (0.5 s) to exercise sync.
 - Pre-commit pins ruff/mypy. Keep their `rev:` in sync with the versions in `uv.lock`, or the hooks and CI
   will disagree.

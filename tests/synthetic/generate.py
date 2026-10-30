@@ -190,9 +190,78 @@ def write_bdf(path: Path, truth: Truth) -> Path:
     return out
 
 
+#: The marker PC's clock runs this far behind the EEG PC (true = marker timestamp + offset).
+XDF_MARKER_CLOCK_OFFSET = 0.5
+XDF_T0 = 1000.0  # LSL clocks start at an arbitrary value
+
+
+def write_xdf_recording(
+    path: Path,
+    truth: Truth,
+    *,
+    jitter_s: float = 0.003,
+    extra_eeg_stream: bool = False,
+    actual_rate: float = SFREQ,
+) -> Path:
+    """LSL-style XDF: EEG stream (µV, jittered timestamps) + marker stream on another clock."""
+    from tests.synthetic.xdf_writer import Stream, write_xdf
+
+    rng = np.random.default_rng(1)
+    n = truth.data_uV.shape[1]
+    # ``actual_rate`` != SFREQ simulates an amplifier clock running fast or slow while the
+    # header still claims SFREQ.
+    true_t = XDF_T0 + np.arange(n) / actual_rate
+    eeg_ts = true_t + rng.uniform(-jitter_s, jitter_s, n)
+    names = list(truth.eeg + truth.eog)
+    offsets = [(XDF_T0 + t, 0.0) for t in np.arange(0, DURATION, 5.0)]
+    eeg = Stream(
+        1,
+        "BrainAmp",
+        "EEG",
+        SFREQ,
+        "float32",
+        eeg_ts,
+        truth.data_uV.T,
+        labels=names,
+        units=["microvolts"] * len(names),
+        types=["EEG"] * len(truth.eeg) + ["EOG"] * len(truth.eog),
+        clock_offsets=offsets,
+    )
+    marker_true = XDF_T0 + truth.samples / SFREQ
+    markers = Stream(
+        2,
+        "PsychoPyMarkers",
+        "Markers",
+        0.0,
+        "string",
+        marker_true - XDF_MARKER_CLOCK_OFFSET,
+        [str(c) for c in truth.codes],
+        clock_offsets=[(t - XDF_MARKER_CLOCK_OFFSET, XDF_MARKER_CLOCK_OFFSET) for t, _ in offsets],
+    )
+    streams = [eeg, markers]
+    if extra_eeg_stream:
+        streams.append(
+            Stream(
+                3,
+                "SecondAmp",
+                "EEG",
+                SFREQ,
+                "float32",
+                true_t,
+                truth.data_uV[:2].T,
+                labels=["X1", "X2"],
+                units=["microvolts"] * 2,
+                types=["EEG"] * 2,
+                clock_offsets=offsets,
+            )
+        )
+    return write_xdf(path.with_suffix(".xdf"), streams)
+
+
 WRITERS = {
     "brainvision": write_brainvision,
     "edf": write_edf,
     "eeglab": write_eeglab,
     "bdf": write_bdf,
+    "xdf": write_xdf_recording,
 }

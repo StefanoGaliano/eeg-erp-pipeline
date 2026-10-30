@@ -8,7 +8,9 @@ channel has been dropped. The returned table is the source for ``events.tsv``.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
+from pathlib import Path
 
 import mne
 import numpy as np
@@ -60,7 +62,10 @@ def _from_stim(raw: mne.io.BaseRaw, ch: str, cfg: EventsSection, mask: int) -> p
     )
 
 
-def _from_annotations(raw: mne.io.BaseRaw) -> pd.DataFrame:
+_STATUS_RE = re.compile(r"^STATUS/(\d+)$", re.IGNORECASE)
+
+
+def _from_annotations(raw: mne.io.BaseRaw, status_mask: int) -> pd.DataFrame:
     ann = raw.annotations
     first_time = raw.first_samp / raw.info["sfreq"]
     rows = []
@@ -76,14 +81,64 @@ def _from_annotations(raw: mne.io.BaseRaw) -> pd.DataFrame:
                 "onset": onset,
                 "duration": float(a["duration"]),
                 "sample": round(onset * raw.info["sfreq"]),
-                "value": parse_code(desc),
+                "value": _annotation_code(desc, status_mask),
+            }
+        )
+    return pd.DataFrame(rows, columns=["onset", "duration", "sample", "value"])
+
+
+def _annotation_code(desc: str, status_mask: int) -> int | str:
+    """``parse_code``, plus raw BioSemi Status values kept as markers (``STATUS/61694``, seen
+    when BDF data were converted to BrainVision): masked like the Status channel itself."""
+    m = _STATUS_RE.match(desc.strip())
+    if m:
+        return int(m.group(1)) & status_mask
+    return parse_code(desc)
+
+
+def bids_events_path(recording: Path) -> Path | None:
+    """``sub-01_task-x_eeg.bdf`` -> sibling ``sub-01_task-x_events.tsv`` if it exists."""
+    stem = recording.name.split(".")[0]
+    if not stem.endswith("_eeg"):
+        return None
+    path = recording.with_name(stem.removesuffix("_eeg") + "_events.tsv")
+    return path if path.is_file() else None
+
+
+def _from_bids_events(path: Path, sfreq: float) -> pd.DataFrame:
+    """Events from a BIDS ``events.tsv``: ``value`` if present, else ``trial_type``."""
+    tsv = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
+    if "onset" not in tsv.columns:
+        raise ValueError(f"{path.name} has no onset column")
+    label_col = next((c for c in ("value", "trial_type", "event_type") if c in tsv.columns), None)
+    rows = []
+    for _, r in tsv.iterrows():
+        try:
+            onset = float(r["onset"])
+        except ValueError:
+            continue
+        label = str(r[label_col]) if label_col else "event"
+        if label in ("", "n/a"):
+            label = str(r.get("trial_type", "event")) or "event"
+        duration = r.get("duration", "0")
+        rows.append(
+            {
+                "onset": onset,
+                "duration": float(duration) if duration not in ("", "n/a") else 0.0,
+                "sample": round(onset * sfreq),
+                "value": parse_code(label),
             }
         )
     return pd.DataFrame(rows, columns=["onset", "duration", "sample", "value"])
 
 
 def extract_events(
-    raw: mne.io.BaseRaw, cfg: EventsSection, *, bdf_status_mask: int | None = None
+    raw: mne.io.BaseRaw,
+    cfg: EventsSection,
+    *,
+    bdf_status_mask: int | None = None,
+    annotation_status_mask: int = 0xFF,
+    source_path: Path | None = None,
 ) -> EventResult:
     """Extract and map events, then rewrite ``raw.annotations`` and drop stim channels.
 
@@ -95,6 +150,14 @@ def extract_events(
         The ``events`` config block.
     bdf_status_mask
         Bit mask applied to stim channel values (BioSemi Status: ``0xFF``).
+    annotation_status_mask
+        Bit mask for ``STATUS/<n>`` markers (BioSemi Status values stored as annotations).
+    source_path
+        The recording file, used to find a sibling BIDS ``*_events.tsv``.
+
+    With ``events.source: auto`` the stim channel is used if there is one, unless it yields no
+    events while the file has markers: a Status channel stored as a scaled voltage (BDF
+    converted to BrainVision, seen in ds001810) decodes to nothing.
     """
     stim = _stim_channels(raw)
     source = cfg.source
@@ -107,11 +170,32 @@ def extract_events(
         mask = bdf_status_mask if bdf_status_mask is not None else 0xFFFFFF
         table = _from_stim(raw, ch, cfg, mask)
         method = f"stim_channel:{ch}"
+        if table.empty and cfg.source == "auto":
+            markers = _from_annotations(raw, annotation_status_mask)
+            if not markers.empty:
+                log.warning(
+                    "stim channel %s has no events; using the %d markers instead", ch, len(markers)
+                )
+                table, method = markers, "annotations"
     elif source == "annotations":
-        table = _from_annotations(raw)
+        table = _from_annotations(raw, annotation_status_mask)
         method = "annotations"
+    elif source == "bids_events":
+        tsv = bids_events_path(source_path) if source_path else None
+        if tsv is None:
+            raise ValueError("events.source is bids_events but no sibling *_events.tsv exists")
+        table, method = _from_bids_events(tsv, raw.info["sfreq"]), f"bids_events:{tsv.name}"
     else:
         raise NotImplementedError(f"events.source {source!r} is not available for this format yet")
+
+    # Recordings without triggers whose events live only in the BIDS sidecar (ds003645,
+    # ds006768): fall back to it in auto mode.
+    if table.empty and cfg.source == "auto" and source_path is not None:
+        tsv = bids_events_path(source_path)
+        if tsv is not None:
+            table = _from_bids_events(tsv, raw.info["sfreq"])
+            method = f"bids_events:{tsv.name}"
+            log.warning("no events in the recording; using %s (%d events)", tsv.name, len(table))
 
     mapper = EventMapper.from_config(cfg.mapping)
     ignore = set(cfg.ignore_codes)

@@ -1,0 +1,8 @@
+{
+ "response/correct": 281,
+ "response/error": 39,
+ "stimulus/car": 80,
+ "stimulus/face": 80,
+ "stimulus/scrambled_car": 80,
+ "stimulus/scrambled_face": 80
+}

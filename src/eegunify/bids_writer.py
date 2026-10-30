@@ -64,6 +64,7 @@ def _patch_channels(path: Path, rec: Recording) -> None:
 
 def _patch_sidecar(path: Path, rec: Recording) -> None:
     data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    data.update(rec.sidecar)
     data["EEGReference"] = rec.reference
     if rec.ground:
         data["EEGGround"] = rec.ground

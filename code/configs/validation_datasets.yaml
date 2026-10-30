@@ -33,7 +33,7 @@ datasets:
   - {id: ds004745, source: openneuro, format: set, paradigm: SSVEP, subjects: 1}
   - {id: ds005028, source: openneuro, format: edf, paradigm: P300, subjects: 1, tag: bci2000-dat}
   - {id: ds004362, source: openneuro, format: set, paradigm: motor, subjects: 1, tag: cross-format-with-physionet}
-  - {id: erpcore, source: osf, url: 'https://doi.org/10.18115/D5JW4R', format: set, paradigm: N170+P3+N2pc, subjects: 1, headline: true}
+  - {id: erpcore, source: erpcore, url: 'https://doi.org/10.18115/D5JW4R', format: set, paradigm: N170+P3+N2pc, subjects: 1, headline: true}
   - {id: mne-ssvep, source: mne, fetcher: mne.datasets.ssvep, format: brainvision, paradigm: SSVEP}
   - {id: mne-sample, source: mne, fetcher: mne.datasets.sample, format: fif, paradigm: visual+auditory}
   - {id: mne-testing, source: mne, fetcher: mne.datasets.testing, format: many, paradigm: format-coverage}

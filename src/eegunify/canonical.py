@@ -36,6 +36,8 @@ class Recording:
     rename_log: dict[str, str]
     missing_positions: list[str]
     provenance: dict[str, Any] = field(default_factory=dict)
+    sidecar: dict[str, Any] = field(default_factory=dict)
+    """Values for ``_eeg.json`` that MNE-BIDS cannot know (hardware, task description, ...)."""
     notes: list[str] = field(default_factory=list)
 
 
@@ -55,9 +57,23 @@ class CanonicalError(ValueError):
         super().__init__("recording is not canonical:\n" + "\n".join(lines))
 
 
-def check(rec: Recording, *, montage_expected: bool = True) -> list[Violation]:
+UNIT_ERROR_RATIO = 10.0
+
+
+def _far_outside(value: float, rng: tuple[float, float]) -> bool:
+    lo, hi = rng
+    return bool(value > hi * UNIT_ERROR_RATIO or value < lo / UNIT_ERROR_RATIO)
+
+
+def check(
+    rec: Recording,
+    *,
+    montage_expected: bool = True,
+    expected_range_uV: tuple[float, float] = (0.5, 500.0),
+) -> list[Violation]:
     """Evaluate all invariants and return every violation (errors and warnings)."""
     raw = rec.raw
+    rng = expected_range_uV
     out: list[Violation] = []
 
     # 1. Units: Volts in memory, plausible amplitude.
@@ -75,8 +91,13 @@ def check(rec: Recording, *, montage_expected: bool = True) -> list[Violation]:
     if picks.size and not np.isfinite(raw.get_data(picks=picks)).all():
         out.append(Violation(1, "error", "data contain NaN or Inf"))
     if not rec.units.plausible:
+        # Refuse only unmistakable scale errors: a 10^3/10^6 factor fixes it AND the amplitude
+        # is more than 10x outside the range. Infant or unreferenced data sit legitimately just
+        # above the range (ds005106, ds007096) and get a warning instead.
         level: Literal["error", "warning"] = (
-            "error" if rec.units.suggested_factor != 1.0 else "warning"
+            "error"
+            if rec.units.suggested_factor != 1.0 and _far_outside(rec.units.robust_sd_uV, rng)
+            else "warning"
         )
         hint = ""
         if rec.units.suggested_factor in _FACTOR_TO_DECLARED:
@@ -136,9 +157,14 @@ def check(rec: Recording, *, montage_expected: bool = True) -> list[Violation]:
     return out
 
 
-def validate(rec: Recording, *, montage_expected: bool = True) -> list[Violation]:
+def validate(
+    rec: Recording,
+    *,
+    montage_expected: bool = True,
+    expected_range_uV: tuple[float, float] = (0.5, 500.0),
+) -> list[Violation]:
     """Raise :class:`CanonicalError` on any error-level violation; return the warnings."""
-    violations = check(rec, montage_expected=montage_expected)
+    violations = check(rec, montage_expected=montage_expected, expected_range_uV=expected_range_uV)
     errors = [v for v in violations if v.level == "error"]
     if errors:
         raise CanonicalError(errors)

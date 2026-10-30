@@ -80,7 +80,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m \"not realdata\""  # real-data tests: pytest -m realdata
 markers = [
     "realdata: needs downloaded public EEG data (MNE testing data, ERP CORE)",
     "slow: slow tests",

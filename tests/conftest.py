@@ -67,3 +67,19 @@ def make_project(tmp_path: Path):  # type: ignore[no-untyped-def]
         return tmp_path, path
 
     return _make
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--update-golden", action="store_true", help="Rewrite tests/golden/ from current output."
+    )
+
+
+@pytest.fixture(scope="session")
+def data_cache() -> Path:
+    """Where real-data tests keep downloads (``EEGUNIFY_DATA`` or ``~/.cache/eegunify``)."""
+    import os
+
+    root = Path(os.environ.get("EEGUNIFY_DATA", Path.home() / ".cache" / "eegunify"))
+    root.mkdir(parents=True, exist_ok=True)
+    return root

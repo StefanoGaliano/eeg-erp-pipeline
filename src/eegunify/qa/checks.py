@@ -110,8 +110,14 @@ def detect_line_freq(raw: mne.io.BaseRaw) -> float | None:
     freqs, power = psd.freqs, psd.get_data().mean(axis=0)
 
     def prominence(f0: float) -> float:
-        peak = power[np.abs(freqs - f0) <= 1].max()
-        base = np.median(power[(np.abs(freqs - f0) > 2) & (np.abs(freqs - f0) <= 6)])
+        # Nearest bin, not a fixed ±1 Hz window: short or low-rate recordings have coarse
+        # frequency resolution (crashed on ds005028).
+        dist = np.abs(freqs - f0)
+        if dist.min() > 2:
+            return 0.0
+        peak = power[dist <= max(1.0, dist.min())].max()
+        side = power[(dist > 2) & (dist <= 6)]
+        base = float(np.median(side)) if side.size else 0.0
         return float(peak / base) if base > 0 else 0.0
 
     scores = {50.0: prominence(50.0), 60.0: prominence(60.0)}

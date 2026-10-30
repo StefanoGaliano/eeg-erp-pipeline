@@ -27,6 +27,8 @@ class ReadResult:
     reader: str
     """Fully-qualified MNE function used."""
     default_reference: str | None = None
+    manufacturer: str | None = None
+    """Hardware vendor implied by the file format (BDF -> BioSemi); None if not implied."""
     """Reference implied by the hardware (BioSemi: CMS/DRL), used if the config says n/a."""
     status_mask: int | None = None
     """Bit mask for stim channel values (BioSemi Status)."""
