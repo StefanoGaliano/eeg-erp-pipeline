@@ -34,7 +34,9 @@ def test_on_missing_raise() -> None:
 @pytest.mark.filterwarnings("ignore:Fiducial point nasion")
 def test_montage_file_per_subject(tmp_path: Path) -> None:
     # .sfp: "name x y z" per line; {subject} is filled per recording.
-    (tmp_path / "sub-07.sfp").write_text("O1 -0.03 -0.1 0.0\nO2 0.03 -0.1 0.0\nOz 0 -0.11 0.0\n")
+    (tmp_path / "sub-07.sfp").write_text(
+        "O1 -0.03 -0.1 0.0\nO2 0.03 -0.1 0.0\nOz 0 -0.11 0.0\n", encoding="utf-8"
+    )
     raw = _raw(["O1", "O2", "Oz"])
     cfg = MontageSection(source="file", file="sub-{subject}.sfp")
     assert apply_montage(raw, cfg, tmp_path, "07") == []

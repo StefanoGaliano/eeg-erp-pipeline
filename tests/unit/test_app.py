@@ -88,7 +88,7 @@ def test_ui_config_converts_like_hand_written(project: tuple[Path, Path]) -> Non
     at.button(key="cfg_save").click().run()
     saved = root / "code" / "configs" / "synthetic_ui.yaml"
     assert saved.exists()
-    ui_cfg = yaml.safe_load(saved.read_text())
+    ui_cfg = yaml.safe_load(saved.read_text(encoding="utf-8"))
     assert ui_cfg["events"]["mapping"] == {"1": "stimulus/face", "2": "stimulus/car"}
 
     # Convert through the app's third page.
@@ -108,11 +108,11 @@ def test_ui_config_converts_like_hand_written(project: tuple[Path, Path]) -> Non
 def test_save_refuses_overwrite(project: tuple[Path, Path]) -> None:
     root, _ = project
     target = root / "code" / "configs" / "synthetic.yaml"
-    target.write_text("keep me")
+    target.write_text("keep me", encoding="utf-8")
     at = _app(root, page="2 · Configure", file="sourcedata/synth/sub-01_task-faces.vhdr")
     at.text_input(key="cfg_name").set_value("Synthetic").run()
     at.button(key="cfg_save").click().run()
-    assert target.read_text() == "keep me"
+    assert target.read_text(encoding="utf-8") == "keep me"
     assert any("exists" in e.value for e in at.error)
 
 

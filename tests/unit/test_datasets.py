@@ -58,11 +58,11 @@ def test_erpcore_member_selection() -> None:
 
 
 def test_manifest_detects_changed_files(tmp_path: Path) -> None:
-    (tmp_path / "a.txt").write_text("one")
+    (tmp_path / "a.txt").write_text("one", encoding="utf-8")
     m = Manifest.load(tmp_path)
     m.record(tmp_path, "a.txt", "test")
     assert Manifest.load(tmp_path).is_current(tmp_path, "a.txt")
-    (tmp_path / "a.txt").write_text("two")
+    (tmp_path / "a.txt").write_text("two", encoding="utf-8")
     assert not Manifest.load(tmp_path).is_current(tmp_path, "a.txt")
 
 

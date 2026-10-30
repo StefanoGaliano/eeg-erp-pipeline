@@ -73,7 +73,7 @@ def test_config_init_cli(tmp_path: Path, synthetic_files: dict[str, Path]) -> No
     runner = CliRunner()
     res = runner.invoke(app, ["config", "init", str(synthetic_files["edf"]), "--out", str(out)])
     assert res.exit_code == 0, res.output
-    assert parse_config(yaml.safe_load(out.read_text()))
+    assert parse_config(yaml.safe_load(out.read_text(encoding="utf-8")))
     assert (
         runner.invoke(
             app, ["config", "init", str(synthetic_files["edf"]), "--out", str(out)]

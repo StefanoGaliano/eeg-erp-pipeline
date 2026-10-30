@@ -35,7 +35,7 @@ def test_openbci_without_names_keeps_pin_labels(tmp_path: Path, truth: Truth) ->
 
 def test_unknown_rate_is_an_error(tmp_path: Path) -> None:
     p = tmp_path / "x.csv"
-    p.write_text("Fz,Cz\n1,2\n3,4\n")
+    p.write_text("Fz,Cz\n1,2\n3,4\n", encoding="utf-8")
     with pytest.raises(ValueError, match=r"csv\.sfreq"):
         read_recording(p)
 
@@ -46,7 +46,7 @@ def test_explicit_columns_and_units(tmp_path: Path) -> None:
     rows = ["junk\tA\tB\tC"] + [
         f"{i}\t{a}\t{b}\t9" for i, (a, b) in enumerate(rng.standard_normal((500, 2)) * 0.02)
     ]
-    p.write_text("\n".join(rows) + "\n")
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
     cfg = default_config(p)
     hints = cfg.format.hints.csv
     hints.sfreq, hints.unit = 250.0, "mV"

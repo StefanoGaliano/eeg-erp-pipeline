@@ -128,7 +128,7 @@ class Manifest:
     @classmethod
     def load(cls, dest: Path) -> Manifest:
         p = dest / "eegunify_manifest.json"
-        entries = json.loads(p.read_text()) if p.exists() else {}
+        entries = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
         return cls(p, entries)
 
     def is_current(self, dest: Path, rel: str) -> bool:
@@ -144,7 +144,9 @@ class Manifest:
             "source": source,
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self.entries, indent=1, sort_keys=True) + "\n")
+        self.path.write_text(
+            json.dumps(self.entries, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
 
 def _erpcore_members(names: Iterable[str], component: str, subjects: Iterable[str]) -> list[str]:

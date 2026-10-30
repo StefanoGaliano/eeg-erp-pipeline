@@ -66,7 +66,7 @@ def write_presentation(path: Path, truth: Truth) -> Path:
         for i, (c, tm) in enumerate(zip(t["stim_file"], times, strict=True))
     ]
     lines += ["", "Event Type\tCode\tType\tResponse", "Picture\tx\thit\t1"]
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
 
 

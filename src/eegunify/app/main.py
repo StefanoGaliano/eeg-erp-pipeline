@@ -52,7 +52,7 @@ def find_recordings(root: Path) -> list[str]:
         for name in [*filenames, *dirnames]:
             p = here / name
             if p.suffix.lower() in _ENTRY_SUFFIXES and (p.is_file() or p.suffix == ".mff"):
-                found.append(str(p.relative_to(root)))
+                found.append(p.relative_to(root).as_posix())
     return sorted(found)
 
 
@@ -284,16 +284,16 @@ def page_configure() -> None:
     c1, c2, c3 = st.columns([1, 1, 2])
     c1.download_button("Download YAML", text, file_name=out.name, mime="text/yaml")
     overwrite = c3.checkbox(
-        f"Overwrite `{out.relative_to(root)}` if it exists", key="cfg_overwrite"
+        f"Overwrite `{out.relative_to(root).as_posix()}` if it exists", key="cfg_overwrite"
     )
     if c2.button("Save to project", type="primary", key="cfg_save"):
         if out.exists() and not overwrite:
-            st.error(f"{out.relative_to(root)} exists. Tick overwrite to replace it.")
+            st.error(f"{out.relative_to(root).as_posix()} exists. Tick overwrite to replace it.")
         else:
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(text, encoding="utf-8")
-            st.session_state["config_path"] = str(out.relative_to(root))
-            st.success(f"Saved `{out.relative_to(root)}`. Next: Convert + QA.")
+            st.session_state["config_path"] = out.relative_to(root).as_posix()
+            st.success(f"Saved `{out.relative_to(root).as_posix()}`. Next: Convert + QA.")
 
 
 def _dataset_configs(root: Path) -> list[str]:
@@ -304,7 +304,7 @@ def _dataset_configs(root: Path) -> list[str]:
             load_config(p)
         except ConfigError:
             continue
-        out.append(str(p.relative_to(root)))
+        out.append(p.relative_to(root).as_posix())
     return out
 
 
@@ -368,12 +368,16 @@ def page_convert() -> None:
                     qa_json = Path(r["report"]).with_name(
                         Path(r["report"]).name.replace("_qa.html", "_qa.json")
                     )
-                    data = json.loads(qa_json.read_text())
+                    data = json.loads(qa_json.read_text(encoding="utf-8"))
                     st.dataframe(
                         pd.DataFrame(data["checks"])[["id", "level", "message"]], hide_index=True
                     )
                     if st.toggle("Show full report", key=f"full_{r['subject']}"):
-                        components.html(Path(r["report"]).read_text(), height=900, scrolling=True)
+                        components.html(
+                            Path(r["report"]).read_text(encoding="utf-8"),
+                            height=900,
+                            scrolling=True,
+                        )
     summary = root / "derivatives" / "eegunify-qa" / "summary.tsv"
     if summary.exists():
         st.subheader("Dataset QA summary")

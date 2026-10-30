@@ -48,15 +48,17 @@ def converted(data_cache: Path, tmp_path_factory: pytest.TempPathFactory) -> Pat
 
 def _normalized(root: Path) -> dict[str, str]:
     eeg_dir = root / "rawdata" / "sub-015" / "ses-N170" / "eeg"
-    sidecar = json.loads((eeg_dir / f"{BASE}_eeg.json").read_text())
+    sidecar = json.loads((eeg_dir / f"{BASE}_eeg.json").read_text(encoding="utf-8"))
     for key in VOLATILE_EEG_JSON:
         sidecar["eegunify"].pop(key, None)
     qa = json.loads(
-        (root / "derivatives" / "eegunify-qa" / "sub-015" / f"{BASE}_qa.json").read_text()
+        (root / "derivatives" / "eegunify-qa" / "sub-015" / f"{BASE}_qa.json").read_text(
+            encoding="utf-8"
+        )
     )
     events = pd.read_csv(eeg_dir / f"{BASE}_events.tsv", sep="\t")
     return {
-        "channels.tsv": (eeg_dir / f"{BASE}_channels.tsv").read_text(),
+        "channels.tsv": (eeg_dir / f"{BASE}_channels.tsv").read_text(encoding="utf-8"),
         "events_head.tsv": events.head(50).to_csv(sep="\t", index=False),
         "event_counts.json": json.dumps(
             events["trial_type"].value_counts().sort_index().to_dict(), indent=1
@@ -76,10 +78,10 @@ def test_matches_golden(converted: Path, request: pytest.FixtureRequest) -> None
         shutil.rmtree(GOLDEN, ignore_errors=True)
         GOLDEN.mkdir(parents=True)
         for name, text in current.items():
-            (GOLDEN / name).write_text(text)
+            (GOLDEN / name).write_text(text, encoding="utf-8")
         pytest.skip("golden files updated")
     for name, text in current.items():
-        assert text == (GOLDEN / name).read_text(), f"{name} differs from golden"
+        assert text == (GOLDEN / name).read_text(encoding="utf-8"), f"{name} differs from golden"
 
 
 def test_events_match_erpcore_authors(converted: Path, data_cache: Path) -> None:

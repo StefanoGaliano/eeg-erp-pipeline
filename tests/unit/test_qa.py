@@ -142,8 +142,8 @@ def test_report_and_summary(rec_cfg, tmp_path: Path) -> None:  # type: ignore[no
     rec, cfg = rec_cfg(expected_counts={"stimulus/face": 80})
     result = run_checks(rec, cfg)
     html = write_report(rec, result, tmp_path / "sub-01", "sub-01_task-x")
-    assert html.exists() and "EVENTS_EXPECTED_COUNT" in html.read_text()
-    data = json.loads((tmp_path / "sub-01" / "sub-01_task-x_qa.json").read_text())
+    assert html.exists() and "EVENTS_EXPECTED_COUNT" in html.read_text(encoding="utf-8")
+    data = json.loads((tmp_path / "sub-01" / "sub-01_task-x_qa.json").read_text(encoding="utf-8"))
     assert data["status"] == "FAIL"
     assert {c["id"] for c in data["checks"]} >= {"UNITS_RANGE", "LINE_NOISE"}
     assert data["event_counts"] == {"stimulus/face": 50, "stimulus/car": 50}

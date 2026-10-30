@@ -136,7 +136,7 @@ def test_convert_with_behavior(
     assert res.error is None, res.error
     events = pd.read_csv(res.output.with_name("sub-01_task-faces_events.tsv"), sep="\t")  # type: ignore[union-attr]
     assert {"beh_stim_file", "beh_rt"} <= set(events.columns)
-    qa = json.loads(res.qa_report.with_suffix(".json").read_text())  # type: ignore[union-attr]
+    qa = json.loads(res.qa_report.with_suffix(".json").read_text(encoding="utf-8"))  # type: ignore[union-attr]
     check = next(c for c in qa["checks"] if c["id"] == "BEHAVIOR_ALIGNMENT")
     assert check["level"] == level
     if drop is not None:

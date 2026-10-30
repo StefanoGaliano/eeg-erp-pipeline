@@ -109,15 +109,18 @@ def test_convert_to_bids(
     assert set(channels.loc[channels["type"] == "EEG", "units"]) == {"µV"}
     assert "original_name" in channels.columns
 
-    sidecar = json.loads(bp.copy().update(suffix="eeg", extension=".json").fpath.read_text())
+    sidecar = json.loads(
+        bp.copy().update(suffix="eeg", extension=".json").fpath.read_text(encoding="utf-8")
+    )
     assert sidecar["EEGReference"] == "Cz"
     assert sidecar["eegunify"]["source_format"] == fmt
-    vhdr = bp.copy().update(suffix="eeg", extension=".vhdr").fpath.read_text()
+    vhdr = bp.copy().update(suffix="eeg", extension=".vhdr").fpath.read_text(encoding="utf-8")
     assert "IEEE_FLOAT_32" in vhdr
 
     prov = next((root / "derivatives" / "eegunify-qa").rglob("*_provenance.json"))
     assert (
-        json.loads(prov.read_text())["source_files"][0]["sha256"] == before[sorted(before)[0]]
+        json.loads(prov.read_text(encoding="utf-8"))["source_files"][0]["sha256"]
+        == before[sorted(before)[0]]
         or True
     )
 
@@ -224,9 +227,9 @@ def test_two_tasks_same_subject(synthetic_files: dict[str, Path], make_project) 
 
     root, cfg_path = make_project(synthetic_files["brainvision"], "brainvision")
     assert convert(cfg_path, project_root=root)[0].error is None
-    cfg = yaml.safe_load(cfg_path.read_text())
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
     cfg["dataset"]["task"] = "cars"
-    cfg_path.write_text(yaml.safe_dump(cfg))
+    cfg_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
     [res] = convert(cfg_path, project_root=root)
     assert res.error is None, res.error
     eeg_dir = root / "rawdata" / "sub-01" / "eeg"
@@ -255,7 +258,7 @@ def test_sidecar_metadata(synthetic_files: dict[str, Path], make_project) -> Non
     root, cfg_path = make_project(synthetic_files["bdf"], "bdf")
     [res] = convert(cfg_path, project_root=root)
     assert res.error is None
-    sidecar = json.loads(res.output.with_suffix(".json").read_text())  # type: ignore[union-attr]
+    sidecar = json.loads(res.output.with_suffix(".json").read_text(encoding="utf-8"))  # type: ignore[union-attr]
     assert sidecar["Manufacturer"] == "BioSemi"
 
 
@@ -267,7 +270,8 @@ def test_bids_source_sidecar_inherited(tmp_path: Path, truth: Truth) -> None:
     (tmp_path / "sub-01_task-x_eeg.json").write_text(
         json.dumps(
             {"Manufacturer": "Biosemi", "PowerLineFrequency": 60, "TaskDescription": "faces"}
-        )
+        ),
+        encoding="utf-8",
     )
     rec, _ = read_recording(src, default_config(src))
     assert rec.sidecar["Manufacturer"] == "Biosemi"

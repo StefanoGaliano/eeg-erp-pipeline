@@ -44,9 +44,11 @@ def make_project(tmp_path: Path):  # type: ignore[no-untyped-def]
         # BrainVision headers reference their companions by name: rewrite them.
         vhdr = source_dir / "sub-01_task-faces.vhdr"
         if vhdr.exists():
-            vhdr.write_text(vhdr.read_text().replace(src.stem, "sub-01_task-faces"))
+            text = vhdr.read_text(encoding="utf-8").replace(src.stem, "sub-01_task-faces")
+            vhdr.write_text(text, encoding="utf-8")
             vmrk = source_dir / "sub-01_task-faces.vmrk"
-            vmrk.write_text(vmrk.read_text().replace(src.stem, "sub-01_task-faces"))
+            text = vmrk.read_text(encoding="utf-8").replace(src.stem, "sub-01_task-faces")
+            vmrk.write_text(text, encoding="utf-8")
         cfg = {
             "dataset": {
                 "name": "Synthetic",
@@ -63,7 +65,7 @@ def make_project(tmp_path: Path):  # type: ignore[no-untyped-def]
             cfg.setdefault(key, {}).update(val)
         path = tmp_path / "code" / "configs" / "synth.yaml"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(yaml.safe_dump(cfg))
+        path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
         return tmp_path, path
 
     return _make

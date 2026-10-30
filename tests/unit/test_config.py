@@ -70,9 +70,9 @@ def test_load_config_errors(tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="not found"):
         load_config(tmp_path / "missing.yaml")
     p = tmp_path / "bad.yaml"
-    p.write_text("dataset: [unclosed")
+    p.write_text("dataset: [unclosed", encoding="utf-8")
     with pytest.raises(ConfigError, match="not valid YAML"):
         load_config(p)
-    p.write_text("- a list")
+    p.write_text("- a list", encoding="utf-8")
     with pytest.raises(ConfigError, match="mapping"):
         load_config(p)

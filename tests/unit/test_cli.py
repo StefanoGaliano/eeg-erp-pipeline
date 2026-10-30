@@ -15,7 +15,7 @@ def test_inspect(synthetic_files: dict[str, Path]) -> None:
 
 def test_inspect_unknown_format(tmp_path: Path) -> None:
     p = tmp_path / "x.xyz"
-    p.write_text("hi")
+    p.write_text("hi", encoding="utf-8")
     assert runner.invoke(app, ["inspect", str(p)]).exit_code == 2
 
 
@@ -25,7 +25,7 @@ def test_config_validate_and_schema(
     _, cfg = make_project(synthetic_files["edf"], "edf")
     assert runner.invoke(app, ["config", "validate", str(cfg)]).exit_code == 0
     bad = tmp_path / "bad.yaml"
-    bad.write_text("dataset: {name: x}\n")
+    bad.write_text("dataset: {name: x}\n", encoding="utf-8")
     res = runner.invoke(app, ["config", "validate", str(bad)])
     assert res.exit_code == 2 and "dataset.source_root" in res.output
     res = runner.invoke(app, ["config", "schema"])

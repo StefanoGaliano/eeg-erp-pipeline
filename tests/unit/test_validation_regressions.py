@@ -87,7 +87,7 @@ def test_events_from_bids_sidecar(tmp_path: Path, truth: Truth) -> None:
     rows = ["onset\tduration\tvalue\ttrial_type"] + [
         f"{s / sfreq:.6f}\tn/a\t{c}\tstim" for s, c in zip(truth.samples, truth.codes, strict=True)
     ]
-    (tmp_path / "sub-01_task-x_events.tsv").write_text("\n".join(rows) + "\n")
+    (tmp_path / "sub-01_task-x_events.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
     rec, _ = read_recording(out)
     assert rec.events.method == "bids_events:sub-01_task-x_events.tsv"
     np.testing.assert_array_equal(rec.events.table["sample"], truth.samples)
@@ -112,3 +112,24 @@ def test_neuroscan_width_ambiguity(monkeypatch: pytest.MonkeyPatch, truth: Truth
     monkeypatch.setattr(neuroscan, "_read", fake(1.0, 1.0))
     with pytest.raises(ValueError, match="neuroscan_data_format"):
         neuroscan._disambiguate(Path("x.cnt"))
+
+
+def test_all_text_io_declares_encoding() -> None:
+    """Windows defaults to cp1252: every read_text/write_text must say utf-8 (CI on Windows
+    failed on the µ in QA reports)."""
+    import ast
+
+    root = Path(__file__).parents[2]
+    offenders = []
+    for py in [*(root / "src").rglob("*.py"), *(root / "tests").rglob("*.py")]:
+        tree = ast.parse(py.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr in ("read_text", "write_text")
+                and not any(k.arg == "encoding" for k in node.keywords)
+                and len(node.args) < (2 if node.func.attr == "write_text" else 1)
+            ):
+                offenders.append(f"{py.relative_to(root)}:{node.lineno}")
+    assert not offenders, offenders
