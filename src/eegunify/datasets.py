@@ -57,7 +57,13 @@ def _retry(fn: Callable[[], T], what: str, attempts: int = 5) -> T:
         try:
             return fn()
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
-            if i == attempts - 1:
+            # 4xx (except 429 rate limiting) is permanent: retrying a dead link only wastes time.
+            permanent = (
+                isinstance(err, urllib.error.HTTPError)
+                and 400 <= err.code < 500
+                and err.code != 429
+            )
+            if permanent or i == attempts - 1:
                 raise
             wait = 2**i
             log.warning("%s failed (%s); retrying in %ss", what, err, wait)
