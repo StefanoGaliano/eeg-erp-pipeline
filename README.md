@@ -22,11 +22,25 @@ eegunify version
 pytest
 ```
 
+## Usage
+
+```bash
+eegunify inspect sourcedata/study/sub-01/eeg/sub-01_task-faces_eeg.bdf   # what does the file contain?
+eegunify config init <that file> --out code/configs/study.yaml            # draft a config
+eegunify convert code/configs/study.yaml                                  # BIDS + QA reports
+eegunify app                                                              # the same, interactively
+```
+
+The app (`pip install -e ".[app]"`) has three steps: **Inspect** a recording, **Configure** the
+dataset (event codes → conditions, bad channels, reference, units, positions; validated as you
+type), and **Convert + QA**. It is a front end over the library: every choice is a config key, and
+the saved YAML reproduces the run exactly from the command line.
+
 ## Repository layout
 
 | Folder | Contents |
 |---|---|
-| `src/eegunify/` | Python package |
+| `src/eegunify/` | Python package (`app/` = Streamlit front end) |
 | `tests/` | unit, synthetic round-trip and real-data tests |
 | `code/configs/` | per-dataset YAML configs |
 | `matlab/` | MATLAB implementation (planned) |

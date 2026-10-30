@@ -166,6 +166,35 @@ def qa(
     _run(config, subject, root, write_bids=False)
 
 
+@app.command(name="app")
+def run_app(
+    root: Annotated[Path, typer.Option(help="Project root shown in the app.")] = Path("."),
+    port: Annotated[int, typer.Option(help="Port to serve on.")] = 8501,
+) -> None:
+    """Open the interactive app (needs the `app` extra: pip install eegunify[app])."""
+    import importlib.util
+    import subprocess
+    import sys
+
+    if importlib.util.find_spec("streamlit") is None:
+        console.print("[red]Streamlit is not installed: pip install 'eegunify[app]'")
+        raise typer.Exit(EXIT_USAGE)
+    script = Path(__file__).parent / "app" / "main.py"
+    cmd = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(script),
+        "--server.port",
+        str(port),
+        "--",
+        "--root",
+        str(root.resolve()),
+    ]
+    raise typer.Exit(subprocess.call(cmd))
+
+
 @config_app.command("validate")
 def config_validate(
     config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],
@@ -179,6 +208,33 @@ def config_validate(
         console.print(f"[red]{err}")
         raise typer.Exit(EXIT_USAGE) from err
     console.print(f"[green]valid[/]: {cfg.dataset.name} ({len(cfg.recordings.subjects)} subjects)")
+
+
+@config_app.command("init")
+def config_init(
+    path: Annotated[Path, typer.Argument(exists=True, help="One example recording.")],
+    out: Annotated[Path | None, typer.Option(help="Write the YAML here (default: stdout).")] = None,
+    root: Annotated[Path, typer.Option(help="Project root.")] = Path("."),
+) -> None:
+    """Draft a config from one recording: paths, subject pattern, event codes, reference."""
+    from eegunify.config.draft import draft_config, to_yaml
+    from eegunify.pipeline import read_recording
+
+    try:
+        rec, _ = read_recording(path)
+    except Exception as err:
+        console.print(f"[red]could not read {path}: {type(err).__name__}: {err}")
+        raise typer.Exit(EXIT_READER) from err
+    text = to_yaml(draft_config(rec, path, root))
+    if out:
+        if out.exists():
+            console.print(f"[red]{out} exists; not overwriting")
+            raise typer.Exit(EXIT_USAGE)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        console.print(f"wrote {out}: edit events.mapping, then `eegunify config validate {out}`")
+    else:
+        typer.echo(text)
 
 
 @config_app.command("schema")

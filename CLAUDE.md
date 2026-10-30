@@ -19,7 +19,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Lint/format/types: `ruff check . && ruff format --check . && mypy` (mypy is strict; config in pyproject)
 - Try on a file: `eegunify inspect <file>`; convert a dataset: `eegunify convert <config.yaml> [-s 001] [--overwrite] [--root .]`
 - QA only, no BIDS write: `eegunify qa <config.yaml>`; skip QA on convert with `--no-qa`
-- `eegunify config validate <yaml>`, `eegunify config schema`
+- `eegunify config init <file> --out code/configs/x.yaml` (draft), `eegunify config validate <yaml>`, `eegunify config schema`
+- App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
 ## Architecture (data flow)
 
@@ -49,6 +50,12 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 overrides). A failing subject is reported in its `ConvertResult` and doesn't stop the others. The CLI
 (`cli.py`) imports heavy modules lazily and maps outcomes to exit codes: 0 ok, 1 recording failed,
 2 config/usage, 3 reader error. A QA FAIL also exits with 1.
+
+App (`app/main.py`, Phase A): three pages selected by a sidebar radio (a radio, not `st.navigation`,
+so `AppTest` can drive it). Pages hold no logic: drafting is in `config/draft.py` (shared with
+`config init`), validation in `config/loader.parse_config`, and running in `pipeline.convert`. To move
+between pages, set `session_state["nav"]`; `main()` applies it before the radio is drawn, because a
+widget's value can't change after it renders.
 
 Tests: `tests/synthetic/generate.py` writes a signal with known content in each format (`Truth` holds
 exact samples, codes and µV data). Round-trip tests compare against it. The `make_project` fixture in
@@ -82,5 +89,8 @@ exact samples, codes and µV data). Round-trip tests compare against it. The `ma
 - MNE-BIDS writes one `electrodes.tsv` per subject unless `electrodes_tsv_task=True`, and several tasks per
   subject then collide. `montage.source: none` must also drop embedded positions: positions without
   fiducials can't be written.
+- Paths inside a project: use `os.path.abspath`, not `Path.resolve()`, and walk with `os.walk(followlinks=True)`.
+  Datasets are often symlinked into `sourcedata/`, and resolving them moves them outside the project root.
+- `AppTest` runs the script outside coverage's view, so `app/main.py` is omitted from coverage (see pyproject).
 - Pre-commit pins ruff/mypy. Keep their `rev:` in sync with the versions in `uv.lock`, or the hooks and CI
   will disagree.
