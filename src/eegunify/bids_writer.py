@@ -50,6 +50,8 @@ def _patch_events(path: Path, rec: Recording) -> None:
         )
     df["value"] = [str(v) for v in table["value"]]
     df["trial_type"] = table["trial_type"].astype(str).to_numpy()
+    for col in (c for c in table.columns if c.startswith("beh_")):
+        df[col] = ["n/a" if pd.isna(v) else str(v) for v in table[col]]
     # MNE-BIDS also writes annotation extras as columns; ``code`` is already in ``value``.
     df = df.drop(columns=[c for c in ("code",) if c in df.columns])
     df.to_csv(path, sep="\t", index=False, na_rep="n/a")

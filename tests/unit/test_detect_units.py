@@ -24,7 +24,7 @@ def test_detect_by_extension(name: str, fmt: str) -> None:
     assert detect_format(name) == fmt
 
 
-@pytest.mark.parametrize("name", ["a.eeg", "a.vmrk", "a.fdt", "a.edf.gz", "a.txt"])
+@pytest.mark.parametrize("name", ["a.eeg", "a.vmrk", "a.fdt", "a.edf.gz", "a.xyz"])
 def test_detect_rejects(name: str) -> None:
     with pytest.raises(UnknownFormatError):
         detect_format(name)

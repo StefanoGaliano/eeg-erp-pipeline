@@ -152,7 +152,15 @@ def read_recording(
         bdf_status_mask=result.status_mask,
         annotation_status_mask=cfg.format.hints.bdf_status_mask,
         source_path=path,
+        preferred_source=result.event_source,
+        extra_ignore_codes=result.ignore_codes,
     )
+    behavior = None
+    if cfg.behavior.source != "none":
+        from eegunify.events.behavior import attach_behavior
+
+        source_dir = project_root / cfg.dataset.source_root
+        events.table, behavior = attach_behavior(events.table, cfg.behavior, source_dir, subject)
 
     bads = cfg.bads_for(subject)
     unknown = [b for b in bads if b not in raw.ch_names]
@@ -208,6 +216,7 @@ def read_recording(
         | {"unit_correction_factor": unit_factor},
         notes=result.notes,
         sidecar=sidecar,
+        behavior=behavior,
     )
     warnings = validate(
         rec,

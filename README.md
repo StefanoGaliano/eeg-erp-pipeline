@@ -45,6 +45,7 @@ the saved YAML reproduces the run exactly from the command line.
 | Folder | Contents |
 |---|---|
 | `src/eegunify/` | Python package (`app/` = Streamlit front end) |
+| `docs/formats.md` | supported formats and how each is tested |
 | `tests/` | unit, synthetic round-trip and real-data tests |
 | `code/configs/` | per-dataset YAML configs |
 | `matlab/` | MATLAB implementation (planned) |

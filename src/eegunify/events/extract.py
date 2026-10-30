@@ -22,7 +22,18 @@ from eegunify.events.mapping import EventMapper, UnmappedEventError, parse_code
 log = logging.getLogger(__name__)
 
 #: Annotation descriptions that are recording housekeeping, not experimental events.
-_HOUSEKEEPING = {"new segment/", "boundary", "edf annotations", "bad", "bad_acq_skip"}
+_HOUSEKEEPING = {
+    "new segment/",
+    "boundary",
+    "edf annotations",
+    "bad",
+    "bad_acq_skip",
+    # Impedance checks written by the recording software (ANT eego: "impedance"; its
+    # BrainVision export: "Marker/Impedance"; Brain Products: "Impedance/").
+    "impedance",
+    "marker/impedance",
+    "impedance/",
+}
 
 
 @dataclass
@@ -139,6 +150,8 @@ def extract_events(
     bdf_status_mask: int | None = None,
     annotation_status_mask: int = 0xFF,
     source_path: Path | None = None,
+    preferred_source: str | None = None,
+    extra_ignore_codes: frozenset[int] = frozenset(),
 ) -> EventResult:
     """Extract and map events, then rewrite ``raw.annotations`` and drop stim channels.
 
@@ -154,15 +167,19 @@ def extract_events(
         Bit mask for ``STATUS/<n>`` markers (BioSemi Status values stored as annotations).
     source_path
         The recording file, used to find a sibling BIDS ``*_events.tsv``.
+    preferred_source
+        Reader's choice for ``auto`` (e.g. ``annotations`` for EGI).
+    extra_ignore_codes
+        Reader's housekeeping codes (e.g. Curry's 50000), ignored like ``events.ignore_codes``.
 
     With ``events.source: auto`` the stim channel is used if there is one, unless it yields no
     events while the file has markers: a Status channel stored as a scaled voltage (BDF
     converted to BrainVision, seen in ds001810) decodes to nothing.
     """
     stim = _stim_channels(raw)
-    source = cfg.source
+    source: str = cfg.source
     if source == "auto":
-        source = "stim_channel" if stim else "annotations"
+        source = preferred_source or ("stim_channel" if stim else "annotations")
     if source == "stim_channel":
         ch = cfg.stim_channel or (stim[0] if stim else None)
         if ch is None or ch not in raw.ch_names:
@@ -198,7 +215,7 @@ def extract_events(
             log.warning("no events in the recording; using %s (%d events)", tsv.name, len(table))
 
     mapper = EventMapper.from_config(cfg.mapping)
-    ignore = set(cfg.ignore_codes)
+    ignore = set(cfg.ignore_codes) | set(extra_ignore_codes)
     keep, trial_types, unmapped = [], [], []
     for value in table["value"]:
         if isinstance(value, (int, np.integer)) and int(value) in ignore:

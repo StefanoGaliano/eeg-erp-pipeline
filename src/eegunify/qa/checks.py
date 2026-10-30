@@ -16,6 +16,7 @@ EVENTS_NONE               recording has no events
 EVENTS_UNMAPPED           event codes without a mapping
 EVENTS_EXPECTED_COUNT     per-condition counts vs ``events.expected_counts``
 LINE_NOISE                detected power-line frequency (informational)
+BEHAVIOR_ALIGNMENT        behavioural log matched to EEG events (if configured)
 ========================  ======================================================
 """
 
@@ -219,6 +220,29 @@ def _event_checks(rec: Recording, cfg: Config) -> list[QACheck]:
     return out
 
 
+def _behavior_check(rec: Recording, cfg: Config) -> QACheck:
+    b = rec.behavior
+    assert b is not None
+    value = {
+        "matched": b.matched,
+        "eeg": b.n_eeg,
+        "log": b.n_beh,
+        "method": b.method,
+        "max_residual_ms": b.max_residual_ms,
+        "drift_ppm": b.drift_ppm,
+    }
+    limit = cfg.behavior.max_drift_ms
+    msg = f"{b.matched}/{b.n_eeg} EEG events matched to {b.n_beh} log rows ({b.method})"
+    if b.max_residual_ms is not None:
+        msg += f", max residual {b.max_residual_ms:.1f} ms"
+    if b.n_eeg == 0 or b.matched / max(b.n_eeg, 1) < 0.9:
+        return QACheck("BEHAVIOR_ALIGNMENT", "fail", msg, value, limit)
+    if b.unmatched_eeg or b.unmatched_beh:
+        msg += f"; unmatched: {b.unmatched_eeg} EEG, {b.unmatched_beh} log"
+        return QACheck("BEHAVIOR_ALIGNMENT", "warn", msg, value, limit)
+    return QACheck("BEHAVIOR_ALIGNMENT", "pass", msg, value, limit)
+
+
 def run_checks(rec: Recording, cfg: Config) -> QAResult:
     """Run every QA check on a canonical recording."""
     raw = rec.raw
@@ -265,6 +289,8 @@ def run_checks(rec: Recording, cfg: Config) -> QAResult:
         )
     )
     checks.extend(_event_checks(rec, cfg))
+    if rec.behavior is not None:
+        checks.append(_behavior_check(rec, cfg))
     line = detect_line_freq(raw)
     checks.append(
         QACheck(

@@ -258,10 +258,57 @@ def write_xdf_recording(
     return write_xdf(path.with_suffix(".xdf"), streams)
 
 
+def write_csv(path: Path, truth: Truth) -> Path:
+    """Generic CSV: a time column, one column per channel (µV), and a marker column."""
+    n = truth.data_uV.shape[1]
+    marker = np.zeros(n, dtype=int)
+    marker[truth.samples] = truth.codes
+    names = list(truth.eeg + truth.eog)
+    header = ",".join(["time", *names, "marker"])
+    cols = [np.arange(n) / SFREQ, *truth.data_uV, marker]
+    out = path.with_suffix(".csv")
+    with out.open("w") as fh:
+        fh.write(header + "\n")
+        np.savetxt(
+            fh, np.column_stack(cols), delimiter=",", fmt=["%.9f"] + ["%.6f"] * len(names) + ["%d"]
+        )
+    return out
+
+
+def write_openbci(path: Path, truth: Truth, n_channels: int = 8) -> Path:
+    """OpenBCI GUI v5 raw export: % header lines, EXG Channel N columns (µV), extras."""
+    n = truth.data_uV.shape[1]
+    header = [
+        "%OpenBCI Raw EXG Data",
+        f"%Number of channels = {n_channels}",
+        f"%Sample Rate = {SFREQ:g} Hz",
+        "%Board = OpenBCI_GUI$BoardCytonSerial",
+    ]
+    cols = (
+        ["Sample Index"]
+        + [f" EXG Channel {i}" for i in range(n_channels)]
+        + [" Accel Channel 0", " Accel Channel 1", " Accel Channel 2", " Timestamp"]
+    )
+    data = np.column_stack(
+        [
+            np.arange(n) % 256,
+            *truth.data_uV[:n_channels],
+            np.zeros((n, 3)),
+            1.7e9 + np.arange(n) / SFREQ,
+        ]
+    )
+    out = path.with_suffix(".txt")
+    with out.open("w") as fh:
+        fh.write("\n".join(header) + "\n" + ",".join(cols) + "\n")
+        np.savetxt(fh, data, delimiter=", ", fmt="%.6f")
+    return out
+
+
 WRITERS = {
     "brainvision": write_brainvision,
     "edf": write_edf,
     "eeglab": write_eeglab,
     "bdf": write_bdf,
     "xdf": write_xdf_recording,
+    "csv": write_csv,
 }

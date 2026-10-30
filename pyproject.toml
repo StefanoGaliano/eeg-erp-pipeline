@@ -31,6 +31,9 @@ dependencies = [
     "edfio>=0.4",
     "eeglabio>=0.0.3",
     "pyxdf>=1.16",
+    "antio>=0.4",
+    "curryreader>=0.1",
+    "mffpy>=0.9",
     "defusedxml>=0.7",
     "matplotlib>=3.8",
 ]
@@ -75,7 +78,7 @@ python_version = "3.12"  # numpy stubs use 3.12 syntax; runtime still supports 3
 files = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "pooch.*", "scipy.*"]
+module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -21,6 +21,7 @@ import json
 import logging
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from collections.abc import Callable, Iterable
@@ -370,3 +371,60 @@ def fetch_openneuro(
         tmp.replace(target)
         manifest.record(root, rel, f"openneuro:{dataset}@{tag}")
     return tag, subject, out
+
+
+#: mne-testing-data pinned to one commit, so real-file tests always see the same bytes.
+MNE_TESTING_COMMIT = "33ef2a6f6345a1adf8764f8f63725f0ed9e4bb92"
+_MNE_RAW = "https://raw.githubusercontent.com/mne-tools/mne-testing-data/{commit}/{path}"
+_MNE_TREE = "https://api.github.com/repos/mne-tools/mne-testing-data/contents/{path}?ref={commit}"
+
+
+def _mne_dir_files(path: str) -> list[str]:
+    """Files under a directory of mne-testing-data (for EGI ``.mff`` folders)."""
+
+    def get(p: str) -> list[dict[str, Any]]:
+        req = urllib.request.Request(
+            _MNE_TREE.format(path=urllib.parse.quote(p), commit=MNE_TESTING_COMMIT),
+            headers={"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json"},
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data: list[dict[str, Any]] = json.load(resp)
+            return data
+
+    out: list[str] = []
+    for item in _retry(lambda: get(path), f"list {path}"):
+        if item["type"] == "dir":
+            out.extend(_mne_dir_files(item["path"]))
+        else:
+            out.append(item["path"])
+    return out
+
+
+def fetch_mne_testing(paths: Iterable[str], dest: Path) -> list[Path]:
+    """Download individual files (or ``.mff`` folders) from mne-testing-data.
+
+    ``paths`` are repository paths such as ``"GDF/test_gdf_2.20.gdf"``; a path ending in
+    ``.mff`` fetches the whole folder. Returns the local paths in the same order.
+    """
+    dest.mkdir(parents=True, exist_ok=True)
+    manifest = Manifest.load(dest)
+    out = []
+    for path in paths:
+        files = _mne_dir_files(path) if path.endswith(".mff") else [path]
+        for rel in files:
+            if manifest.is_current(dest, rel):
+                continue
+            target = dest / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            url = _MNE_RAW.format(commit=MNE_TESTING_COMMIT, path=urllib.parse.quote(rel))
+
+            def download(url: str = url, target: Path = target) -> None:
+                req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    target.write_bytes(resp.read())
+
+            log.info("fetching mne-testing-data/%s", rel)
+            _retry(download, rel)
+            manifest.record(dest, rel, f"mne-testing-data@{MNE_TESTING_COMMIT[:12]}")
+        out.append(dest / path)
+    return out

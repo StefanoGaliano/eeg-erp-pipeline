@@ -71,12 +71,43 @@ class RecordingsSection(_Strict):
         return v
 
 
+class CsvHints(_Strict):
+    """How to read a delimited text recording (OpenBCI GUI exports, generic CSV).
+
+    Everything is optional: OpenBCI files declare their sampling rate in a ``%Sample Rate``
+    header line and name channels ``EXG Channel N``; generic files are recognised by a time
+    column (``time``/``timestamp``) and a marker column (``marker``/``trigger``/``event``).
+    """
+
+    sfreq: float | None = Field(default=None, gt=0)
+    channel_columns: list[str] | None = None
+    """Columns holding EEG/EOG data (default: OpenBCI ``EXG Channel N`` columns, else every
+    numeric column except time, marker and sample-index columns)."""
+    channel_names: list[str] | None = None
+    """Names for those columns, in order (e.g. the 10-20 position of each OpenBCI pin)."""
+    unit: Literal["V", "mV", "uV"] = "uV"
+    delimiter: str | None = None
+    comment: str = "%"
+    time_column: str | None = None
+    marker_column: str | None = None
+
+    @model_validator(mode="after")
+    def _names_match(self) -> CsvHints:
+        if (
+            self.channel_names
+            and self.channel_columns
+            and len(self.channel_names) != len(self.channel_columns)
+        ):
+            raise ValueError("csv.channel_names and csv.channel_columns differ in length")
+        return self
+
+
 class FormatHints(_Strict):
     neuroscan_data_format: Literal["auto", "int16", "int32"] = "auto"
     bdf_status_mask: int = 0xFF
     xdf_eeg_stream: dict[str, str] = Field(default_factory=lambda: {"type": "EEG"})
     xdf_marker_stream: dict[str, str] = Field(default_factory=lambda: {"type": "Markers"})
-    csv: dict[str, Any] | None = None
+    csv: CsvHints = Field(default_factory=CsvHints)
 
 
 class FormatSection(_Strict):
@@ -168,12 +199,30 @@ class EventsSection(_Strict):
         return v
 
 
+class AlignOn(_Strict):
+    eeg_trial_types: list[str] = Field(default_factory=lambda: ["*"])
+    """Glob patterns of EEG trial types that correspond to log rows (e.g. ``stimulus/*``)."""
+    beh_filter: str | None = None
+    """pandas ``query`` selecting the log rows to align (e.g. ``"block != 'practice'"``)."""
+    beh_time_column: str | None = None
+    """Stimulus time in the log, in seconds (auto: PsychoPy ``*.started``, Presentation
+    ``Time``). Without one, rows are paired in order and the counts must match."""
+
+
 class BehaviorSection(_Strict):
     source: Literal["psychopy", "presentation", "eprime", "none"] = "none"
     file: str | None = None
-    align_on: dict[str, Any] = Field(default_factory=dict)
+    """Path relative to ``dataset.source_root``; may contain ``{subject}`` and glob ``*``."""
+    align_on: AlignOn = Field(default_factory=AlignOn)
     columns: list[str] = Field(default_factory=list)
-    max_drift_ms: float = 20.0
+    """Log columns appended to ``events.tsv`` (as ``beh_<column>``)."""
+    max_drift_ms: float = Field(default=20.0, gt=0)
+
+    @model_validator(mode="after")
+    def _file_needed(self) -> BehaviorSection:
+        if self.source != "none" and not self.file:
+            raise ValueError("behavior.file is required when behavior.source is set")
+        return self
 
 
 class Config(_Strict):

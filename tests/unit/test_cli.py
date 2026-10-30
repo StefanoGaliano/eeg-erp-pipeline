@@ -14,7 +14,7 @@ def test_inspect(synthetic_files: dict[str, Path]) -> None:
 
 
 def test_inspect_unknown_format(tmp_path: Path) -> None:
-    p = tmp_path / "x.txt"
+    p = tmp_path / "x.xyz"
     p.write_text("hi")
     assert runner.invoke(app, ["inspect", str(p)]).exit_code == 2
 

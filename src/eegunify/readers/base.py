@@ -33,6 +33,11 @@ class ReadResult:
     status_mask: int | None = None
     """Bit mask for stim channel values (BioSemi Status)."""
     notes: list[str] = field(default_factory=list)
+    event_source: str | None = None
+    """Where ``events.source: auto`` should look first (``annotations`` for EGI, whose stim
+    channels hold one event type each)."""
+    ignore_codes: frozenset[int] = frozenset()
+    """Format-level housekeeping codes, added to ``events.ignore_codes``."""
 
 
 class Reader(Protocol):

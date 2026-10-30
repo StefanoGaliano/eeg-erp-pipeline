@@ -70,8 +70,14 @@ GraphQL, by snapshot tag. Every download is recorded with its sha256 in `eegunif
 already present with the recorded hash is not fetched again. `validation.py` runs each catalog entry
 end to end with an auto-drafted config, and every failure becomes a row in the summary, not a crash.
 
-Event sources (`events/extract.py`, `auto` mode): stim channel → if empty, file markers → if still
-empty, the source's BIDS `*_events.tsv`. `STATUS/<n>` markers are masked like BioSemi Status.
+Event sources (`events/extract.py`, `auto` mode): the reader's `ReadResult.event_source` if set (EGI →
+annotations), else stim channel → if empty, file markers → if still empty, the source's BIDS
+`*_events.tsv`. `STATUS/<n>` markers are masked like BioSemi Status. Readers can add housekeeping codes
+via `ReadResult.ignore_codes` (Curry 50000). Impedance-check markers are dropped as housekeeping.
+
+Behaviour (`events/behavior.py`): logs are aligned by time (offset by consensus of all pair differences,
+then nearest match + linear refit for drift) so a dropped trigger can't shift later trials; columns go
+into `events.tsv` as `beh_<col>`; QA `BEHAVIOR_ALIGNMENT`. The format support matrix is `docs/formats.md`.
 
 ## Rules
 
@@ -112,5 +118,12 @@ empty, the source's BIDS `*_events.tsv`. `STATUS/<n>` markers are masked like Bi
 - Unit rule 1 refuses a file only when it's > 10x outside the range *and* a 10^3/10^6 factor explains it.
 - XDF: `pyxdf.load_xdf(..., dejitter_timestamps=True)` (not `dejitter_timeseries`). The test writer in
   `tests/synthetic/xdf_writer.py` puts the marker stream on another clock (0.5 s) to exercise sync.
+- Tier-2 readers need `antio`, `curryreader`, `mffpy` (runtime deps). Real-file tests fetch single files from
+  mne-testing-data pinned at `datasets.MNE_TESTING_COMMIT`.
+- Neuroscan `.cnt` headers may say 0 samples: `readers/neuroscan._disambiguate` reads int16 and int32 and keeps
+  the plausible one (mne-testing `scan41_short.cnt`: 40 µV vs 2.6 V).
+- Cross-format tests (`tests/integration/test_formats.py`) are the strongest reader checks: ANT vs its
+  BrainVision export, Curry 7/8 vs the BDF original.
+- `.txt` maps to the CSV reader (OpenBCI GUI writes `OpenBCI-RAW-*.txt`).
 - Pre-commit pins ruff/mypy. Keep their `rev:` in sync with the versions in `uv.lock`, or the hooks and CI
   will disagree.

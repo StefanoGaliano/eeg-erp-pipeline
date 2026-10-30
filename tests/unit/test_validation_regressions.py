@@ -92,3 +92,23 @@ def test_events_from_bids_sidecar(tmp_path: Path, truth: Truth) -> None:
     assert rec.events.method == "bids_events:sub-01_task-x_events.tsv"
     np.testing.assert_array_equal(rec.events.table["sample"], truth.samples)
     assert rec.events.table["value"].astype(int).tolist() == truth.codes.tolist()
+
+
+def test_neuroscan_width_ambiguity(monkeypatch: pytest.MonkeyPatch, truth: Truth) -> None:
+    """Both widths parse; only the plausible one is chosen, or the user must decide."""
+    from eegunify.readers import neuroscan
+
+    def fake(scale16: float, scale32: float):  # type: ignore[no-untyped-def]
+        def _read(path: Path, data_format: str) -> mne.io.BaseRaw:
+            raw = to_raw(truth)
+            raw._data *= scale16 if data_format == "int16" else scale32
+            return raw
+
+        return _read
+
+    monkeypatch.setattr(neuroscan, "_read", fake(1.0, 6e4))
+    _, note = neuroscan._disambiguate(Path("x.cnt"))
+    assert "int16" in note
+    monkeypatch.setattr(neuroscan, "_read", fake(1.0, 1.0))
+    with pytest.raises(ValueError, match="neuroscan_data_format"):
+        neuroscan._disambiguate(Path("x.cnt"))

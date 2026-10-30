@@ -16,10 +16,17 @@ from eegunify.canonical import CanonicalError
 from eegunify.pipeline import convert, read_recording
 from tests.synthetic.generate import CODES, SFREQ, STATUS_HIGH_BITS, Truth
 
-FORMATS = ["brainvision", "edf", "eeglab", "bdf", "xdf"]
+FORMATS = ["brainvision", "edf", "eeglab", "bdf", "xdf", "csv"]
 # Max abs amplitude error in µV: float formats are exact to float32; EDF is 16-bit over the
 # exported physical range, BDF 24-bit over ±262 mV.
-TOLERANCE_UV = {"brainvision": 1e-3, "eeglab": 1e-3, "edf": 0.05, "bdf": 0.05, "xdf": 1e-3}
+TOLERANCE_UV = {
+    "brainvision": 1e-3,
+    "eeglab": 1e-3,
+    "edf": 0.05,
+    "bdf": 0.05,
+    "xdf": 1e-3,
+    "csv": 1e-3,
+}
 
 
 def _truth_for(fmt: str, truth: Truth, truth64: Truth) -> Truth:

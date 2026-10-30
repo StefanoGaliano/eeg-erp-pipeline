@@ -14,6 +14,7 @@ import mne
 import numpy as np
 
 from eegunify.channels.naming import is_standard
+from eegunify.events.behavior import AlignmentReport
 from eegunify.events.extract import EventResult
 from eegunify.units import UnitVerdict
 
@@ -37,6 +38,7 @@ class Recording:
     missing_positions: list[str]
     provenance: dict[str, Any] = field(default_factory=dict)
     sidecar: dict[str, Any] = field(default_factory=dict)
+    behavior: AlignmentReport | None = None
     """Values for ``_eeg.json`` that MNE-BIDS cannot know (hardware, task description, ...)."""
     notes: list[str] = field(default_factory=list)
 

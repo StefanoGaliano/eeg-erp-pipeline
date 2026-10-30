@@ -17,6 +17,8 @@ EXTENSIONS: dict[str, str] = {
     ".dap": "curry",
     ".mff": "egi",
     ".csv": "csv",
+    ".tsv": "csv",
+    ".txt": "csv",  # OpenBCI GUI writes OpenBCI-RAW-*.txt
 }
 
 
