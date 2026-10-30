@@ -116,7 +116,7 @@ def update_summary(
         "n_warn": sum(c.level == "warn" for c in result.checks),
         "failed_checks": ",".join(c.id for c in result.checks if c.level == "fail"),
         "warned_checks": ",".join(c.id for c in result.checks if c.level == "warn"),
-        "report": str(report.relative_to(summary.parent)),
+        "report": report.relative_to(summary.parent).as_posix(),
     }
     if summary.exists():
         df_old = pd.read_csv(summary, sep="\t", dtype=str, keep_default_na=False)
