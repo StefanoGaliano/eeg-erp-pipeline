@@ -516,3 +516,38 @@ The user decided that the same ingestion pipeline must also exist natively in MA
   - `channels.tsv` names and types must be identical
   - channel data must agree to within float32 tolerance (max abs diff < 1e-3 µV)
   - a `tests/integration/test_matlab_parity.py` test compares the two outputs and is skipped if MATLAB is not installed
+
+---
+
+## 23. Phase A: interactive app (decided 2026-10-30)
+
+The user wants an interactive front end where analysis choices (event mapping, bad channels,
+reference, and later the ERP components of interest) are made by clicking rather than writing
+YAML. **The app is a layer over the library, never a replacement:** every choice it offers is a
+config key, and it calls the same `eegunify` functions as the CLI, so app runs stay reproducible
+(the downloaded YAML reproduces them exactly with `eegunify convert`).
+
+- **Stack:** Streamlit (Python, same env), optional extra `eegunify[app]`, entry point
+  `eegunify app` (`streamlit run src/eegunify/app/main.py`). Runs **locally**: EEG files are
+  GB-sized, so free cloud hosting is only used for a demo on a small bundled synthetic recording.
+- **A1 (after M2):** pages that wrap Phase 1:
+  1. *Inspect*: choose a file under `sourcedata/` → output of `read_recording` (channels table,
+     types, units verdict, event codes with counts, canonical warnings).
+  2. *Configure*: editable table mapping event codes/ranges → `trial_type`; bad channels
+     multiselect (shown on a topomap); reference/ground; montage choice; live validation through
+     `parse_config` with errors shown next to the widget → download/save `code/configs/<name>.yaml`.
+  3. *Convert + QA*: run `convert` for chosen subjects; display the M2 QA report (PSD, event
+     raster, visual-ROI warnings).
+- **A2 (after Phase 4–5, ERP):** *Components* page: pick N170 / P1 / N1 / P3 / N2pc / VEP;
+  each preset fills ROI channels (`rois.py`), time window and measure (mean/peak amplitude,
+  latency); show condition ERPs and difference waves with the window shaded.
+- **Code layout:** `src/eegunify/app/` (pages only, no logic: anything non-trivial lives in the
+  library and is unit-tested there). App tests use `streamlit.testing.v1.AppTest` with synthetic data.
+- **Acceptance A1:** from a fresh synthetic recording, a user can produce a config through the UI
+  that `eegunify config validate` accepts and that converts identically to a hand-written one
+  (test asserts equal `events.tsv`/`channels.tsv`).
+
+| Milestone | Depends on | Acceptance |
+|---|---|---|
+| A1 Inspect / Configure / Convert app | M2 | AppTest suite green; UI-made config == hand-written config output |
+| A2 Components / ERP app | Phase 4–5 | ERP for ERP CORE N170 sub-001 matches published component windows |
