@@ -4,7 +4,7 @@ title: "eeg-erp-pipeline (eegunify): one canonical format for every raw EEG reco
 authors:
   - family-names: Galiano
     given-names: Stefano
-version: 0.1.0
+version: 0.2.0
 license: MIT
 repository-code: "https://github.com/StefanoGaliano/eeg-erp-pipeline"
 keywords: [EEG, ERP, BIDS, MNE-Python, neuroscience]
