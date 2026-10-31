@@ -39,3 +39,21 @@ bipolar VEOG = Fp2 - VEOG_lower and HEOG = HEOG_left - HEOG_right), test
 Indices differ across OS/BLAS, so the test asserts classes and counts only. ERP CORE's own
 pipeline removed blink and eye-movement components with ICA too; whether our set matches theirs
 shows up in the N170 comparison (M-E6a).
+
+## M-E3 epochs (2026-10-31)
+
+ERP CORE N170 sub-015, set `stim` (`stimulus/*`, -200 to 800 ms, baseline -200 to 0 ms), rejection
+with the blueprint defaults (ERPLAB semantics: moving-window peak-to-peak 100 µV, 200 ms window,
+100 ms step, on EEG; step function 32 µV on bipolar HEOG, 200 ms window, 50 ms step), test
+`tests/integration/test_erp_epochs.py`:
+
+| Check | Result |
+|---|---|
+| events logged | 320, 80 per stimulus trial type (= `events.expected_counts`), each with its rawdata code |
+| rejected | 13 (4 %): 8 by the HEOG step function, 5 by peak-to-peak |
+| kept | face 76, car 79, scrambled_face 76, scrambled_car 76 |
+| QA | `EPOCHS_REJECTED_FRACTION`, `EPOCHS_MIN_TRIALS`, `EPOCHS_BASELINE_DRIFT` pass |
+
+ERP CORE set its rejection thresholds per subject; their values are taken from their files in
+M-E6a. Exact parity of the rejected set with ERPLAB is the M-E5 test (window placement and
+half-up rounding of ms to samples are the points to check there).

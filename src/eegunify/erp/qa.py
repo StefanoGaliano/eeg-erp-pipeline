@@ -19,9 +19,11 @@ ICA_EXCLUDED_COUNT           ica     warn if 0 excluded while an EOG channel is 
 ICA_BLINK_RESIDUAL           ica     warn if |VEOG-Fp1 correlation| after cleaning is > 0.3
                                      (1 Hz high-passed copy)
 ICA_BRAIN_REMOVED            ica     warn if an excluded component has ICLabel brain prob > 0.5
-EPOCHS_REJECTED_FRACTION     epochs  (M-E3)
-EPOCHS_MIN_TRIALS            epochs  (M-E3)
-EPOCHS_BASELINE_DRIFT        epochs  (M-E3)
+EPOCHS_REJECTED_FRACTION     epochs  warn > 25 %, fail > 50 % of all epochs rejected
+EPOCHS_MIN_TRIALS            epochs  fail if a condition used by a component (or, with no
+                                     components, any condition present in a set) has fewer
+                                     kept epochs than ``min_trials_per_condition``
+EPOCHS_BASELINE_DRIFT        epochs  warn if the mean |baseline| of a condition ERP > 2 µV
 ERP_NOISE_SME                erp     (M-E4)
 ERP_COMPONENT_POLARITY       erp     (M-E4)
 MEASURE_NO_LOCAL_PEAK        erp     (M-E4)
@@ -53,6 +55,8 @@ LINE_RESIDUAL_DB = 10.0
 BADS_WARN, BADS_FAIL = 0.10, 0.25
 ICA_EXCLUDED_WARN = 0.25
 BLINK_RESIDUAL_R = 0.3
+REJECTED_WARN, REJECTED_FAIL = 0.25, 0.50
+BASELINE_DRIFT_UV = 2.0
 BRAIN_REMOVED_PROB = 0.5
 QA_SECONDS = 300.0
 """Spectral QA uses at most this much data (as Phase 1 QA)."""
@@ -205,3 +209,47 @@ def ica_checks(raw: mne.io.BaseRaw, decision: Decision) -> list[QACheck]:
         )
     )
     return checks
+
+
+# --- epochs ----------------------------------------------------------------------------------
+
+
+def rejected_fraction_check(n_rejected: int, n_total: int, by_set: dict[str, str]) -> QACheck:
+    frac = n_rejected / n_total if n_total else 0.0
+    level: Level = "fail" if frac > REJECTED_FAIL else "warn" if frac > REJECTED_WARN else "pass"
+    detail = "; ".join(f"{k}: {v}" for k, v in sorted(by_set.items()))
+    return QACheck(
+        "EPOCHS_REJECTED_FRACTION",
+        level,
+        f"{n_rejected}/{n_total} epochs rejected ({100 * frac:.0f} %) [{detail}]",
+        round(frac, 4),
+        [REJECTED_WARN, REJECTED_FAIL],
+    )
+
+
+def min_trials_check(counts: dict[str, int], minimum: int) -> QACheck:
+    """``counts``: ``<set>/<condition>`` -> kept epochs (only the conditions that matter)."""
+    if not counts:
+        return QACheck("EPOCHS_MIN_TRIALS", "pass", "no condition to check")
+    low = {k: v for k, v in sorted(counts.items()) if v < minimum}
+    shown = ", ".join(f"{k}={v}" for k, v in sorted(counts.items()))
+    if low:
+        msg = f"fewer than {minimum} kept epochs: " + ", ".join(f"{k}={v}" for k, v in low.items())
+        return QACheck("EPOCHS_MIN_TRIALS", "fail", msg, counts, minimum)
+    return QACheck("EPOCHS_MIN_TRIALS", "pass", f"kept epochs: {shown}", counts, minimum)
+
+
+def baseline_drift_check(offsets: dict[str, float]) -> QACheck:
+    """``offsets``: ``<set>/<condition>`` -> mean |baseline| of its ERP in µV."""
+    finite = {k: v for k, v in offsets.items() if np.isfinite(v)}
+    if not finite:
+        return QACheck("EPOCHS_BASELINE_DRIFT", "pass", "no ERP to check")
+    worst_key = max(finite, key=finite.__getitem__)
+    val = finite[worst_key]
+    return QACheck(
+        "EPOCHS_BASELINE_DRIFT",
+        "warn" if val > BASELINE_DRIFT_UV else "pass",
+        f"largest mean |baseline| {val:.2f} uV ({worst_key})",
+        round(val, 4),
+        BASELINE_DRIFT_UV,
+    )

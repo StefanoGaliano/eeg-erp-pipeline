@@ -28,12 +28,13 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E2 done)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E3 done)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.
 - Implemented stages: preproc (`erp/preprocess.py` helpers, `erp/stages/preproc.py`), ica (`erp/ica.py`,
-  `erp/stages/ica.py`; disabled by `artifacts.method: none`). New built-in stages go in
+  `erp/stages/ica.py`; disabled by `artifacts.method: none`), epochs (`erp/epochs.py`, `erp/stages/epochs.py`; reads
+  `desc-clean`, else `desc-preproc`; disabled when `epochs.sets` is empty). New built-in stages go in
   `BUILTIN_MODULES` in `erp/stages/base.py` (imported lazily; importing them from `stages/__init__` is circular).
 - Filters follow ERPLAB: `iir_order` is the total forward-backward order (2 = 12 dB/oct, half-amplitude cutoff), so MNE
   gets `order // 2`. MNE updates `info["highpass"/"lowpass"]` only when it picks the channels itself: `_filter_all`.
@@ -41,6 +42,9 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
   cleaning average-references the data, applies ICA, then re-applies `reference.scheme` (linear, so exact).
   `scheme: none` is refused. picard runs as extended infomax (`ortho=False`). ICA tests check blink removal
   by applying the solution to the blink part alone (`blink_truth`), which is exact because cleaning is linear.
+- Epoch rejection is numpy with ERPLAB semantics (`pop_artmwppth`, `pop_artstep`), ms -> samples rounded half-up
+  (not Python's half-to-even `round`). The per-epoch log lists every selected event, also those MNE drops
+  (`TOO_SHORT`, `BAD_`); `code` is matched by onset to rawdata `events.tsv`.
 - Tests that run the default stages up to one stage use `Runner(...).run(to="preproc")[0]`: the plan lists
   every stage.
 - Synthetic ERP data: `tests/synthetic/erp.py` (`make_erp_recording`); the `erp_project` fixture copies a converted project.

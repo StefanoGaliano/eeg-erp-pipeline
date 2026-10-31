@@ -341,6 +341,8 @@ Epoch rejection.
 | `ptp_window_ms` | number | `200.0` | Moving-window width. |
 | `ptp_step_ms` | number | `100.0` | Moving-window step. |
 | `step_heog_uv` | number \| null | `32.0` | Step-function threshold on HEOG (ERPLAB ``pop_artstep``); only if HEOG exists. |
+| `step_window_ms` | number | `200.0` | Step-function window: second-half mean minus first-half mean within it. |
+| `step_step_ms` | number | `50.0` | Step-function window step. |
 | `flat_uv` | number \| null | `null` | Reject epochs whose peak-to-peak on any EEG channel is below this. |
 | `min_trials_per_condition` | integer | `30` | Fewer kept trials fails ``EPOCHS_MIN_TRIALS`` and excludes the subject from group. |
 | `random_state` | integer | `97` | Seed for autoreject; part of the cache key. |

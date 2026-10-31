@@ -84,7 +84,7 @@ python_version = "3.12"  # numpy stubs use 3.12 syntax; runtime still supports 3
 files = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*", "pyprep.*", "meegkit.*", "mne_icalabel.*", "picard.*"]
+module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*", "pyprep.*", "meegkit.*", "mne_icalabel.*", "picard.*", "autoreject.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

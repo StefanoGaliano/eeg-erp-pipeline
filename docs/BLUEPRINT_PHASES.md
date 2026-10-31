@@ -115,7 +115,7 @@ TSVs utf-8, `n/a` for missing. A `derivatives/eegunify-<stage>/summary.tsv` per 
 recording (status, config hash, n_kept, ...), same upsert logic as `qa/report.py`.
 
 The `-ica` stage writes `desc-clean`; when `artifacts.method: none`, the epochs stage reads
-`desc-preproc` directly (no copy). `desc-` values are a closed set: `preproc`, `ica`, `clean`,
+`desc-preproc` directly (no copy). `desc-` values are a closed set: `preproc`, `ica`, `clean`, `epochs` (QA file),
 and epoch-set names (`[A-Za-z0-9]+`).
 
 ---

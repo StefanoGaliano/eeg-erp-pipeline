@@ -127,7 +127,11 @@ def register_stage(cls: S) -> S:
     return cls
 
 
-BUILTIN_MODULES = ("eegunify.erp.stages.preproc", "eegunify.erp.stages.ica")
+BUILTIN_MODULES = (
+    "eegunify.erp.stages.preproc",
+    "eegunify.erp.stages.ica",
+    "eegunify.erp.stages.epochs",
+)
 """Modules defining the built-in stages, imported by :func:`registered_stages`."""
 
 

@@ -23,7 +23,7 @@ ICLABEL_CLASSES = (
     "other",
 )
 """ICLabel classes in the order of its probability columns, spelled as mne-icalabel does."""
-RESERVED_DESC = frozenset({"preproc", "ica", "clean"})
+RESERVED_DESC = frozenset({"preproc", "ica", "clean", "epochs"})
 """``desc-`` values used by the stages themselves; epoch sets cannot take them."""
 
 
@@ -210,6 +210,10 @@ class RejectSpec(_Strict):
     """Moving-window step."""
     step_heog_uv: float | None = Field(default=32.0, gt=0)
     """Step-function threshold on HEOG (ERPLAB ``pop_artstep``); only if HEOG exists."""
+    step_window_ms: float = Field(default=200.0, gt=0)
+    """Step-function window: second-half mean minus first-half mean within it."""
+    step_step_ms: float = Field(default=50.0, gt=0)
+    """Step-function window step."""
     flat_uv: float | None = Field(default=None, gt=0)
     """Reject epochs whose peak-to-peak on any EEG channel is below this."""
     min_trials_per_condition: int = Field(default=30, ge=1)
