@@ -23,6 +23,7 @@ A complete, validated per-dataset configuration.
 | `preproc` | PreprocSection | see section | ERP phases: continuous-data cleaning (unused by ``convert``). |
 | `artifacts` | ArtifactsSection | see section | ERP phases: ICA / ASR artifact correction. |
 | `epochs` | EpochsSection | see section | ERP phases: epoch sets and rejection. |
+| `erp` | ErpSection | see section | ERP phases: averaging, measurement and figures. |
 | `conditions` | map[str, list[string]] | `{}` | ERP phases: condition name -> trial-type prefixes pooled into it (``face: [stimulus/face]``). |
 | `contrasts` | map[str, Contrast] | `{}` | ERP phases: difference waves by name (``face_minus_car: {plus: face, minus: car}``). |
 | `components` | ComponentsSection | see section | ERP phases: components to measure, from the component library. |
@@ -191,6 +192,16 @@ Epoching and rejection (Phase 4).
 |---|---|---|---|
 | `sets` | map[str, EpochSet] | `{}` | Epoch sets by name (letters and digits; the name becomes the ``desc-`` entity). |
 | `reject` | RejectSpec | see section | Rejection rule shared by all sets. |
+
+## `ErpSection`
+
+Averaging, measurement and figures (Phase 5).
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `peak_neighborhood` | integer | `3` | Samples on each side a local peak must exceed on average (ERPLAB "neighborhood"). |
+| `plot_lowpass_hz` | number \| null | `20.0` | Low-pass applied to figures only, never to the measured waveforms; ``null`` plots the data as measured. |
+| `figures` | boolean | `true` | Write one PNG per measured component. |
 
 ## `EventsSection`
 

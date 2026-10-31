@@ -57,3 +57,23 @@ with the blueprint defaults (ERPLAB semantics: moving-window peak-to-peak 100 µ
 ERP CORE set its rejection thresholds per subject; their values are taken from their files in
 M-E6a. Exact parity of the rejected set with ERPLAB is the M-E5 test (window placement and
 half-up rounding of ms to samples are the points to check there).
+
+## M-E4 erp + measure (2026-10-31)
+
+ERP CORE N170 sub-015, test `tests/integration/test_erp_measures.py`:
+
+| Check | Result |
+|---|---|
+| preview recipe (`eegunify.erp.recipes.PREVIEW`: 0.1-30 Hz FIR, F8 left bad, average reference, no ICA, ±150 µV whole-epoch) | face − car at PO8, 110-150 ms = **−2.2396 µV**; golden −2.24 ± 0.05 (`tests/golden/erpcore_n170_sub-015/erp/preview_recipe.json`). Faces 3.37 µV and cars 5.61 µV, identical to the v0.1.0 preview script |
+| ERP CORE recipe (M-E1 to M-E3 settings) | face − car **−1.28 µV** (SME 0.77 µV), 50 % area latency 143.5 ms; faces 4.44 µV (76 trials), cars 5.71 µV (79) |
+| QA | `ERP_NOISE_SME` and `ERP_COMPONENT_POLARITY` pass; `MEASURE_NO_LOCAL_PEAK` warns for the condition waves (they rise through the window; the face − car difference has a local peak) |
+
+The two recipes differ by ICA, interpolating F8, 256 Hz and the 30 Hz low-pass, so different
+values are expected. Which one is closer to ERP CORE's published value for sub-015 is checked in
+M-E6a against their files.
+
+Synthetic: the noiseless difference wave matches the injected one to 1e-6 µV and its mean
+amplitude exactly; through all stages (with noise, ICA and the average reference) the measured
+mean amplitude is within 3 SME + 0.2 µV of the injected value. The blueprint's "0.3 µV RMS over
+the whole difference wave" is not reachable at the synthetic noise level (~28 trials per
+condition give ~0.8 µV RMS of noise), so the bound is stated in SME units instead.

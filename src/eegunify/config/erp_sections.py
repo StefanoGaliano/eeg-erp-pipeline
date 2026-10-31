@@ -23,7 +23,7 @@ ICLABEL_CLASSES = (
     "other",
 )
 """ICLabel classes in the order of its probability columns, spelled as mne-icalabel does."""
-RESERVED_DESC = frozenset({"preproc", "ica", "clean", "epochs"})
+RESERVED_DESC = frozenset({"preproc", "ica", "clean", "epochs", "erp"})
 """``desc-`` values used by the stages themselves; epoch sets cannot take them."""
 
 
@@ -239,6 +239,21 @@ class EpochsSection(_Strict):
             if name in RESERVED_DESC:
                 raise ValueError(f"epoch set name {name!r} is reserved")
         return v
+
+
+# --- erp (averaging and measurement) ----------------------------------------------------------
+
+
+class ErpSection(_Strict):
+    """Averaging, measurement and figures (Phase 5)."""
+
+    peak_neighborhood: int = Field(default=3, ge=1)
+    """Samples on each side a local peak must exceed on average (ERPLAB "neighborhood")."""
+    plot_lowpass_hz: float | None = Field(default=20.0, gt=0)
+    """Low-pass applied to figures only, never to the measured waveforms; ``null`` plots the
+    data as measured."""
+    figures: bool = True
+    """Write one PNG per measured component."""
 
 
 # --- conditions, contrasts, components, group ------------------------------------------------

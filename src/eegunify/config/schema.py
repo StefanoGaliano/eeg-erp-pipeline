@@ -24,6 +24,7 @@ from eegunify.config.erp_sections import (
     EogCorrelationSpec,
     EpochSet,
     EpochsSection,
+    ErpSection,
     FilterSpec,
     GroupSection,
     IcaSpec,
@@ -371,6 +372,8 @@ class Config(_Strict):
     """ERP phases: ICA / ASR artifact correction."""
     epochs: EpochsSection = Field(default_factory=EpochsSection)
     """ERP phases: epoch sets and rejection."""
+    erp: ErpSection = Field(default_factory=ErpSection)
+    """ERP phases: averaging, measurement and figures."""
     conditions: dict[str, list[str]] = Field(default_factory=dict)
     """ERP phases: condition name -> trial-type prefixes pooled into it
     (``face: [stimulus/face]``)."""

@@ -1,0 +1,9 @@
+{
+  "description": "F6 regression anchor: preview recipe (eegunify.erp.recipes.PREVIEW) on ERP CORE N170 sub-015, face_minus_car mean amplitude at PO8, 110-150 ms. Value first printed by code/scripts/erp_preview.py at v0.1.0.",
+  "component": "n170",
+  "wave": "face_minus_car",
+  "channels": "PO8",
+  "window_ms": [110, 150],
+  "value_uv": -2.24,
+  "tolerance_uv": 0.05
+}

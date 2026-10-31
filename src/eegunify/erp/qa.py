@@ -24,10 +24,11 @@ EPOCHS_MIN_TRIALS            epochs  fail if a condition used by a component (or
                                      components, any condition present in a set) has fewer
                                      kept epochs than ``min_trials_per_condition``
 EPOCHS_BASELINE_DRIFT        epochs  warn if the mean |baseline| of a condition ERP > 2 µV
-ERP_NOISE_SME                erp     (M-E4)
-ERP_COMPONENT_POLARITY       erp     (M-E4)
-MEASURE_NO_LOCAL_PEAK        erp     (M-E4)
-VEP_LATENCY_ATYPICAL         erp     (VEP)
+ERP_NOISE_SME                erp     warn if the SME of a primary mean amplitude is > 2 µV
+ERP_COMPONENT_POLARITY       erp     warn if a primary mean amplitude has the opposite sign
+                                     of the component's ``polarity``
+MEASURE_NO_LOCAL_PEAK        erp     warn if a peak measure fell back to the absolute extreme
+VEP_LATENCY_ATYPICAL         erp     info (pass) if the vep_p100 peak latency is > 115 ms
 GROUP_SUBJECTS_EXCLUDED      group   (M-E6a)
 GROUP_UNDERPOWERED           group   (M-E6a)
 REFERENCE_VALUES_MISMATCH    group   (M-E6a)
@@ -57,6 +58,8 @@ ICA_EXCLUDED_WARN = 0.25
 BLINK_RESIDUAL_R = 0.3
 REJECTED_WARN, REJECTED_FAIL = 0.25, 0.50
 BASELINE_DRIFT_UV = 2.0
+SME_WARN_UV = 2.0
+VEP_P100_ATYPICAL_MS = 115.0
 BRAIN_REMOVED_PROB = 0.5
 QA_SECONDS = 300.0
 """Spectral QA uses at most this much data (as Phase 1 QA)."""
@@ -253,3 +256,70 @@ def baseline_drift_check(offsets: dict[str, float]) -> QACheck:
         round(val, 4),
         BASELINE_DRIFT_UV,
     )
+
+
+# --- erp -------------------------------------------------------------------------------------
+
+
+def erp_checks(
+    sme_uv: dict[str, float],
+    mean_uv: dict[str, tuple[float, str]],
+    no_local_peak: dict[str, list[str]],
+    vep_p100_ms: float | None = None,
+) -> list[QACheck]:
+    """``sme_uv``/``mean_uv``/``no_local_peak`` are keyed by component id; ``mean_uv`` holds
+    (primary mean amplitude, expected polarity)."""
+    if not mean_uv:
+        return [QACheck("ERP_NOISE_SME", "pass", "no component measured")]
+    finite = {k: v for k, v in sme_uv.items() if np.isfinite(v)}
+    high = {k: v for k, v in sorted(finite.items()) if v > SME_WARN_UV}
+    shown = ", ".join(f"{k} {v:.2f}" for k, v in sorted(finite.items())) or "n/a"
+    checks = [
+        QACheck(
+            "ERP_NOISE_SME",
+            "warn" if high else "pass",
+            f"SME of the primary mean amplitude (uV): {shown}",
+            {k: round(v, 4) for k, v in finite.items()},
+            SME_WARN_UV,
+        )
+    ]
+    wrong = {
+        k: v
+        for k, (v, pol) in sorted(mean_uv.items())
+        if np.isfinite(v) and (v > 0) != (pol == "positive") and v != 0
+    }
+    checks.append(
+        QACheck(
+            "ERP_COMPONENT_POLARITY",
+            "warn" if wrong else "pass",
+            "opposite polarity: " + ", ".join(f"{k} {v:+.2f} uV" for k, v in wrong.items())
+            if wrong
+            else "every primary mean amplitude has the expected sign",
+            {k: round(v, 4) for k, (v, _) in mean_uv.items()},
+        )
+    )
+    flat = {k: v for k, v in sorted(no_local_peak.items()) if v}
+    checks.append(
+        QACheck(
+            "MEASURE_NO_LOCAL_PEAK",
+            "warn" if flat else "pass",
+            "absolute extreme used (no local peak): "
+            + "; ".join(f"{k}: {', '.join(v)}" for k, v in flat.items())
+            if flat
+            else "every peak is a local peak",
+            flat or None,
+        )
+    )
+    if vep_p100_ms is not None and np.isfinite(vep_p100_ms):
+        late = vep_p100_ms > VEP_P100_ATYPICAL_MS
+        checks.append(
+            QACheck(
+                "VEP_LATENCY_ATYPICAL",
+                "pass",
+                f"P100 latency {vep_p100_ms:.0f} ms"
+                + (f" (> {VEP_P100_ATYPICAL_MS:g} ms: atypically late)" if late else ""),
+                round(vep_p100_ms, 2),
+                VEP_P100_ATYPICAL_MS,
+            )
+        )
+    return checks

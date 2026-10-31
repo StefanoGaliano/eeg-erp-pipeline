@@ -211,13 +211,13 @@ def test_stage_after_ica_and_cache(blink_project: Make, blink_truth: ErpTruth) -
         },
     }
     st = {it.stage: it.status for it in Runner(parse_config(erp_config(**sections)), root).status()}
-    assert st == {"preproc": "ok", "ica": "ok", "epochs": "stale"}
+    assert st == {"preproc": "ok", "ica": "ok", "epochs": "stale", "erp": "stale"}
 
 
 def test_stage_reads_preproc_without_ica(blink_project: Make) -> None:
     root, cfg = blink_project(artifacts={"method": "none"}, **ERP_SECTIONS)
     outs = {o.item.stage: o for o in Runner(cfg, root).run()}
-    assert set(outs) == {"preproc", "epochs"}
+    assert set(outs) == {"preproc", "epochs", "erp"}
     data = json.loads(_out(root, cfg, "epochs", "qa", ".json").read_text(encoding="utf-8"))
     assert data["input"].endswith("_desc-preproc_eeg.fif")
 

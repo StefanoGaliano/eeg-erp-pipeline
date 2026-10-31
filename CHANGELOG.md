@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+**Single-subject ERPs**: the ERP stages on canonical data (docs/BLUEPRINT_PHASES.md, M-E0 to
+M-E4).
+
+- **Stage runner:** `eegunify erp run/status`, cached per subject and stage by a key over the
+  config section, component definitions, upstream keys and versions; `--from/--to/--force`.
+- **preproc:** line noise, ERPLAB-style Butterworth filters, bad channels (config, pyprep, LOF),
+  interpolation, re-reference (average, channels, REST); BioSemi data must be re-referenced.
+- **ica:** picard (extended infomax) on a 1–100 Hz average-referenced copy, ICLabel plus an EOG
+  correlation vote, `_components.tsv` with a reason per component; optional bipolar EOG and ASR.
+- **epochs:** epoch sets selected by trial-type prefix, ERPLAB-style moving-window peak-to-peak
+  and HEOG step rejection, a per-epoch log with the rawdata code and reason.
+- **erp:** averages per condition, difference waves, `measures.tsv` (mean amplitude, peak,
+  fractional-area latency) from the component library, one figure per component.
+- **QA:** 15 new checks with stable IDs (`erp/qa.py`).
+- **Validation:** synthetic ground truth for every stage; ERP CORE N170 sub-015 through all
+  stages; the v0.1.0 preview value (−2.24 µV) is a golden regression test.
+
 ## 0.1.0 (2026-10-30)
 
 First release: **Phase 1, unified ingestion**. Any supported raw EEG recording becomes one

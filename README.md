@@ -14,11 +14,24 @@ every format encodes channels, units, references and triggers differently. **Pha
 reads a single representation, whatever the hardware. Each conversion is validated and comes
 with a QA report.
 
-![ERP CORE N170 from canonical data](docs/img/erpcore_n170_preview.png)
+![ERP CORE N170 through the eegunify ERP stages](docs/img/erpcore_n170_erp.png)
 
-*ERP CORE N170 (sub-015), read from eegunify's canonical output: faces evoke a larger negativity
-than cars at PO8 around 150 ms. The minimal ERP steps here are a preview of the later phases:
-[`code/scripts/erp_preview.py`](code/scripts/erp_preview.py).*
+*ERP CORE N170 (sub-015) through the ERP stages with ERP CORE's recipe (256 Hz, 0.1 Hz
+Butterworth high-pass, average reference, ICA with ICLabel, ERPLAB-style rejection): faces evoke
+a larger negativity than cars at PO8. The figure is the erp stage's own output
+([`code/scripts/erp_preview.py`](code/scripts/erp_preview.py) runs the pipeline and copies it).*
+
+First `measures.tsv` (sub-015, N170 window 110–150 ms at PO8, from the component library's
+`n170@erpcore` preset; 13 of 320 epochs rejected):
+
+| wave | measure | value | trials |
+|---|---|---|---|
+| face − car | mean amplitude | −1.28 µV | 76 |
+| face − car | 50 % area latency | 143.5 ms | 76 |
+| face | mean amplitude | 4.44 µV | 76 |
+| car | mean amplitude | 5.71 µV | 79 |
+
+The comparison with ERP CORE's published per-subject values comes with the group stage (v0.3.0).
 
 ## Why trust it
 
@@ -50,7 +63,8 @@ conda env create -f environment.yml && conda activate eegunify
 
 eegunify fetch erpcore -s 015 --dest sourcedata/erpcore    # ~80 MB of ERP CORE N170
 eegunify convert code/configs/erpcore_n170.yaml -s 015     # → rawdata/ (BIDS) + QA report
-python code/scripts/erp_preview.py                          # the figure above
+eegunify erp run code/configs/erpcore_n170.yaml -s 015      # preproc → ica → epochs → erp
+python code/scripts/erp_preview.py                          # the figure and table above
 ```
 
 On your own data:
@@ -95,19 +109,21 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
 
 ## Roadmap
 
-- **Phase 1 (done):** unified ingestion, QA, interactive app (A1), MATLAB interop.
-- **Next:** the ERP stages on the canonical data:
-  - filtering, re-referencing, ICA;
-  - epoching, averaging;
-  - P1, N170 and P3 measurement in visual regions of interest;
-  - an app page to choose components (A2).
+- **Phase 1 (done, v0.1.0):** unified ingestion, QA, interactive app (A1), MATLAB interop.
+- **Single-subject ERPs (done, v0.2.0):** preproc (filter, bad channels, re-reference), ICA with
+  ICLabel and an EOG vote, epochs with ERPLAB-style rejection, averages, difference waves and
+  component measures (mean amplitude, peak, fractional-area latency) from a component library.
+  Every stage is cached and writes QA. See [BLUEPRINT_PHASES.md](docs/BLUEPRINT_PHASES.md) and
+  [validation_erp.md](docs/validation_erp.md).
+- **Next (v0.3.0):** group statistics and the ERP CORE reproduction (N170, P3, N2pc on
+  sub-015..019); an ERPLAB cross-check of the measurements; app pages for the ERP stages (A2).
 - **Phase M:** the same ingestion natively in MATLAB, with outputs that match Python.
 
 ## Repository layout
 
 | Folder | Contents |
 |---|---|
-| `src/eegunify/` | Python package (`readers/`, `events/`, `channels/`, `qa/`, `app/`) |
+| `src/eegunify/` | Python package (`readers/`, `events/`, `channels/`, `qa/`, `app/`, `erp/`) |
 | `tests/` | unit, synthetic round-trip, real-data (`pytest -m realdata`) and MATLAB tests |
 | `code/configs/` | dataset configs (ERP CORE N170, validation catalog) |
 | `code/scripts/` | analysis scripts built on the canonical data |

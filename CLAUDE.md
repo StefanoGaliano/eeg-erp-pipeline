@@ -28,7 +28,7 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E3 done)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E4 done)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.

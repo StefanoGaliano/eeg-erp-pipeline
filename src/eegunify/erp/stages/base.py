@@ -131,6 +131,7 @@ BUILTIN_MODULES = (
     "eegunify.erp.stages.preproc",
     "eegunify.erp.stages.ica",
     "eegunify.erp.stages.epochs",
+    "eegunify.erp.stages.erp",
 )
 """Modules defining the built-in stages, imported by :func:`registered_stages`."""
 
