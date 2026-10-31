@@ -13,7 +13,8 @@ function result = erplab_crosscheck(setfile, eventsfile, outjson, p)
 %              {label, '{codes}'} pairs, e.g. {'face', '1-40'}).
 %
 %   Steps (docs/BLUEPRINT_PHASES.md section 8.4): event list -> binlister -> pop_epochbin
-%   -> pop_artmwppth on the EEG channels -> pop_averager (good trials) -> pop_binoperator
+%   -> pop_artmwppth on the EEG channels (and pop_artstep on HEOG when p.step_uv > 0, with
+%   p.heog, p.step_window_ms, p.step_step_ms) -> pop_averager (good trials) -> pop_binoperator
 %   (bin1 - bin2) -> pop_geterpvalues ('meanbl'). The result holds the rejected epochs as
 %   1-based indices into the events file, the trials per bin and the mean amplitudes.
 %   Needs EEGLAB with ERPLAB (Practice/setup_eeg_toolboxes.m).
@@ -44,6 +45,12 @@ eeg = find(ismember({EEG.chanlocs.labels}, p.eeg_channels));
 EEG = pop_artmwppth(EEG, 'Channel', eeg, 'Flag', 1, 'Threshold', p.ptp_uv, ...
     'Twindow', [EEG.xmin EEG.xmax] * 1000, 'Windowsize', p.window_ms, ...
     'Windowstep', p.step_ms, 'Review', 'off');
+if isfield(p, 'step_uv') && p.step_uv > 0
+    heog = find(strcmpi({EEG.chanlocs.labels}, p.heog));
+    EEG = pop_artstep(EEG, 'Channel', heog, 'Flag', 1, 'Threshold', p.step_uv, ...
+        'Twindow', [EEG.xmin EEG.xmax] * 1000, 'Windowsize', p.step_window_ms, ...
+        'Windowstep', p.step_step_ms, 'Review', 'off');
+end
 
 % Which events became rejected epochs: each epoch's time-locking event is its 'urevent'.
 flags = EEG.reject.rejmanual;

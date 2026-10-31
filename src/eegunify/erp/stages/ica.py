@@ -43,7 +43,7 @@ def preproc_file(inputs: StageInputs) -> Path:
 @register_stage
 class IcaStage(Stage):
     name = "ica"
-    schema_version = 1
+    schema_version = 2  # 2: bipolar EOG now comes from preproc
 
     def enabled(self, cfg: Config) -> bool:
         return cfg.artifacts.method == "ica"

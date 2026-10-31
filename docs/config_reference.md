@@ -57,7 +57,7 @@ Artifact correction (Phase 3).
 | `method` | `ica` \| `none` | `"ica"` | ``ica`` runs the ICA stage; ``none`` epochs the preprocessed data directly. |
 | `ica` | IcaSpec | see section | ICA settings. |
 | `asr` | AsrSpec \| null | `null` | ASR settings; ``null`` (default) keeps ASR off. |
-| `eog_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. |
+| `eog_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. Derived by the preproc stage before any filtering, whether or not ICA runs. |
 
 ## `AsrSpec`
 

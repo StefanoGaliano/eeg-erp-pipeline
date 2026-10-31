@@ -56,11 +56,12 @@ def channels_table(raw: Any, bads: dict[str, str], interpolated: list[str]) -> p
 @register_stage
 class PreprocStage(Stage):
     name = "preproc"
-    schema_version = 1
+    schema_version = 2  # 2: bipolar EOG channels derived here (were in ica)
 
     def hash_config(self, cfg: Config, project_root: Path) -> Any:
         return {
             "preproc": cfg.preproc,
+            "eog_bipolar": cfg.artifacts.eog_bipolar,
             "reference": {"scheme": cfg.reference.scheme, "channels": cfg.reference.channels},
             # Only QA (PREPROC_ROI_INTERPOLATED) depends on this, but the QA file is an output.
             "primary_rois": primary_rois(cfg, project_root),

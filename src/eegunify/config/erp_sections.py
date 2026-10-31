@@ -167,7 +167,8 @@ class ArtifactsSection(_Strict):
     asr: AsrSpec | None = None
     """ASR settings; ``null`` (default) keeps ASR off."""
     eog_bipolar: dict[str, tuple[str, str]] = Field(default_factory=dict)
-    """Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second."""
+    """Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. Derived by
+    the preproc stage before any filtering, whether or not ICA runs."""
 
 
 # --- epochs ----------------------------------------------------------------------------------

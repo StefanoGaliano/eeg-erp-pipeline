@@ -25,6 +25,7 @@ from eegunify.erp.ica import (
     fit_copy,
     run_ica,
 )
+from eegunify.erp.preprocess import PreprocError
 from eegunify.erp.runner import Runner
 from tests.synthetic.erp import ErpTruth, erp_config
 
@@ -162,7 +163,7 @@ def test_bipolar_eog(blink_truth: ErpTruth) -> None:
         raw.get_data(picks="VEOGb")[0],
         raw.get_data(picks="Fp1")[0] - raw.get_data(picks="VEOG")[0],
     )
-    with pytest.raises(IcaError, match="not in the data"):
+    with pytest.raises(PreprocError, match="not in the data"):
         add_bipolar_eog(raw, {"X": ("Fp1", "nope")})
 
 
@@ -222,3 +223,15 @@ def test_stage_outputs_and_cache(blink_project: Make) -> None:
 def test_stage_disabled_with_method_none(blink_project: Make) -> None:
     root, cfg = blink_project(artifacts={"method": "none"})
     assert [it.stage for it in Runner(cfg, root).status()] == ["preproc"]
+
+
+def test_bipolar_eog_derived_in_preproc_without_ica(blink_project: Make) -> None:
+    """The derivation happens in preproc, so HEOG exists even with ``artifacts.method: none``."""
+    root, cfg = blink_project(artifacts={"method": "none", "eog_bipolar": {"HEOGb": ["F7", "F8"]}})
+    [out] = Runner(cfg, root).run()
+    assert out.status == "ok", out.message
+    pre = paths.stage_path(
+        root, "preproc", cfg, "01", description="preproc", suffix="eeg", extension=".fif"
+    )
+    raw = mne.io.read_raw_fif(pre, verbose=False)
+    assert raw.get_channel_types(picks=["HEOGb"]) == ["eog"]

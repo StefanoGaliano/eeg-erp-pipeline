@@ -28,33 +28,15 @@ import pandas as pd
 
 from eegunify.config.erp_sections import ICLABEL_CLASSES, ArtifactsSection, IcaSpec
 from eegunify.config.schema import ReferenceSection
-from eegunify.erp.preprocess import rereference
+from eegunify.erp.preprocess import add_bipolar_eog, rereference
+
+__all__ = ["add_bipolar_eog"]  # moved to preprocess (derived in preproc since 0.3.0)
 
 ICLABEL_LOWPASS_HZ = 100.0
 
 
 class IcaError(ValueError):
     """The data or config can't be cleaned with ICA as asked (the message says how to fix it)."""
-
-
-def add_bipolar_eog(raw: mne.io.BaseRaw, bipolar: dict[str, tuple[str, str]]) -> list[str]:
-    """Add each ``{name: (a, b)}`` derivation (a minus b) as an EOG channel, in place.
-
-    An existing channel of the same name is replaced. Returns the names added.
-    """
-    added = []
-    for name, (a, b) in sorted(bipolar.items()):
-        missing = [c for c in (a, b) if c not in raw.ch_names]
-        if missing:
-            raise IcaError(f"artifacts.eog_bipolar {name}: channels {missing} not in the data")
-        data = raw.get_data(picks=[a]) - raw.get_data(picks=[b])
-        if name in raw.ch_names:
-            raw.drop_channels([name])
-        info = mne.create_info([name], raw.info["sfreq"], "eog")
-        new = mne.io.RawArray(data, info, first_samp=raw.first_samp, verbose=False)
-        raw.add_channels([new], force_update_info=True)
-        added.append(name)
-    return added
 
 
 def run_asr(raw: mne.io.BaseRaw, cutoff: float) -> dict[str, Any]:
@@ -233,8 +215,6 @@ def run_ica(raw: mne.io.BaseRaw, art: ArtifactsSection, reference: ReferenceSect
     spec = art.ica
     check_reference(reference)
     steps: dict[str, Any] = {}
-    if art.eog_bipolar:
-        steps["eog_bipolar"] = add_bipolar_eog(raw, art.eog_bipolar)
     if art.asr is not None:
         steps["asr"] = run_asr(raw, art.asr.cutoff)
     fit_raw = fit_copy(raw, spec)

@@ -1,9 +1,10 @@
 """M-E5: eegunify vs ERPLAB on the same preprocessed data (docs/BLUEPRINT_PHASES.md 8.4).
 
 ERP CORE N170 sub-015 goes through eegunify with the ``erplab`` recipe (the ERP CORE config
-without ICA or the HEOG step rule). The preprocessed data (``desc-preproc``) are exported to
+without ICA). The preprocessed data (``desc-preproc``) are exported to
 EEGLAB and run through ERPLAB by ``matlab/erplab_crosscheck.m``: binlister, ``pop_epochbin``,
-``pop_artmwppth``, ``pop_averager``, ``pop_binoperator``, ``pop_geterpvalues``. Expected:
+``pop_artmwppth``, ``pop_artstep`` (HEOG), ``pop_averager``, ``pop_binoperator``,
+``pop_geterpvalues``. Expected:
 identical rejected epochs and trial counts, and mean amplitudes within 0.05 µV.
 
 Needs MATLAB with EEGLAB and ERPLAB, set up by ``EEGUNIFY_MATLAB_SETUP`` (e.g.
@@ -116,6 +117,10 @@ def test_erplab_matches_sub015(project: Path, tmp_path: Path) -> None:
         "channel": "PO8",
         "eeg_channels": [raw.ch_names[i] for i in mne.pick_types(raw.info, eeg=True)],
         "bins": BINS,
+        "step_uv": rej.step_heog_uv or 0,
+        "heog": "HEOG",
+        "step_window_ms": rej.step_window_ms,
+        "step_step_ms": rej.step_step_ms,
     }
     out_json = tmp_path / "erplab.json"
     setup = Path(os.environ["EEGUNIFY_MATLAB_SETUP"])

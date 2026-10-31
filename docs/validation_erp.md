@@ -100,6 +100,12 @@ Remaining differences, by design: ERPLAB refuses a rejection window longer than 
 one whole-epoch window, as MNE's `reject`); with no local peak ERPLAB returns NaN unless
 `Peakreplace` is `abs` (here: the absolute peak, flagged `MEASURE_NO_LOCAL_PEAK`).
 
+Bipolar EOG moved from the ica stage to preproc (first step, before filtering and the
+re-reference), so HEOG exists without ICA and the cross-check also runs ERPLAB's `pop_artstep`.
+On sub-015 nothing measured changed (same 4 ICA exclusions, 13/320 rejected, face − car
+−1.22 µV); the VEOG-Fp1 residual after ICA went from r = −0.06 to −0.01 because VEOG is now
+Fp2 − VEOG_lower in the recorded reference rather than after the average reference.
+
 The numeric cross-check in MATLAB (same filtered, re-referenced data through ERPLAB
-`pop_epochbin`, `pop_artmwppth`, `pop_averager`, `pop_geterpvalues`; target |Δ| < 0.05 µV and
+`pop_epochbin`, `pop_artmwppth`, `pop_artstep`, `pop_averager`, `pop_geterpvalues`; target |Δ| < 0.05 µV and
 identical rejected epochs) is not run yet.

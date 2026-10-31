@@ -193,8 +193,10 @@ def test_preview_recipe_patch() -> None:
 
 
 def test_erplab_recipe_patch() -> None:
-    base = _cfg(artifacts={"method": "ica"})
+    base = _cfg(artifacts={"method": "ica", "eog_bipolar": {"HEOG2": ["F7", "F8"]}})
     cfg = apply_recipe(base, "erplab")
-    assert cfg.artifacts.method == "none" and cfg.epochs.reject.step_heog_uv is None
+    assert cfg.artifacts.method == "none"
+    assert cfg.epochs.reject.step_heog_uv == base.epochs.reject.step_heog_uv
     assert cfg.preproc == base.preproc and cfg.epochs.sets == base.epochs.sets
     assert cfg.epochs.reject.ptp_uv == base.epochs.reject.ptp_uv
+    assert cfg.artifacts.eog_bipolar == base.artifacts.eog_bipolar

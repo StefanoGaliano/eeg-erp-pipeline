@@ -1,9 +1,9 @@
 """Continuous-data cleaning (Phase 2, docs/BLUEPRINT_PHASES.md section 6.1).
 
 Pure helpers on ``mne.io.Raw``, used by the preproc stage, the app and the tests. The order is
-fixed and recorded: line noise -> resample -> filter -> bad-channel detection -> interpolation
--> re-reference. Everything works in place on a preloaded Raw and returns a short description of
-what it did, which goes into provenance.
+fixed and recorded: bipolar EOG derivation -> line noise -> resample -> filter -> bad-channel
+detection -> interpolation -> re-reference. Everything works in place on a preloaded Raw and
+returns a short description of what it did, which goes into provenance.
 
 Filter semantics follow ERPLAB ``pop_basicfilter`` so that the MATLAB cross-check (M-E5) can
 agree to < 0.1 µV: Butterworth, ``iir_order`` = the *total* order of the forward-backward
@@ -77,6 +77,26 @@ def _data_picks(raw: mne.io.BaseRaw) -> np.ndarray:
 def harmonics(freq: float, sfreq: float) -> list[float]:
     """``freq`` and its multiples below Nyquist."""
     return [freq * k for k in range(1, int((sfreq / 2) // freq) + 1) if freq * k < sfreq / 2]
+
+
+def add_bipolar_eog(raw: mne.io.BaseRaw, bipolar: dict[str, tuple[str, str]]) -> list[str]:
+    """Add each ``{name: (a, b)}`` derivation (a minus b) as an EOG channel, in place.
+
+    An existing channel of the same name is replaced. Returns the names added.
+    """
+    added = []
+    for name, (a, b) in sorted(bipolar.items()):
+        missing = [c for c in (a, b) if c not in raw.ch_names]
+        if missing:
+            raise PreprocError(f"artifacts.eog_bipolar {name}: channels {missing} not in the data")
+        data = raw.get_data(picks=[a]) - raw.get_data(picks=[b])
+        if name in raw.ch_names:
+            raw.drop_channels([name])
+        info = mne.create_info([name], raw.info["sfreq"], "eog")
+        new = mne.io.RawArray(data, info, first_samp=raw.first_samp, verbose=False)
+        raw.add_channels([new], force_update_info=True)
+        added.append(name)
+    return added
 
 
 def remove_line_noise(
@@ -267,7 +287,13 @@ def preprocess(
     """
     pre = cfg.preproc
     line_freq = raw.info.get("line_freq") or detect_line_freq(raw)
-    steps: dict[str, Any] = {"line_noise": remove_line_noise(raw, pre.line_noise, line_freq)}
+    steps: dict[str, Any] = {}
+    if cfg.artifacts.eog_bipolar:
+        # First, from the recorded signals: the derived EOG channels are then filtered like the
+        # rest, kept out of the EEG re-reference, and exist whether or not ICA runs (the HEOG
+        # step rejection in the epochs stage needs them).
+        steps["eog_bipolar"] = add_bipolar_eog(raw, cfg.artifacts.eog_bipolar)
+    steps["line_noise"] = remove_line_noise(raw, pre.line_noise, line_freq)
     if pre.resample_hz and pre.resample_hz != raw.info["sfreq"]:
         raw.resample(pre.resample_hz, verbose=False)
         steps["resample_hz"] = pre.resample_hz
