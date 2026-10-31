@@ -11,6 +11,7 @@ paths to helpers. That keeps the app and the tests able to call the helpers in m
 
 from __future__ import annotations
 
+import importlib
 import os
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
@@ -126,8 +127,14 @@ def register_stage(cls: S) -> S:
     return cls
 
 
+BUILTIN_MODULES = ("eegunify.erp.stages.preproc",)
+"""Modules defining the built-in stages, imported by :func:`registered_stages`."""
+
+
 def registered_stages() -> list[Stage]:
     """Registered stages in :data:`STAGE_ORDER` (unknown names last, alphabetically)."""
+    for mod in BUILTIN_MODULES:
+        importlib.import_module(mod)
     rank: Callable[[str], tuple[int, str]] = lambda n: (  # noqa: E731
         STAGE_ORDER.index(n) if n in STAGE_ORDER else len(STAGE_ORDER),
         n,

@@ -28,10 +28,17 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 foundations done)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 and M-E1 done)
 
-- `eegunify erp components [--preset erpcore] [--show n170]` lists the component library; `eegunify erp status <config>`
-  prints the subject x stage cache table. `eegunify erp run` arrives with the first real stage (M-E1).
+- `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
+  table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.
+- Implemented stages: preproc (`erp/preprocess.py` helpers, `erp/stages/preproc.py`). New built-in stages go in
+  `BUILTIN_MODULES` in `erp/stages/base.py` (imported lazily; importing them from `stages/__init__` is circular).
+- Filters follow ERPLAB: `iir_order` is the total forward-backward order (2 = 12 dB/oct, half-amplitude cutoff), so MNE
+  gets `order // 2`. MNE updates `info["highpass"/"lowpass"]` only when it picks the channels itself: `_filter_all`.
+- Synthetic ERP data: `tests/synthetic/erp.py` (`make_erp_recording`); the `erp_project` fixture copies a converted project.
+  The background is spatially smooth on purpose: with independent noise per channel pyprep flags almost every channel.
+- Real-data ERP results are recorded in `docs/validation_erp.md`.
 - Stages: preproc -> ica -> epochs -> erp -> group (`erp/stages/`, subclass `Stage`, `@register_stage`). Outputs go to
   `derivatives/eegunify-<stage>/` (BIDSPath via `erp/paths.py`), cached by `stage_key` (`erp/hashing.py`). The runner
   (`erp/runner.py`) writes the provenance holding the key, so stages only write outputs (via `atomic_path`).

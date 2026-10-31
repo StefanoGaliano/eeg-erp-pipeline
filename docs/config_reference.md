@@ -73,6 +73,7 @@ How bad channels are found before interpolation.
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `method` | `config_only` \| `pyprep_ransac` \| `pyprep_full` \| `lof` | `"config_only"` | ``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a 1 Hz high-passed copy (pyprep needs electrode positions). |
+| `random_state` | integer | `97` | Seed for pyprep RANSAC; part of the cache key. |
 
 ## `BehaviorSection`
 
@@ -214,7 +215,7 @@ Filter design shared by the high-pass and low-pass steps.
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `method` | `iir` \| `fir` | `"iir"` | ``iir`` Butterworth (as ERPLAB ``pop_basicfilter``) or ``fir`` (MNE default design). |
-| `iir_order` | integer | `2` | Butterworth order; 2 run forward-backward gives ERPLAB's 12 dB/oct. |
+| `iir_order` | integer | `2` | Butterworth order counted as ERPLAB does: the total order of the forward-backward filter, so 2 = 12 dB/oct with a half-amplitude (-6 dB) cutoff. Must be even for ``phase: zero`` (each pass is order/2). |
 | `phase` | `zero` \| `minimum` | `"zero"` | ``zero`` (non-causal, offline ERPs) or ``minimum`` (causal; the seam for real-time use). |
 
 ## `FormatHints`

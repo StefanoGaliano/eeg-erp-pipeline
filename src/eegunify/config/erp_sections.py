@@ -39,9 +39,17 @@ class FilterSpec(_Strict):
     method: Literal["iir", "fir"] = "iir"
     """``iir`` Butterworth (as ERPLAB ``pop_basicfilter``) or ``fir`` (MNE default design)."""
     iir_order: int = Field(default=2, ge=1, le=8)
-    """Butterworth order; 2 run forward-backward gives ERPLAB's 12 dB/oct."""
+    """Butterworth order counted as ERPLAB does: the total order of the forward-backward
+    filter, so 2 = 12 dB/oct with a half-amplitude (-6 dB) cutoff. Must be even for
+    ``phase: zero`` (each pass is order/2)."""
     phase: Literal["zero", "minimum"] = "zero"
     """``zero`` (non-causal, offline ERPs) or ``minimum`` (causal; the seam for real-time use)."""
+
+    @model_validator(mode="after")
+    def _even_order(self) -> FilterSpec:
+        if self.method == "iir" and self.phase == "zero" and self.iir_order % 2:
+            raise ValueError("filter.iir_order must be even with phase 'zero' (forward-backward)")
+        return self
 
 
 class BadChannelsSpec(_Strict):
@@ -50,6 +58,8 @@ class BadChannelsSpec(_Strict):
     method: Literal["config_only", "pyprep_ransac", "pyprep_full", "lof"] = "config_only"
     """``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a
     1 Hz high-passed copy (pyprep needs electrode positions)."""
+    random_state: int = 97
+    """Seed for pyprep RANSAC; part of the cache key."""
 
 
 class PreprocSection(_Strict):

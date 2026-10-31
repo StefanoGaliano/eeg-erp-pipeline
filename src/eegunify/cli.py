@@ -430,6 +430,39 @@ def erp_components(
     console.print("sources and full definitions: eegunify erp components --show <id>")
 
 
+@erp_app.command("run")
+def erp_run(
+    config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],
+    subject: Annotated[list[str] | None, typer.Option("--subject", "-s")] = None,
+    from_: Annotated[str | None, typer.Option("--from", help="First stage to run.")] = None,
+    to: Annotated[str | None, typer.Option("--to", help="Last stage to run.")] = None,
+    force: Annotated[
+        list[str] | None, typer.Option(help="Rerun this stage and everything after it.")
+    ] = None,
+    root: Annotated[Path, typer.Option(help="Project root.")] = Path("."),
+) -> None:
+    """Run the ERP stages; cached stages whose inputs and settings are unchanged are skipped."""
+    from eegunify.config.loader import ConfigError, load_config
+    from eegunify.erp.runner import Runner, RunnerRefusedError
+
+    try:
+        cfg = load_config(config)
+        runner = Runner(cfg, root)
+        outcomes = runner.run(subject, from_=from_, to=to, force=force or ())
+    except (ConfigError, ValueError) as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    except RunnerRefusedError as err:
+        console.print(f"[red]refusing to run:[/]\n{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    colour = {"ok": "green", "skipped": "dim", "failed": "red"}
+    for o in outcomes:
+        msg = f" {o.message}" if o.message else ""
+        console.print(f"{o.item.stage:8} {o.item.label:6} [{colour[o.status]}]{o.status}[/]{msg}")
+    if any(o.status == "failed" for o in outcomes):
+        raise typer.Exit(EXIT_FAILED)
+
+
 @erp_app.command("status")
 def erp_status(
     config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],
@@ -448,7 +481,7 @@ def erp_status(
         console.print(f"[red]{err}")
         raise typer.Exit(EXIT_USAGE) from err
     if not runner.stages:
-        console.print("no ERP stages are implemented yet (M-E0: foundations only)")
+        console.print("no ERP stages enabled by this config")
         return
     colour = {"ok": "green", "stale": "yellow", "missing": "dim", "failed": "red"}
     table = Table("subject", *runner.names)

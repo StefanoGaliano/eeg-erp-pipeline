@@ -814,12 +814,16 @@ dev = [
     { name = "mypy" },
     { name = "pandas-stubs" },
     { name = "pre-commit" },
+    { name = "pyprep" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
     { name = "ruff" },
     { name = "streamlit" },
     { name = "types-pyyaml" },
+]
+erp = [
+    { name = "pyprep" },
 ]
 
 [package.metadata]
@@ -842,6 +846,8 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.7" },
     { name = "pybv", specifier = ">=0.7.5" },
     { name = "pydantic", specifier = ">=2.6" },
+    { name = "pyprep", marker = "extra == 'dev'", specifier = ">=0.10" },
+    { name = "pyprep", marker = "extra == 'erp'", specifier = ">=0.10" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5" },
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.5" },
@@ -855,7 +861,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.12" },
     { name = "types-pyyaml", marker = "extra == 'dev'" },
 ]
-provides-extras = ["app", "dev"]
+provides-extras = ["app", "erp", "dev"]
 
 [[package]]
 name = "execnet"
@@ -2590,6 +2596,23 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e4/11/b213bebff182584360cb8d17c72c1677fec5c5c228de439e63bcf8ab1c8f/pyparsing-3.3.3.tar.gz", hash = "sha256:928ae7e20211f3b6f3915a72f06a0cfd29ab9d24279dd6346b6b1a7146397d36", size = 1050487, upload-time = "2026-09-20T20:59:05.609Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl", hash = "sha256:ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4", size = 126420, upload-time = "2026-09-20T20:59:04.025Z" },
+]
+
+[[package]]
+name = "pyprep"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mne" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "psutil" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/75/ba/a8aafc76cb6f8573a4036bccd3cef177eaa41f4b075658fb63430bab0119/pyprep-0.10.0.tar.gz", hash = "sha256:5567addb38fec78e89b0e3933aad77b3b29af8b9b5de46740a3cdeb6973f241b", size = 38405, upload-time = "2026-10-27T20:34:44.172Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6c/c4/3e90a25de36a7449eae10df47acae4d09c33f2946746a41f6177f727f768/pyprep-0.10.0-py3-none-any.whl", hash = "sha256:cec39c8ab47efdc710f1ead83a4c0813108fb4d08a2696a9357d20ee5d7208ae", size = 42773, upload-time = "2026-10-27T20:34:42.515Z" },
 ]
 
 [[package]]

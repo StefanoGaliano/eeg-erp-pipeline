@@ -26,5 +26,5 @@ def test_components_show() -> None:
 def test_status_without_stages(tmp_path: Path) -> None:
     res = runner.invoke(app, ["erp", "status", str(CFG), "--root", str(tmp_path)])
     assert res.exit_code == 0, res.output
-    assert "no ERP stages" in res.output
+    assert "preproc" in res.output and "missing" in res.output
     assert runner.invoke(app, ["erp", "status", str(tmp_path / "x.yaml")]).exit_code == 2

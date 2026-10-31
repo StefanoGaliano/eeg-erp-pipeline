@@ -15,13 +15,15 @@ CONFIGS = Path(__file__).parents[3] / "code" / "configs"
 
 
 def test_phase1_configs_still_validate() -> None:
-    cfg = load_config(CONFIGS / "erpcore_n170.yaml")
-    assert cfg.reference.online.startswith("CMS/DRL")
+    cfg = parse_config(MINIMAL)  # conversion-only config: every ERP section defaulted
     assert cfg.reference.scheme == "average"
     assert cfg.preproc.highpass_hz == 0.1
     assert cfg.artifacts.method == "ica"
     assert cfg.epochs.sets == {}
     assert cfg.components.use == []
+    erpcore = load_config(CONFIGS / "erpcore_n170.yaml")
+    assert erpcore.reference.online.startswith("CMS/DRL")
+    assert erpcore.preproc.resample_hz == 256
 
 
 def test_full_erp_block_validates() -> None:

@@ -40,8 +40,11 @@ dependencies = [
 
 [project.optional-dependencies]
 app = ["streamlit>=1.40"]
+# ERP phases (docs/BLUEPRINT_PHASES.md section 17); more packages arrive with later stages.
+erp = ["pyprep>=0.10"]
 dev = [
     "streamlit>=1.40",
+    "pyprep>=0.10",
     "pytest>=8",
     "pytest-cov>=5",
     "pytest-xdist>=3.5",
@@ -78,7 +81,7 @@ python_version = "3.12"  # numpy stubs use 3.12 syntax; runtime still supports 3
 files = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*"]
+module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*", "pyprep.*", "meegkit.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -16,6 +16,7 @@ recordings:
   session: N170
 reference:
   online: CMS/DRL (reference-free)   # BioSemi ActiveTwo
+  scheme: average                    # offline, ERP phases: average of the EEG channels (N170)
 channels:
   bads:
     sub-015: [F8]                    # marked bad in ERP CORE's own channels.tsv
@@ -39,3 +40,21 @@ events:
   # (not response) codes by +26 ms (ERPLAB "Shifting Event Codes" tutorial, Luck lab).
   onset_shift_ms:
     "stimulus/*": 26
+
+# --- ERP phases (docs/BLUEPRINT_PHASES.md) -------------------------------------------------------
+# Recipe = ERP CORE's own, from Kappenman et al. 2021 (NeuroImage 225:117465), Methods
+# (checked against PMC7909723 on 2026-10-31): downsampled to 256 Hz; non-causal Butterworth
+# high-pass, half-amplitude cutoff 0.1 Hz, 12 dB/oct; no low-pass on the data that get measured
+# (20 Hz only for peak measures and plots); noisy channels spherically interpolated; N170
+# referenced to the average of all sites (the other components use P9/P10).
+preproc:
+  line_noise: {method: none}          # ERP CORE applies no notch
+  resample_hz: 256
+  highpass_hz: 0.1
+  lowpass_hz: null
+  filter: {method: iir, iir_order: 2, phase: zero}   # = ERPLAB pop_basicfilter order 2
+  bad_channels: {method: config_only} # bads from ERP CORE's channels.tsv (channels.bads above)
+  interpolate: true
+components:
+  preset: erpcore
+  use: [n170]
