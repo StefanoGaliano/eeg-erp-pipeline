@@ -1,0 +1,46 @@
+# Cognitive ERP components. `@erpcore` values: Kappenman et al. 2021, NeuroImage 225:117465,
+# Table 1 (sites, reference, difference wave) and Table 2 (windows), checked on 2026-10-31
+# against PMC7909723. `@classic`: docs/BLUEPRINT_PHASES.md section 5.2.
+
+p3@erpcore:
+  name: P3
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: stim
+  contrast: rare_minus_frequent
+  window_ms: [300, 600]
+  rois: {primary: [Pz]}
+  measures: [mean_amplitude, fractional_area_latency]
+  polarity: positive
+  reference: P9/P10
+
+p3@classic:
+  name: P3
+  citation: docs/BLUEPRINT_PHASES.md section 5.2 (literature preset)
+  epoch_set: stim
+  contrast: rare_minus_frequent
+  window_ms: [250, 500]
+  rois: {primary: [Pz, CPz]}
+  measures: [mean_amplitude]
+  polarity: positive
+
+mmn@erpcore:
+  name: MMN
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: stim
+  contrast: deviant_minus_standard
+  window_ms: [125, 225]
+  rois: {primary: [FCz]}
+  measures: [mean_amplitude, fractional_area_latency]
+  polarity: negative
+  reference: P9/P10
+
+n400@erpcore:
+  name: N400
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: stim
+  contrast: unrelated_minus_related
+  window_ms: [300, 500]
+  rois: {primary: [CPz]}
+  measures: [mean_amplitude, fractional_area_latency]
+  polarity: negative
+  reference: P9/P10

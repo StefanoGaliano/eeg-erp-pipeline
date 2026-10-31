@@ -1,0 +1,30 @@
+# Response-locked components. `@erpcore` values: Kappenman et al. 2021, NeuroImage 225:117465,
+# Table 1 (epoch, baseline, sites, reference, difference wave) and Table 2 (windows), checked on
+# 2026-10-31 against PMC7909723. These are also the first motor-decoding-adjacent signals.
+
+ern@erpcore:
+  name: ERN
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: resp
+  contrast: incorrect_minus_correct
+  window_ms: [0, 100]
+  rois: {primary: [FCz]}
+  measures: [mean_amplitude, fractional_area_latency]
+  polarity: negative
+  reference: P9/P10
+  baseline_ms: [-400, -200]
+  notes: Response-locked epoch -600..400 ms; onsets are never shifted.
+
+lrp@erpcore:
+  name: LRP
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: resp
+  contrast: contra_minus_ipsi
+  window_ms: [-100, 0]
+  rois: {primary: [C3, C4]}
+  lateralized_pairs: [[C3, C4]]
+  measures: [mean_amplitude, fractional_area_latency]
+  polarity: negative
+  reference: P9/P10
+  baseline_ms: [-800, -600]
+  notes: Response-locked epoch -800..200 ms; contralateral minus ipsilateral to the response hand.

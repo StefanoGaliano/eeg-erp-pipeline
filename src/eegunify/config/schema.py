@@ -12,6 +12,31 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+# ERP-phase sections. Imported into this module because config/reference.py looks every
+# model of the JSON schema up here by name.
+from eegunify.config.erp_sections import (
+    ArtifactsSection,
+    AsrSpec,
+    BadChannelsSpec,
+    ClusterSpec,
+    ComponentsSection,
+    Contrast,
+    EogCorrelationSpec,
+    EpochSet,
+    EpochsSection,
+    FilterSpec,
+    GroupSection,
+    IcaSpec,
+    IcLabelSpec,
+    LineNoiseSpec,
+    PreprocSection,
+    RejectSpec,
+)
+
+# The ERP models not referenced below are only re-exported (see the comment above).
+__all__ = ["AsrSpec", "BadChannelsSpec", "ClusterSpec", "EogCorrelationSpec", "EpochSet"]
+__all__ += ["FilterSpec", "IcLabelSpec", "IcaSpec", "LineNoiseSpec", "RejectSpec"]
+
 FormatName = Literal[
     "auto",
     "brainvision",
@@ -169,12 +194,28 @@ class UnitsSection(_Strict):
 
 
 class ReferenceSection(_Strict):
-    """Online reference and ground as recorded (Phase 1 never re-references)."""
+    """Reference: ``online``/``ground`` describe the recording (Phase 1 never re-references);
+    ``scheme``/``channels`` are the offline reference the ERP preproc stage applies."""
 
     online: str = "n/a"
-    """E.g. ``Cz``, ``linked mastoids``; BioSemi defaults to ``CMS/DRL (reference-free)``."""
+    """Recorded (online) reference, e.g. ``Cz``, ``linked mastoids``; BioSemi defaults to
+    ``CMS/DRL (reference-free)``. Written to ``EEGReference``; never changes the data."""
     ground: str | None = None
     """Ground electrode, if known."""
+    scheme: Literal["average", "channels", "rest", "none"] = "average"
+    """Offline re-reference applied by the ERP preproc stage (not by ``convert``): ``average``
+    of good EEG channels, the mean of ``channels``, ``rest``, or ``none`` (refused for
+    reference-free recordings such as BioSemi)."""
+    channels: list[str] = Field(default_factory=list)
+    """Reference channels for ``scheme: channels``, e.g. ``[P9, P10]``."""
+
+    @model_validator(mode="after")
+    def _channels_needed(self) -> ReferenceSection:
+        if self.scheme == "channels" and not self.channels:
+            raise ValueError("reference.scheme 'channels' requires reference.channels")
+        if self.scheme != "channels" and self.channels:
+            raise ValueError("reference.channels is only used with reference.scheme 'channels'")
+        return self
 
 
 class ChannelsSection(_Strict):
@@ -324,13 +365,40 @@ class Config(_Strict):
     """Event extraction, mapping, expected counts, onset shifts."""
     behavior: BehaviorSection = Field(default_factory=BehaviorSection)
     """Behavioural log alignment."""
+    preproc: PreprocSection = Field(default_factory=PreprocSection)
+    """ERP phases: continuous-data cleaning (unused by ``convert``)."""
+    artifacts: ArtifactsSection = Field(default_factory=ArtifactsSection)
+    """ERP phases: ICA / ASR artifact correction."""
+    epochs: EpochsSection = Field(default_factory=EpochsSection)
+    """ERP phases: epoch sets and rejection."""
+    conditions: dict[str, list[str]] = Field(default_factory=dict)
+    """ERP phases: condition name -> trial-type prefixes pooled into it
+    (``face: [stimulus/face]``)."""
+    contrasts: dict[str, Contrast] = Field(default_factory=dict)
+    """ERP phases: difference waves by name (``face_minus_car: {plus: face, minus: car}``)."""
+    components: ComponentsSection = Field(default_factory=ComponentsSection)
+    """ERP phases: components to measure, from the component library."""
+    group: GroupSection = Field(default_factory=GroupSection)
+    """ERP phases: group statistics and comparison with published values."""
     overrides: dict[str, dict[str, Any]] = Field(default_factory=dict)
     """Per-subject patches: ``{"sub-01": {"channels": {...}}}``."""
 
     @field_validator("overrides")
     @classmethod
     def _override_keys(cls, v: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-        allowed = {"format", "units", "reference", "channels", "montage", "events", "behavior"}
+        allowed = {
+            "format",
+            "units",
+            "reference",
+            "channels",
+            "montage",
+            "events",
+            "behavior",
+            "preproc",
+            "artifacts",
+            "epochs",
+            "components",
+        }
         for sub, patch in v.items():
             if not sub.startswith("sub-"):
                 raise ValueError(f"override key {sub!r} must look like 'sub-<label>'")
@@ -338,6 +406,19 @@ class Config(_Strict):
             if bad:
                 raise ValueError(f"override {sub!r} touches unsupported sections {sorted(bad)}")
         return v
+
+    @model_validator(mode="after")
+    def _contrasts_use_conditions(self) -> Config:
+        for name, c in self.contrasts.items():
+            for side in (c.plus, c.minus):
+                if side not in self.conditions:
+                    raise ValueError(
+                        f"contrast {name!r} uses unknown condition {side!r}; "
+                        f"defined: {sorted(self.conditions)}"
+                    )
+        if self.group.cluster.enabled and self.group.cluster.contrast not in self.contrasts:
+            raise ValueError("group.cluster.contrast must name one of 'contrasts'")
+        return self
 
     def bads_for(self, subject: str) -> list[str]:
         """Bad channels for one subject (``bads`` may be a list or a per-subject dict)."""

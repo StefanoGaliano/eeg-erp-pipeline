@@ -1,0 +1,105 @@
+# Visual ERP components. `@erpcore` values are from Kappenman et al. 2021, NeuroImage
+# 225:117465, Table 1 (sites, reference, difference wave) and Table 2 (recommended measurement
+# windows), checked on 2026-10-31 against the PMC author manuscript (PMC7909723).
+# `@classic` / `@iscev` values are the literature defaults chosen in docs/BLUEPRINT_PHASES.md
+# section 5.2; they are not reproduction targets.
+
+n170@erpcore:
+  name: N170
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: stim
+  contrast: face_minus_car
+  window_ms: [110, 150]
+  rois: {primary: [PO8], secondary: [P7, PO7, P8]}
+  measures: [mean_amplitude, peak_latency, fractional_area_latency]
+  polarity: negative
+  reference: average
+  notes: >-
+    Faces minus cars, average of all 33 sites as reference. Stimulus onsets include the
+    26 ms LCD delay (applied once, in Phase 1).
+
+n170@classic:
+  name: N170
+  citation: docs/BLUEPRINT_PHASES.md section 5.2 (literature preset)
+  epoch_set: stim
+  contrast: face_minus_car
+  window_ms: [130, 200]
+  rois: {primary: [P7, P8, PO7, PO8]}
+  measures: [mean_amplitude, peak_latency]
+  polarity: negative
+  reference: average
+
+n2pc@erpcore:
+  name: N2pc
+  citation: Kappenman et al. 2021, NeuroImage 225:117465, Tables 1-2
+  epoch_set: stim
+  contrast: contra_minus_ipsi
+  window_ms: [200, 275]
+  rois: {primary: [PO7, PO8]}
+  lateralized_pairs: [[PO7, PO8]]
+  measures: [mean_amplitude, fractional_area_latency]
+  polarity: negative
+  reference: P9/P10
+  notes: >-
+    Contralateral minus ipsilateral to the target. Needs HEOG rejection: eye movements toward
+    the target fake an N2pc.
+
+n2pc@classic:
+  name: N2pc
+  citation: docs/BLUEPRINT_PHASES.md section 5.2 (literature preset)
+  epoch_set: stim
+  contrast: contra_minus_ipsi
+  window_ms: [180, 300]
+  rois: {primary: [PO7, PO8]}
+  lateralized_pairs: [[PO7, PO8]]
+  measures: [mean_amplitude]
+  polarity: negative
+
+p1@classic:
+  name: P1
+  citation: docs/BLUEPRINT_PHASES.md section 5.2 (literature preset; no ERP CORE value)
+  epoch_set: stim
+  window_ms: [80, 130]
+  rois: {primary: [O1, O2, Oz, PO7, PO8]}
+  measures: [mean_amplitude, peak_amplitude, peak_latency]
+  polarity: positive
+
+n1@classic:
+  name: N1
+  citation: docs/BLUEPRINT_PHASES.md section 5.2 (literature preset)
+  epoch_set: stim
+  window_ms: [150, 200]
+  rois: {primary: [PO7, PO8]}
+  measures: [mean_amplitude, peak_amplitude, peak_latency]
+  polarity: negative
+
+vep_p100@iscev:
+  name: VEP P100
+  citation: ISCEV standard for clinical VEPs (2016 update), pattern reversal
+  epoch_set: stim
+  window_ms: [90, 130]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: positive
+  reference: Fz
+  notes: Latency norm about 100 ms; above 115 ms is flagged VEP_LATENCY_ATYPICAL (info).
+
+vep_n75@iscev:
+  name: VEP N75
+  citation: ISCEV standard for clinical VEPs (2016 update), pattern reversal
+  epoch_set: stim
+  window_ms: [60, 90]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: negative
+  reference: Fz
+
+vep_n135@iscev:
+  name: VEP N135
+  citation: ISCEV standard for clinical VEPs (2016 update), pattern reversal
+  epoch_set: stim
+  window_ms: [115, 160]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: negative
+  reference: Fz

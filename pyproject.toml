@@ -17,8 +17,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
 dependencies = [
-    "mne>=1.10",
-    "mne-bids>=0.16",
+    "mne>=1.13",
+    "mne-bids>=0.20",
     "numpy>=1.26",
     "scipy>=1.11",
     "pandas>=2.1",

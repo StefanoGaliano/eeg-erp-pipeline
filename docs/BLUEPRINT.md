@@ -131,7 +131,7 @@ EEG_Project/                      # git repo root
 │   ├── detect.py                 # format detection
 │   ├── readers/
 │   │   ├── base.py               # Reader protocol + registry decorator
-│   │   ├── brainvision.py  biosemi.py  edf.py  eeglab.py  xdf.py
+│   │   ├── brainvision.py  bdf.py  edf.py  eeglab.py  xdf.py
 │   │   ├── gdf.py  ant.py  neuroscan.py  curry.py  egi.py
 │   │   └── csv_generic.py        # OpenBCI + generic delimited
 │   ├── events/
@@ -404,6 +404,10 @@ Also: `pre-commit.ci` or pre-commit in lint job; Dependabot for actions and pip;
 
 ## 15. Downstream phases (sketch) and the contract they rely on
 
+> **Superseded** by `docs/BLUEPRINT_PHASES.md`. Component windows are now data: the N170 target is the
+> `n170@erpcore` preset (110–150 ms at PO8, face−car); the 130–200 ms P7/P8/PO7/PO8 window below
+> survives as `n170@classic`. The sketch is kept for history.
+
 > **Superseded by [BLUEPRINT_PHASES.md](BLUEPRINT_PHASES.md)** (full design of the ERP phases, A2, Phase M and the BCI direction). The table below is kept for history; its N170 window is replaced by the `n170@erpcore` preset.
 
 All downstream stages read via `mne_bids.read_raw_bids(BIDSPath(root="rawdata", ...))` and rely only on section 5 invariants + `events.tsv` `trial_type` hierarchy. Outputs go to `derivatives/eegunify-<stage>/` as BIDS-derivatives with `desc-` entities and FIF payloads.
@@ -418,7 +422,7 @@ All downstream stages read via `mne_bids.read_raw_bids(BIDSPath(root="rawdata", 
 | 6 | Measurement: mean amplitude, peak latency in ROI windows (P1 80-130 ms @ O1/O2/Oz; N170 130-200 ms @ P7/P8/PO7/PO8; P3 300-600 ms @ Pz), group stats, comparison with ERP CORE published values | `rois.py` | `measurements.tsv`, figures |
 | later | BCI direction: real-time LSL ingest reusing readers/naming | XDF/LSL reader | - |
 
-Phase 2+ acceptance anchor: reproduce ERP CORE N170 grand-average face-car difference at P8 within the published latency range (~130-200 ms).
+Phase 2+ acceptance anchor: reproduce ERP CORE N170 grand-average face-car difference at P8 within the published latency range (~130-200 ms). *(Superseded: see the `n170@erpcore` preset and BLUEPRINT_PHASES.md section 1.)*
 
 ---
 
@@ -513,7 +517,7 @@ The user decided that the same ingestion pipeline must also exist natively in MA
 - **Output:** the same canonical output, BIDS-EEG with BrainVision files in µV as float32, written with bids-matlab-tools `bids_export`. Run the same 10 canonical checks (section 5) as `eegunify.validate`.
 - **Environment:** reuse `Practice/setup_eeg_toolboxes.m` and `Practice/toolboxes/{eeglab,fieldtrip}`. Never use `addpath(genpath(...))`.
 - **Tests:** `matlab.unittest` in `matlab/tests/`, run locally with `matlab -batch "runtests('matlab/tests')"`. They are not run in CI because CI has no MATLAB license. Note this in the README.
-- **Acceptance (parity test):** for ERP CORE N170 sub-001, the MATLAB and Python outputs must match:
+- **Acceptance (parity test):** for ERP CORE N170 sub-015, the MATLAB and Python outputs must match:
   - `events.tsv` must be identical (onset to 1 sample, `value` and `trial_type` exact)
   - `channels.tsv` names and types must be identical
   - channel data must agree to within float32 tolerance (max abs diff < 1e-3 µV)
@@ -552,4 +556,4 @@ config key, and it calls the same `eegunify` functions as the CLI, so app runs s
 | Milestone | Depends on | Acceptance |
 |---|---|---|
 | A1 Inspect / Configure / Convert app | M2 | AppTest suite green; UI-made config == hand-written config output |
-| A2 Components / ERP app | Phase 4–5 | ERP for ERP CORE N170 sub-001 matches published component windows |
+| A2 Components / ERP app | Phase 4–5 | ERP for ERP CORE N170 sub-015 matches published component windows |

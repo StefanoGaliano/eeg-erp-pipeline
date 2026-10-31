@@ -60,10 +60,24 @@ def _section(name: str, schema: dict[str, Any], model: type[BaseModel]) -> list[
     return [*lines, ""]
 
 
+COMPONENTS_HEADER = """# Component library entries
+
+Not config keys: the format of the component YAML files (`src/eegunify/erp/components/*.yaml`
+and `components.library_paths`), one entry per `<id>@<preset>` key. `components.overrides`
+takes a partial entry. List the library with `eegunify erp components`.
+"""
+
+
 def markdown() -> str:
+    from eegunify.erp.components import library as library_module
+
     schema = Config.model_json_schema()
     defs = schema.get("$defs", {})
     out = [HEADER, *_section("(top level)", schema, Config)]
     for name in sorted(defs):
         out += _section(name, defs[name], getattr(schema_module, name))
+    comp = library_module.ComponentDef.model_json_schema()
+    out += [COMPONENTS_HEADER, *_section("ComponentDef", comp, library_module.ComponentDef)]
+    for name in sorted(comp.get("$defs", {})):
+        out += _section(name, comp["$defs"][name], getattr(library_module, name))
     return "\n".join(out).rstrip() + "\n"

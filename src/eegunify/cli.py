@@ -24,6 +24,10 @@ app = typer.Typer(
 )
 config_app = typer.Typer(help="Validate configs and print their schema.", no_args_is_help=True)
 app.add_typer(config_app, name="config")
+erp_app = typer.Typer(
+    help="ERP phases: stages, cache status, component library.", no_args_is_help=True
+)
+app.add_typer(erp_app, name="erp")
 console = Console()
 
 EXIT_FAILED, EXIT_USAGE, EXIT_READER = 1, 2, 3
@@ -378,3 +382,79 @@ def config_schema(
         console.print(f"wrote {out}")
     else:
         typer.echo(text)
+
+
+@erp_app.command("components")
+def erp_components(
+    preset: Annotated[str | None, typer.Option(help="Only this preset family.")] = None,
+    show: Annotated[
+        str | None, typer.Option(help="Print one component (id or id@preset) in full.")
+    ] = None,
+) -> None:
+    """List the component library: windows, sites and sources of every preset."""
+    from eegunify.erp.components.library import LibraryError, load_library, split_key
+
+    library = load_library()
+    if show:
+        keys = [k for k in library if k == show or split_key(k)[0] == show]
+        if preset:
+            keys = [k for k in keys if split_key(k)[1] == preset]
+        if not keys:
+            console.print(f"[red]unknown component {show!r}; known: {sorted(library)}")
+            raise typer.Exit(EXIT_USAGE)
+        import yaml
+
+        for k in sorted(keys):
+            typer.echo(yaml.safe_dump({k: library[k].model_dump(mode="json")}, sort_keys=False))
+        return
+    try:
+        keys = sorted(k for k in library if preset is None or split_key(k)[1] == preset)
+    except LibraryError as err:  # pragma: no cover - keys were validated on load
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    if not keys:
+        console.print(f"[red]no components with preset {preset!r}")
+        raise typer.Exit(EXIT_USAGE)
+    table = Table("key", "name", "window (ms)", "sites", "wave", "polarity")
+    for k in keys:
+        c = library[k]
+        table.add_row(
+            k,
+            c.name,
+            f"{c.window_ms[0]:g} to {c.window_ms[1]:g}",
+            ", ".join(c.rois.primary),
+            c.contrast or "conditions",
+            c.polarity,
+        )
+    console.print(table)
+    console.print("sources and full definitions: eegunify erp components --show <id>")
+
+
+@erp_app.command("status")
+def erp_status(
+    config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],
+    subject: Annotated[list[str] | None, typer.Option("--subject", "-s")] = None,
+    root: Annotated[Path, typer.Option(help="Project root.")] = Path("."),
+) -> None:
+    """Subject x stage table of the cache: ok / stale / missing / failed. Runs nothing."""
+    from eegunify.config.loader import ConfigError, load_config
+    from eegunify.erp.runner import Runner
+
+    try:
+        cfg = load_config(config)
+        runner = Runner(cfg, root)
+        items = runner.status(subject)
+    except (ConfigError, ValueError) as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    if not runner.stages:
+        console.print("no ERP stages are implemented yet (M-E0: foundations only)")
+        return
+    colour = {"ok": "green", "stale": "yellow", "missing": "dim", "failed": "red"}
+    table = Table("subject", *runner.names)
+    rows: dict[str, dict[str, str]] = {}
+    for it in items:
+        rows.setdefault(it.label, {})[it.stage] = f"[{colour[it.status]}]{it.status}"
+    for label, cells in rows.items():
+        table.add_row(label, *(cells.get(n, "") for n in runner.names))
+    console.print(table)

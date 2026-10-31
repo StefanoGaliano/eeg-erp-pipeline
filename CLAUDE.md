@@ -28,6 +28,21 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 foundations done)
+
+- `eegunify erp components [--preset erpcore] [--show n170]` lists the component library; `eegunify erp status <config>`
+  prints the subject x stage cache table. `eegunify erp run` arrives with the first real stage (M-E1).
+- Stages: preproc -> ica -> epochs -> erp -> group (`erp/stages/`, subclass `Stage`, `@register_stage`). Outputs go to
+  `derivatives/eegunify-<stage>/` (BIDSPath via `erp/paths.py`), cached by `stage_key` (`erp/hashing.py`). The runner
+  (`erp/runner.py`) writes the provenance holding the key, so stages only write outputs (via `atomic_path`).
+- ERP config sections (`config/erp_sections.py`, imported into `schema.py` for the docs) are all optional; `reference.online`
+  describes the recording, `reference.scheme/channels` is the offline re-reference.
+- Component windows/ROIs are data: `src/eegunify/erp/components/*.yaml`; never hard-code a window.
+- Never shift event onsets in ERP stages (Phase 1 already applied `onset_shift_ms`).
+- Select events only through `erp.events.select` (MNE tag matching).
+- Reference numbers (ERP CORE) only from fetched files or the paper, never typed from memory.
+- New QA IDs go in the `erp/qa.py` docstring table; IDs are API.
+
 ## Architecture (data flow)
 
 `pipeline.read_recording(path, cfg)` is the single entry point. Every format goes through the same steps:
