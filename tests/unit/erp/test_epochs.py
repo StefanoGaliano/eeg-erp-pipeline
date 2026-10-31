@@ -18,6 +18,7 @@ from eegunify.erp import paths, qa
 from eegunify.erp.epochs import (
     EpochsError,
     make_epochs,
+    matlab_round,
     moving_window_ptp,
     ms_to_samples,
     step_like,
@@ -61,9 +62,22 @@ def test_step_like() -> None:
     assert step_like(noise, 100, 10)[0, 0] < 0.6
 
 
-def test_ms_to_samples_rounds_half_up() -> None:
-    assert ms_to_samples(10, 250) == 3  # 2.5 -> 3 (Python round() would give 2)
-    assert ms_to_samples(200, 256) == 51 and ms_to_samples(0.1, 256) == 1
+def test_ms_to_samples_floors_like_erplab() -> None:
+    # ERPLAB pop_artmwppth / pop_artstep: floor(ms * fs / 1000).
+    assert ms_to_samples(10, 250) == 2
+    assert ms_to_samples(200, 256) == 51 and ms_to_samples(100, 256) == 25
+    assert ms_to_samples(0.1, 256) == 1
+    assert ms_to_samples(200, 500) == 100  # exact products are not floored down by float error
+
+
+def test_matlab_round() -> None:
+    assert [matlab_round(x) for x in (2.5, 3.5, -2.5, 25.5, 0.49)] == [3, 4, -3, 26, 0]
+
+
+def test_step_like_first_half_is_matlab_round() -> None:
+    # 5-sample window: ERPLAB's first half is round(5/2) = 3 samples, the second half 2.
+    x = np.array([[[0.0, 0.0, 9.0, 3.0, 3.0]]])
+    assert step_like(x, 5, 1)[0, 0] == pytest.approx(abs(3.0 - 3.0))
 
 
 def test_trial_type() -> None:

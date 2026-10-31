@@ -10,10 +10,10 @@ ms and a ``[start, end]`` window in ms. The window is inclusive and snaps to the
   samples on each side (neighbours may lie outside the window). The most extreme such sample
   wins. When the window holds none, the absolute extreme is returned with ``local=False`` (QA
   ``MEASURE_NO_LOCAL_PEAK``).
-- :func:`fractional_area_latency`: the time at which the area in the polarity direction
-  (negative parts only for a negative component) reaches ``fraction`` of its total. Each
-  sample is a bin of one sampling period centred on it, and the latency is interpolated
-  inside the bin, so a symmetric triangle gives its apex exactly.
+- :func:`fractional_area_latency`: ERPLAB ``areaerp`` ported: the sample at which the area
+  in the polarity direction (negative parts only for a negative component, trapezoid rule)
+  reaches ``fraction`` of its total, found by ERPLAB's binary search. A symmetric triangle
+  with its apex on a sample gives the apex exactly.
 
 Pooled ROIs are averaged into one waveform before measuring (:func:`pool`, ERPLAB-like).
 """
@@ -84,6 +84,12 @@ def peak(
     return Peak(float(data_uv[best]), float(times_ms[best]), local)
 
 
+def _trapz(x: np.ndarray) -> float:
+    """MATLAB ``trapz`` with unit spacing (0 for a single sample); numpy 1.26 has no
+    ``trapezoid``."""
+    return float(x.sum() - (x[0] + x[-1]) / 2) if x.size > 1 else 0.0
+
+
 def fractional_area_latency(
     times_ms: np.ndarray,
     data_uv: np.ndarray,
@@ -91,21 +97,29 @@ def fractional_area_latency(
     polarity: Polarity,
     fraction: float = 0.5,
 ) -> float:
-    """``nan`` when the window has no area in the polarity direction."""
+    """Port of ERPLAB ``areaerp`` (13.10) for a fixed window: the area in the polarity
+    direction by the trapezoid rule, in single precision, then a binary search for the sample
+    whose cumulative area matches ``fraction`` of it. The result is a sample time, as in ERPLAB.
+    ``nan`` when the window has no area in the polarity direction."""
     sl = window_slice(times_ms, window_ms)
     sign = 1.0 if polarity == "positive" else -1.0
     a = np.clip(sign * np.asarray(data_uv[sl], dtype=float), 0.0, None)
-    total = a.sum()
-    if total <= 0:
+    dt = float(np.median(np.diff(times_ms))) / 1000 if times_ms.size > 1 else 1.0
+    total = np.float32(dt * _trapz(a))
+    if total == 0:
         return float("nan")
-    t = times_ms[sl]
-    dt = float(np.median(np.diff(times_ms))) if times_ms.size > 1 else 1.0
-    cum = np.cumsum(a)
-    target = fraction * total
-    j = int(np.searchsorted(cum, target))
-    before = cum[j - 1] if j else 0.0
-    # Bin j spans t[j] - dt/2 .. t[j] + dt/2; interpolate where the target falls inside it.
-    return float(t[j] - dt / 2 + (target - before) / a[j] * dt)
+    target = np.float32(total * fraction)
+    lo, hi, mid = 0, a.size - 1, 0
+    while lo <= hi:
+        mid = int(np.floor((lo + hi) / 2 + 0.5))  # MATLAB round
+        area = np.float32(dt * _trapz(a[: mid + 1]))
+        if area > target:
+            hi = mid - 1
+        elif area < target:
+            lo = mid + 1
+        else:
+            break
+    return float(times_ms[sl][mid])
 
 
 def pool(data_uv: np.ndarray) -> np.ndarray:

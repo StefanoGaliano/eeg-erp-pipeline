@@ -190,3 +190,11 @@ def test_preview_recipe_patch() -> None:
     assert cfg.epochs.reject.ptp_uv == 150 and cfg.epochs.reject.step_heog_uv is None
     assert cfg.epochs.reject.min_trials_per_condition == 10  # kept from the dataset config
     assert cfg.reference.online == "Cz" and cfg.conditions == _cfg().conditions
+
+
+def test_erplab_recipe_patch() -> None:
+    base = _cfg(artifacts={"method": "ica"})
+    cfg = apply_recipe(base, "erplab")
+    assert cfg.artifacts.method == "none" and cfg.epochs.reject.step_heog_uv is None
+    assert cfg.preproc == base.preproc and cfg.epochs.sets == base.epochs.sets
+    assert cfg.epochs.reject.ptp_uv == base.epochs.reject.ptp_uv

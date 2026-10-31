@@ -50,8 +50,8 @@ with the blueprint defaults (ERPLAB semantics: moving-window peak-to-peak 100 µ
 | Check | Result |
 |---|---|
 | events logged | 320, 80 per stimulus trial type (= `events.expected_counts`), each with its rawdata code |
-| rejected | 13 (4 %): 8 by the HEOG step function, 5 by peak-to-peak |
-| kept | face 76, car 79, scrambled_face 76, scrambled_car 76 |
+| rejected | 13 (4 %): 8 by peak-to-peak, 5 by the HEOG step function (after the M-E5 fixes; before them 5 and 8) |
+| kept | face 77, car 78, scrambled_face 77, scrambled_car 75 |
 | QA | `EPOCHS_REJECTED_FRACTION`, `EPOCHS_MIN_TRIALS`, `EPOCHS_BASELINE_DRIFT` pass |
 
 ERP CORE set its rejection thresholds per subject; their values are taken from their files in
@@ -65,7 +65,7 @@ ERP CORE N170 sub-015, test `tests/integration/test_erp_measures.py`:
 | Check | Result |
 |---|---|
 | preview recipe (`eegunify.erp.recipes.PREVIEW`: 0.1-30 Hz FIR, F8 left bad, average reference, no ICA, ±150 µV whole-epoch) | face − car at PO8, 110-150 ms = **−2.2396 µV**; golden −2.24 ± 0.05 (`tests/golden/erpcore_n170_sub-015/erp/preview_recipe.json`). Faces 3.37 µV and cars 5.61 µV, identical to the v0.1.0 preview script |
-| ERP CORE recipe (M-E1 to M-E3 settings) | face − car **−1.28 µV** (SME 0.77 µV), 50 % area latency 143.5 ms; faces 4.44 µV (76 trials), cars 5.71 µV (79) |
+| ERP CORE recipe (M-E1 to M-E3 settings) | face − car **−1.22 µV** (SME 0.76 µV), 50 % area latency 144.5 ms; faces 4.42 µV (77 trials), cars 5.64 µV (78). Values after the M-E5 fixes; before them −1.28 µV, 143.5 ms |
 | QA | `ERP_NOISE_SME` and `ERP_COMPONENT_POLARITY` pass; `MEASURE_NO_LOCAL_PEAK` warns for the condition waves (they rise through the window; the face − car difference has a local peak) |
 
 The two recipes differ by ICA, interpolating F8, 256 Hz and the 30 Hz low-pass, so different
@@ -77,3 +77,29 @@ amplitude exactly; through all stages (with noise, ICA and the average reference
 mean amplitude is within 3 SME + 0.2 µV of the injected value. The blueprint's "0.3 µV RMS over
 the whole difference wave" is not reachable at the synthetic noise level (~28 trials per
 condition give ~0.8 µV RMS of noise), so the bound is stated in SME units instead.
+
+## M-E5 ERPLAB cross-check (in progress, 2026-10-31)
+
+ERPLAB 13.10 (`ucdavis/erplab` release zip, sha256 `5b1c9d21…53fb9f3`) and bva-io 1.74
+(`sccn/bva-io` tag tarball, sha256 `e54a4395…77813a0c`) are installed in
+`Practice/toolboxes/eeglab/plugins`. Reading their source showed three places where eegunify did
+not follow ERPLAB; all are fixed, with tests:
+
+| Rule | ERPLAB 13.10 | eegunify before | now |
+|---|---|---|---|
+| ms -> samples for rejection windows (`pop_artmwppth`, `pop_artstep`) | `floor(ms*fs/1000)` | half-up rounding (100 ms at 256 Hz: 26 instead of 25) | floor |
+| step function: first half of the window | `round(winpnts/2)` samples (MATLAB round) | `winpnts // 2` | MATLAB round |
+| fractional area latency (`areaerp`) | trapezoid rule, single precision, binary search for a sample | rectangle bins, interpolated inside a sample | ported |
+
+Matching already: moving-window placement (`p1:stepnts:p2-(winpnts-1)`, peak-to-peak `>`
+threshold), the local-peak rule (`localpeak`: more extreme than both adjacent samples and both
+`Neighborhood` means; `geterpvalues` passes `Neighborhood` extra samples on each side of the
+window), window snapping to the closest samples, and the inclusive mean amplitude.
+
+Remaining differences, by design: ERPLAB refuses a rejection window longer than the epoch (here:
+one whole-epoch window, as MNE's `reject`); with no local peak ERPLAB returns NaN unless
+`Peakreplace` is `abs` (here: the absolute peak, flagged `MEASURE_NO_LOCAL_PEAK`).
+
+The numeric cross-check in MATLAB (same filtered, re-referenced data through ERPLAB
+`pop_epochbin`, `pop_artmwppth`, `pop_averager`, `pop_geterpvalues`; target |Δ| < 0.05 µV and
+identical rejected epochs) is not run yet.

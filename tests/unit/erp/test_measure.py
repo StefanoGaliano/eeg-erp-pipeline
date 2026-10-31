@@ -80,9 +80,10 @@ def test_fractional_area_latency_triangle_exact() -> None:
 
 
 def test_fractional_area_fraction() -> None:
-    box = np.where((T >= 100) & (T <= 198), 1.0, 0.0)  # 50 samples of 1
-    # 25 % of the area is reached after 12.5 bins from the first bin's left edge (99 ms).
-    assert fractional_area_latency(T, box, (100.0, 198.0), "positive", 0.25) == pytest.approx(124.0)
+    box = np.where((T >= 100) & (T <= 198), 1.0, 0.0)  # 50 samples of 1 in the window
+    # Trapezoid area to sample m is m sampling periods (49 in total), so 25 % = 12.25: ERPLAB's
+    # binary search (0..49) visits 25, 12, 19, 16, 14, 13 and stops on sample 13 -> 126 ms.
+    assert fractional_area_latency(T, box, (100.0, 198.0), "positive", 0.25) == 126.0
 
 
 def test_pool_and_sme() -> None:

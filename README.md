@@ -26,10 +26,10 @@ First `measures.tsv` (sub-015, N170 window 110–150 ms at PO8, from the compone
 
 | wave | measure | value | trials |
 |---|---|---|---|
-| face − car | mean amplitude | −1.28 µV | 76 |
-| face − car | 50 % area latency | 143.5 ms | 76 |
-| face | mean amplitude | 4.44 µV | 76 |
-| car | mean amplitude | 5.71 µV | 79 |
+| face − car | mean amplitude | −1.22 µV | 77 |
+| face − car | 50 % area latency | 144.5 ms | 77 |
+| face | mean amplitude | 4.42 µV | 77 |
+| car | mean amplitude | 5.64 µV | 78 |
 
 The comparison with ERP CORE's published per-subject values comes with the group stage (v0.3.0).
 

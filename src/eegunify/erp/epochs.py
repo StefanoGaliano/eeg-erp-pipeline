@@ -8,11 +8,16 @@ numpy so that the MATLAB ERP-lite cross-check (M-E5) runs the identical rule in 
   epoch; the epoch's value on a channel is the largest peak-to-peak of any window, and an epoch
   is flagged when any channel exceeds the threshold.
 - :func:`step_like`: ERPLAB ``pop_artstep`` (step-like artifacts, used on HEOG for saccades).
-  In each moving window, the mean of the second half minus the mean of the first half; the
-  epoch's value is the largest absolute difference.
+  In each moving window, the mean of the second half minus the mean of the first half (the
+  first half has MATLAB ``round(window / 2)`` samples); the epoch's value is the largest
+  absolute difference.
 - flat: peak-to-peak over the whole epoch below ``flat_uv`` on any EEG channel.
 
-The test period is the whole epoch, as ERPLAB's default. Values are in µV; data come in Volts.
+The test period is the whole epoch, as ERPLAB's default. Window and step sizes are
+``floor(ms * fs / 1000)`` samples, as in ERPLAB (checked against ERPLAB 13.10 source). One
+difference: ERPLAB refuses a window longer than the epoch, whereas here it becomes a single
+window over the whole epoch (MNE's ``reject``, used by the preview recipe). Values are in µV;
+data come in Volts.
 Event onsets are never shifted here (Phase 1 already applied ``onset_shift_ms``).
 """
 
@@ -55,7 +60,7 @@ def moving_window_ptp(data: np.ndarray, window: int, step: int) -> np.ndarray:
 def step_like(data: np.ndarray, window: int, step: int) -> np.ndarray:
     """(n_epochs, n_channels) largest |mean(second half) - mean(first half)| over windows."""
     starts = _windows(data.shape[-1], window, step)
-    half = max(window // 2, 1)
+    half = max(matlab_round(window / 2), 1)  # ERPLAB: round(winpnts/2) samples in the first half
     out = np.zeros(data.shape[:2])
     for s in starts:
         seg = data[..., s : s + window]
@@ -65,8 +70,13 @@ def step_like(data: np.ndarray, window: int, step: int) -> np.ndarray:
 
 
 def ms_to_samples(ms: float, sfreq: float) -> int:
-    # Half-up rounding (Python round() is half-to-even, which would differ from MATLAB).
-    return max(int(np.floor(ms * sfreq / 1000.0 + 0.5)), 1)
+    """``floor(ms * fs / 1000)``, as ERPLAB ``pop_artmwppth``/``pop_artstep``; at least 1."""
+    return max(int(np.floor(ms * sfreq / 1000.0 + 1e-9)), 1)
+
+
+def matlab_round(x: float) -> int:
+    """MATLAB ``round``: halves away from zero (Python's ``round`` goes to even)."""
+    return int(np.sign(x) * np.floor(abs(x) + 0.5))
 
 
 def _heog(epochs: mne.BaseEpochs) -> str | None:

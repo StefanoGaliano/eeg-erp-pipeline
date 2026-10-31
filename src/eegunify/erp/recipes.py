@@ -6,6 +6,9 @@ left out (not interpolated), average reference, no ICA, -200..800 ms epochs with
 baseline, and one peak-to-peak rule of 150 µV over the whole epoch on EEG (MNE's
 ``reject=dict(eeg=150e-6)``). On ERP CORE N170 sub-015 it gives the regression golden value
 face - car = -2.24 µV at PO8, 110-150 ms. It is a regression anchor, not ERP CORE's recipe.
+
+``erplab`` is the M-E5 cross-check recipe: the dataset config's own settings without ICA and
+without the HEOG step rule, so the same preprocessed data can go through ERPLAB.
 """
 
 from __future__ import annotations
@@ -47,7 +50,14 @@ PREVIEW: dict[str, Any] = {
         },
     },
 }
-RECIPES = {"preview": PREVIEW}
+ERPLAB_CROSSCHECK: dict[str, Any] = {
+    # M-E5 (section 8.4): the dataset's own recipe without ICA (not reproducible across
+    # implementations) and without the HEOG step function, so ERPLAB runs exactly
+    # pop_artmwppth on the same preprocessed data.
+    "artifacts": {"method": "none"},
+    "epochs": {"reject": {"method": "thresholds", "step_heog_uv": None, "flat_uv": None}},
+}
+RECIPES = {"preview": PREVIEW, "erplab": ERPLAB_CROSSCHECK}
 
 
 def apply_recipe(cfg: Config, name: str) -> Config:
