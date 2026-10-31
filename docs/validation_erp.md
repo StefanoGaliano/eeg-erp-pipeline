@@ -20,3 +20,22 @@ Butterworth high-pass at 12 dB/oct, no low-pass, F8 interpolated, average refere
 Open point: the ERP CORE paper references the N170 to the average of "all 33 sites" (30 scalp
 channels plus the three EOG electrodes), whereas this pipeline keeps EOG channels out of the
 average reference (blueprint rule). The effect on the N170 measure will be checked in M-E4/M-E6a.
+
+## M-E2 ica (2026-10-31)
+
+ERP CORE N170 sub-015, same recipe plus `artifacts.method: ica` (picard as extended infomax,
+seed 97, fitted on a 1-100 Hz average-referenced copy; ICLabel `eye blink` >= 0.8; EOG z >= 3 on
+bipolar VEOG = Fp2 - VEOG_lower and HEOG = HEOG_left - HEOG_right), test
+`tests/integration/test_erp_ica.py`:
+
+| Check | Result |
+|---|---|
+| ica stage runs | ok in ~6 s; a second run is skipped (cache) |
+| components | 18 (`n_components: 0.99`) |
+| excluded | 4: three ICLabel `eye blink` (p 1.00, 0.91, 0.99; the first also VEOG z = -3.1) and one HEOG z = -3.3 component that ICLabel calls `muscle artifact` (horizontal eye movements) |
+| `ICA_BLINK_RESIDUAL` | VEOG-Fp1 r = -0.06 after cleaning (warn above 0.3) |
+| `ICA_BRAIN_REMOVED` | none |
+
+Indices differ across OS/BLAS, so the test asserts classes and counts only. ERP CORE's own
+pipeline removed blink and eye-movement components with ICA too; whether our set matches theirs
+shows up in the N170 comparison (M-E6a).

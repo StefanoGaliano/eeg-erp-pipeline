@@ -275,7 +275,7 @@ def test_line_residual_warns_without_cleaning(erp_truth: ErpTruth) -> None:
 
 def test_stage_writes_outputs_and_caches(erp_project: Make) -> None:
     root, cfg = erp_project(preproc={"line_noise": {"method": "notch"}, "lowpass_hz": 40})
-    [out] = Runner(cfg, root).run()
+    out = Runner(cfg, root).run(to="preproc")[0]
     assert out.status == "ok", out.message
     fif = paths.stage_path(
         root, "preproc", cfg, "01", description="preproc", suffix="eeg", extension=".fif"
@@ -289,7 +289,7 @@ def test_stage_writes_outputs_and_caches(erp_project: Make) -> None:
         fif.with_name(fif.name.replace("_eeg.fif", "_qa.json")).read_text(encoding="utf-8")
     )
     assert qa_json["stage"] == "preproc" and qa_json["steps"]["line_noise"]["method"] == "notch"
-    [again] = Runner(cfg, root).run()
+    again = Runner(cfg, root).run(to="preproc")[0]
     assert again.status == "skipped"
     cfg2 = parse_config(erp_config(preproc={"line_noise": {"method": "notch"}, "lowpass_hz": 30}))
     assert Runner(cfg2, root).status()[0].status == "stale"
@@ -301,7 +301,7 @@ def test_stage_failure_writes_qa_but_no_eeg(erp_project: Make) -> None:
     data = json.loads(sidecar.read_text(encoding="utf-8"))
     data["EEGReference"] = "CMS/DRL (reference-free)"
     sidecar.write_text(json.dumps(data), encoding="utf-8")
-    [out] = Runner(cfg, root).run()
+    out = Runner(cfg, root).run(to="preproc")[0]
     assert out.status == "failed" and "reference-free" in out.message
     folder = paths.subject_dir(root, "preproc", cfg, "01")
     names = sorted(p.name.split("desc-preproc_")[1] for p in folder.iterdir())
@@ -313,6 +313,6 @@ def test_stage_hash_includes_used_component_rois(erp_project: Make) -> None:
     root, cfg = erp_project()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        Runner(cfg, root).run()
+        Runner(cfg, root).run(to="preproc")
     cfg2 = parse_config(erp_config(components={"use": ["n170"]}))
     assert Runner(cfg2, root).status()[0].status == "stale"

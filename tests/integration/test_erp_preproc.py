@@ -44,7 +44,7 @@ def project(data_cache: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def test_sub015_preproc_runs_with_erpcore_recipe(project: Path) -> None:
     cfg = load_config(CONFIG)
-    [out] = Runner(cfg, project).run(subjects=["015"])
+    out = Runner(cfg, project).run(subjects=["015"], to="preproc")[0]
     assert out.status == "ok", out.message
     fif = paths.stage_path(
         project, "preproc", cfg, "015", description="preproc", suffix="eeg", extension=".fif"
@@ -63,7 +63,7 @@ def test_sub015_preproc_runs_with_erpcore_recipe(project: Path) -> None:
     assert levels["REREF_APPLIED"] == "pass" and levels["PREPROC_BADS_FRACTION"] == "pass"
     assert qa["reference_free"] is True
     # Cached on a second run.
-    assert Runner(cfg, project).run(subjects=["015"])[0].status == "skipped"
+    assert Runner(cfg, project).run(subjects=["015"], to="preproc")[0].status == "skipped"
 
 
 def test_sub015_reference_free_requires_reref(project: Path, tmp_path: Path) -> None:
@@ -73,5 +73,5 @@ def test_sub015_reference_free_requires_reref(project: Path, tmp_path: Path) -> 
     root = tmp_path / "p"
     root.mkdir()
     (root / "rawdata").symlink_to(project / "rawdata")
-    [out] = Runner(cfg, root).run(subjects=["015"])
+    out = Runner(cfg, root).run(subjects=["015"], to="preproc")[0]
     assert out.status == "failed" and "reference-free" in out.message

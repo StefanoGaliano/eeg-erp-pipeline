@@ -55,6 +55,12 @@ preproc:
   filter: {method: iir, iir_order: 2, phase: zero}   # = ERPLAB pop_basicfilter order 2
   bad_channels: {method: config_only} # bads from ERP CORE's channels.tsv (channels.bads above)
   interpolate: true
+artifacts:
+  method: ica                         # picard (extended infomax) + ICLabel, EOG vote second
+  # ERP CORE has no VEOG/HEOG channels, only the three EOG electrodes: derive bipolar ones so the
+  # EOG vote and QA ICA_BLINK_RESIDUAL work. VEOG uses Fp2 as the upper site, which leaves Fp1
+  # independent for the residual check (VEOG vs Fp1).
+  eog_bipolar: {VEOG: [Fp2, VEOG_lower], HEOG: [HEOG_left, HEOG_right]}
 components:
   preset: erpcore
   use: [n170]

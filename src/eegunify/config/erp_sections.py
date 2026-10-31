@@ -13,6 +13,16 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 _EPOCH_SET_RE = re.compile(r"^[A-Za-z0-9]+$")
+ICLABEL_CLASSES = (
+    "brain",
+    "muscle artifact",
+    "eye blink",
+    "heart beat",
+    "line noise",
+    "channel noise",
+    "other",
+)
+"""ICLabel classes in the order of its probability columns, spelled as mne-icalabel does."""
 RESERVED_DESC = frozenset({"preproc", "ica", "clean"})
 """``desc-`` values used by the stages themselves; epoch sets cannot take them."""
 
@@ -98,6 +108,14 @@ class IcLabelSpec(_Strict):
     """ICLabel classes to remove, spelled as mne-icalabel spells them (``eye blink``, ...)."""
     threshold: float = Field(default=0.8, ge=0, le=1)
     """Minimum class probability for exclusion."""
+
+    @field_validator("exclude_classes")
+    @classmethod
+    def _known(cls, v: list[str]) -> list[str]:
+        unknown = [c for c in v if c not in ICLABEL_CLASSES]
+        if unknown:
+            raise ValueError(f"unknown ICLabel classes {unknown}; use {list(ICLABEL_CLASSES)}")
+        return v
 
 
 class EogCorrelationSpec(_Strict):

@@ -14,9 +14,11 @@ PREPROC_ROI_INTERPOLATED     preproc warn if a primary ROI channel of a used com
                                      interpolated
 REREF_REQUIRED               preproc fail: reference-free recording with ``scheme: none``
 REREF_APPLIED                preproc info: the scheme and channels used
-ICA_EXCLUDED_COUNT           ica     (M-E2)
-ICA_BLINK_RESIDUAL           ica     (M-E2)
-ICA_BRAIN_REMOVED            ica     (M-E2)
+ICA_EXCLUDED_COUNT           ica     warn if 0 excluded while an EOG channel is present, or
+                                     > 25 % of the components excluded
+ICA_BLINK_RESIDUAL           ica     warn if |VEOG-Fp1 correlation| after cleaning is > 0.3
+                                     (1 Hz high-passed copy)
+ICA_BRAIN_REMOVED            ica     warn if an excluded component has ICLabel brain prob > 0.5
 EPOCHS_REJECTED_FRACTION     epochs  (M-E3)
 EPOCHS_MIN_TRIALS            epochs  (M-E3)
 EPOCHS_BASELINE_DRIFT        epochs  (M-E3)
@@ -36,7 +38,7 @@ import json
 from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import mne
 import numpy as np
@@ -44,8 +46,14 @@ import numpy as np
 from eegunify.erp.stages.base import write_text_atomic
 from eegunify.qa.checks import _ORDER, Level, QACheck
 
+if TYPE_CHECKING:
+    from eegunify.erp.ica import Decision
+
 LINE_RESIDUAL_DB = 10.0
 BADS_WARN, BADS_FAIL = 0.10, 0.25
+ICA_EXCLUDED_WARN = 0.25
+BLINK_RESIDUAL_R = 0.3
+BRAIN_REMOVED_PROB = 0.5
 QA_SECONDS = 300.0
 """Spectral QA uses at most this much data (as Phase 1 QA)."""
 
@@ -135,3 +143,65 @@ def write_qa_json(path: Path, stage: str, checks: Sequence[QACheck], extra: dict
         **extra,
     }
     write_text_atomic(path, json.dumps(data, indent=2, ensure_ascii=False, default=str) + "\n")
+
+
+# --- ica -------------------------------------------------------------------------------------
+
+
+def blink_residual_r(raw: mne.io.BaseRaw, eog: str = "VEOG", frontal: str = "Fp1") -> float:
+    """Correlation of ``eog`` and ``frontal`` on a 1 Hz high-passed copy (nan if absent)."""
+    names = {c.upper(): c for c in raw.ch_names}
+    if eog.upper() not in names or frontal.upper() not in names:
+        return float("nan")
+    picks = [names[eog.upper()], names[frontal.upper()]]
+    tmax = min(raw.times[-1], QA_SECONDS)
+    copy = raw.copy().crop(tmax=tmax).pick(picks)
+    copy.filter(1.0, None, picks="all", verbose=False)
+    x = copy.get_data()
+    return float(np.corrcoef(x[0], x[1])[0, 1])
+
+
+def ica_checks(raw: mne.io.BaseRaw, decision: Decision) -> list[QACheck]:
+    """The three ica checks on the cleaned data and the component decisions."""
+    table = decision.table
+    n, excluded = len(table), decision.excluded
+    frac = len(excluded) / n if n else 0.0
+    has_eog = bool(mne.pick_types(raw.info, eog=True).size)
+    count_level: Level = (
+        "warn" if (not excluded and has_eog) or frac > ICA_EXCLUDED_WARN else "pass"
+    )
+    checks = [
+        QACheck(
+            "ICA_EXCLUDED_COUNT",
+            count_level,
+            f"{len(excluded)}/{n} components excluded: {excluded or 'none'}"
+            + (" (EOG present but nothing excluded)" if not excluded and has_eog else ""),
+            len(excluded),
+            ICA_EXCLUDED_WARN,
+        )
+    ]
+    r = blink_residual_r(raw)
+    if np.isfinite(r):
+        checks.append(
+            QACheck(
+                "ICA_BLINK_RESIDUAL",
+                "warn" if abs(r) > BLINK_RESIDUAL_R else "pass",
+                f"VEOG-Fp1 correlation after cleaning r = {r:.2f}",
+                round(r, 3),
+                BLINK_RESIDUAL_R,
+            )
+        )
+    else:
+        checks.append(QACheck("ICA_BLINK_RESIDUAL", "pass", "VEOG or Fp1 absent: not measured"))
+    brainy = table[table["excluded"] & (table["p_brain"] > BRAIN_REMOVED_PROB)]
+    idx = [int(i) for i in brainy["idx"]]
+    checks.append(
+        QACheck(
+            "ICA_BRAIN_REMOVED",
+            "warn" if idx else "pass",
+            f"excluded components with brain prob > {BRAIN_REMOVED_PROB}: {idx or 'none'}",
+            idx,
+            BRAIN_REMOVED_PROB,
+        )
+    )
+    return checks
