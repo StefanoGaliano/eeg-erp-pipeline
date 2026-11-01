@@ -168,7 +168,7 @@ def test_stage_end_to_end(blink_project: Make, blink_truth: ErpTruth) -> None:
     # The figure low-pass only reruns erp.
     cfg2 = _cfg(erp={"plot_lowpass_hz": 30})
     st = {it.stage: it.status for it in Runner(cfg2, root).status()}
-    assert st == {"preproc": "ok", "ica": "ok", "epochs": "ok", "erp": "stale"}
+    assert st == {"preproc": "ok", "ica": "ok", "epochs": "ok", "erp": "stale", "group": "stale"}
 
 
 def test_stage_without_components_or_figures(blink_project: Make) -> None:
@@ -237,7 +237,7 @@ def test_erpcore_exact_recipe_from_golden_parameters(tmp_path: Path) -> None:
 
     root = Path(__file__).parents[3]
     params = json.loads(
-        (root / "tests" / "golden" / "erpcore_reference" / "N170_exact.json").read_text(
+        (root / "src" / "eegunify" / "erp" / "reference" / "N170_exact.json").read_text(
             encoding="utf-8"
         )
     )

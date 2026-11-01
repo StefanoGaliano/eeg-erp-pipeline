@@ -23,20 +23,23 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Real data: `pytest -m realdata` (ERP CORE golden + cross-check; data cached in `EEGUNIFY_DATA` or `~/.cache/eegunify`); refresh golden files with `--update-golden` after reviewing the diff
 - Fetch: `eegunify fetch erpcore -s 015`, `eegunify fetch openneuro ds005841 -s 001`
 - ERP CORE published per-subject values: `eegunify fetch erpcore-values [-c N170] --dest ~/.cache/eegunify/erpcore`
-  (`reference_values.py`) rewrites `tests/golden/erpcore_reference/<comp>{,_subjects}.tsv`; a realdata test checks them against OSF
+  (`reference_values.py`) rewrites `src/eegunify/erp/reference/<comp>{,_subjects}.tsv`; a realdata test checks them against OSF
 - Validation harness: `eegunify validate-datasets [--max-mb N] [--only dsXXXX] [--dry-run]` → `derivatives/validation/summary.{tsv,md}`; results written up in `docs/validation_results.md`
 - Export for MATLAB: `eegunify export <config> --to eeglab`; `matlab/load_canonical.m` (EEGLAB via bva-io, else FieldTrip readers). MATLAB tests: `pytest -m realdata` with `EEGUNIFY_MATLAB_SETUP=<.../setup_eeg_toolboxes.m>` and `matlab` on PATH (skipped otherwise, e.g. CI)
 - Config reference: `eegunify config schema --markdown --out docs/config_reference.md` (a test fails if stale; every field needs a docstring)
 - README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E5 done)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E5 done, M-E6a in progress)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.
 - Implemented stages: preproc (`erp/preprocess.py` helpers, `erp/stages/preproc.py`), ica (`erp/ica.py`,
   `erp/stages/ica.py`; disabled by `artifacts.method: none`), epochs (`erp/epochs.py`, `erp/stages/epochs.py`; reads
-  `desc-clean`, else `desc-preproc`; disabled when `epochs.sets` is empty). New built-in stages go in
+  `desc-clean`, else `desc-preproc`; disabled when `epochs.sets` is empty), erp, group (`erp/group.py`,
+  `erp/stages/group.py`; `level = "group"`, outputs in `paths.group_dir`, gets `inputs.subjects`/`inputs.excluded`).
+  Group tests run only on contrast mean amplitudes (linear: one-sample on the contrast = paired test);
+  no d_z CI below `MIN_BOOTSTRAP_N` = 8 subjects. New built-in stages go in
   `BUILTIN_MODULES` in `erp/stages/base.py` (imported lazily; importing them from `stages/__init__` is circular).
 - Filters follow ERPLAB: `iir_order` is the total forward-backward order (2 = 12 dB/oct, half-amplitude cutoff), so MNE
   gets `order // 2`. MNE updates `info["highpass"/"lowpass"]` only when it picks the channels itself: `_filter_all`.
@@ -64,7 +67,7 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - ERP CORE comparison: sign must equal ERP CORE's per subject (their sub-019 N170 is positive); subjects ERP CORE
   excluded (`*_subjects.tsv`, N170 sub-016) are reported, not checked (BLUEPRINT_PHASES §0, §8.2).
 - `erpcore-exact` recipe (`erp.recipes.erpcore_exact`, BLUEPRINT_PHASES §8.2a): ERP CORE's own per-subject choices
-  from `tests/golden/erpcore_reference/N170_exact.json` + their ICA weights (`erpcore_exact.fetch_exact`, cache only).
+  from `src/eegunify/erp/reference/N170_exact.json` + their ICA weights (`erpcore_exact.fetch_exact`, cache only).
   ERPLAB semantics to keep: `window2sample` = `round(t*fs) + round(|xmin|*fs)` clipped; `pop_artextval` bounds
   inclusive; binlister `{t<a-b>code}` = any matching event in [a, b] ms. OSF sometimes answers bursts with 403.
 - New QA IDs go in the `erp/qa.py` docstring table; IDs are API.

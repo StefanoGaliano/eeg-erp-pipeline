@@ -84,3 +84,15 @@ contrasts:
 components:
   preset: erpcore
   use: [n170]
+group:
+  tests: [paired_t, wilcoxon]
+  # Face - car is expected negative at PO8 (one-tailed); with 5 subjects 32 sign flips exist, so
+  # the smallest possible p is 1/32: reported, labelled underpowered (BLUEPRINT 6.7).
+  cluster:
+    enabled: true
+    contrast: face_minus_car
+    tmin_ms: 0
+    tmax_ms: 400
+    n_permutations: 5000
+    tail: -1
+  reference_values: erpcore             # compare with ERP CORE's published per-subject values

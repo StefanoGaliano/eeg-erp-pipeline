@@ -11,7 +11,7 @@ import pytest
 
 from eegunify import reference_values as rv
 
-GOLDEN = Path(__file__).parents[1] / "golden" / "erpcore_reference"
+GOLDEN = rv.REFERENCE_DIR
 
 SHEET_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 

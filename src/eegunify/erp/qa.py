@@ -29,9 +29,13 @@ ERP_COMPONENT_POLARITY       erp     warn if a primary mean amplitude has the op
                                      of the component's ``polarity``
 MEASURE_NO_LOCAL_PEAK        erp     warn if a peak measure fell back to the absolute extreme
 VEP_LATENCY_ATYPICAL         erp     info (pass) if the vep_p100 peak latency is > 115 ms
-GROUP_SUBJECTS_EXCLUDED      group   (M-E6a)
-GROUP_UNDERPOWERED           group   (M-E6a)
-REFERENCE_VALUES_MISMATCH    group   (M-E6a)
+GROUP_SUBJECTS_EXCLUDED      group   warn if a configured subject is not in the group (an upstream
+                                     stage failed), listing each with its reason
+GROUP_UNDERPOWERED           group   info (pass) when the smallest p a sign-flip permutation can
+                                     give with N subjects (2/2**N two-tailed, 1/2**N one-tailed)
+                                     is above ``group.alpha``
+REFERENCE_VALUES_MISMATCH    group   warn if a compared value is outside its tolerance or has
+                                     the opposite sign of the published one (section 8.2)
 ===========================  ======  ============================================================
 """
 
@@ -323,3 +327,52 @@ def erp_checks(
             )
         )
     return checks
+
+
+# --- group -----------------------------------------------------------------------------------
+
+
+def subjects_excluded_check(excluded: dict[str, str]) -> QACheck:
+    if not excluded:
+        return QACheck("GROUP_SUBJECTS_EXCLUDED", "pass", "every configured subject included")
+    listed = "; ".join(f"sub-{s}: {why}" for s, why in sorted(excluded.items()))
+    return QACheck(
+        "GROUP_SUBJECTS_EXCLUDED", "warn", f"{len(excluded)} excluded: {listed}", sorted(excluded)
+    )
+
+
+def underpowered_check(n_subjects: int, min_p: float, alpha: float, tail: int) -> QACheck:
+    sides = "two-tailed" if tail == 0 else "one-tailed"
+    if min_p > alpha:
+        return QACheck(
+            "GROUP_UNDERPOWERED",
+            "pass",
+            f"N = {n_subjects}: the smallest possible {sides} permutation p is {min_p:.4g} "
+            f"> alpha {alpha:g}, so no cluster can reach significance; report effect sizes, "
+            "not p-values",
+            min_p,
+            alpha,
+        )
+    return QACheck(
+        "GROUP_UNDERPOWERED",
+        "pass",
+        f"N = {n_subjects}: smallest possible {sides} permutation p {min_p:.4g} <= alpha",
+        min_p,
+        alpha,
+    )
+
+
+def reference_values_check(n_failed: int, n_compared: int, failing: list[str]) -> QACheck:
+    if n_failed:
+        return QACheck(
+            "REFERENCE_VALUES_MISMATCH",
+            "warn",
+            f"{n_failed}/{n_compared} compared values outside tolerance: " + ", ".join(failing),
+            n_failed,
+        )
+    return QACheck(
+        "REFERENCE_VALUES_MISMATCH",
+        "pass",
+        f"all {n_compared} compared values within tolerance",
+        0,
+    )

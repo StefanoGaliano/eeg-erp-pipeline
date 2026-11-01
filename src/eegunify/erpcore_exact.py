@@ -4,7 +4,7 @@ ERP CORE publishes, next to its MATLAB scripts, the parameters each subject was 
 the interpolated channels, the ICA components removed (with the ICA weights themselves, inside
 each subject's ``*_ica_weighted.set``) and five artifact-rejection tests with per-subject
 settings. This module downloads those files (sha256 in the manifest), and turns them into
-``tests/golden/erpcore_reference/<component>_exact.json``, which
+``src/eegunify/erp/reference/<component>_exact.json``, which
 :func:`eegunify.erp.recipes.erpcore_exact` reads. Channel numbers in their spreadsheets index
 the epoched data of ``Script6_Artifact_Rejection.m``, whose channel list is the one written by
 ``Add_Corrected_Bipolars_<component>.txt``; they are resolved to channel names here.

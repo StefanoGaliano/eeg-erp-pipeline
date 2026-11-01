@@ -130,7 +130,7 @@ mapped back to events through `EEG.EVENTLIST.eventinfo(k).bepoch`.
 
 ## M-E6a ERP CORE published values (2026-11-01)
 
-`eegunify fetch erpcore-values` (`tests/golden/erpcore_reference/`). Included subjects per
+`eegunify fetch erpcore-values` (`src/eegunify/erp/reference/`). Included subjects per
 component (from `<component>_Subject_Summary.xlsx`; the measurement files hold exactly these):
 
 | Component | Included | BIDS-archive subjects (015-019) excluded by ERP CORE |
@@ -175,7 +175,7 @@ amplitudes are equal to 1e-6 µV.
 ## M-E6a `erpcore-exact` recipe, N170 sub-015..019 (2026-11-01)
 
 `eegunify.erp.recipes.erpcore_exact` (BLUEPRINT_PHASES 8.2a) follows ERP CORE's own processing of
-each subject, from their files (`tests/golden/erpcore_reference/N170_exact.json`): average
+each subject, from their files (`src/eegunify/erp/reference/N170_exact.json`): average
 reference over all 33 recorded sites (EOG electrodes included, applied to them too), their
 EEGLAB ICA decomposition with their removed components (`*_ica_weighted.set` headers), corrected
 bipolar EOG after ICA, interpolation after ICA (015 F8, 017 C6, 018 FP2), their five rejection
@@ -206,3 +206,25 @@ A common offset on both conditions points at slow-signal processing that is stil
 resampling (MNE vs EEGLAB `pop_resample`), the 0.1 Hz high-pass implementation, and spherical
 interpolation (MNE vs EEGLAB). Not pursued further for M-E6a, whose acceptance is on the
 difference wave.
+
+## M-E6a group stage, N170 sub-015..019 (2026-11-01)
+
+`eegunify erp run code/configs/erpcore_n170.yaml` now ends with the group stage
+(`derivatives/eegunify-group/task-N170/`); the realdata comparison test reads its
+`task-N170_erpcore-comparison.tsv`. sub-016 is excluded by our `EPOCHS_MIN_TRIALS` (2 correct
+face trials; ERP CORE excluded it too), so N = 4 (`GROUP_SUBJECTS_EXCLUDED` warn).
+
+| | default recipe | erpcore-exact |
+|---|---|---|
+| face − car mean amplitude, mean ± SEM | −0.38 ± 1.00 µV | −0.57 ± 0.98 µV |
+| paired t (= one-sample on face − car), p | t = −0.38, p = 0.73 | t = −0.59, p = 0.60 |
+| Wilcoxon p | 0.875 | 0.625 |
+| d_z | −0.19 | −0.29 |
+| cluster test (0-400 ms, one-tailed negative), best cluster | 160-215 ms, P3/P4/PO3/PO4/PO7/O1/Pz, p = 0.875 | 160-195 ms, P3/P4/PO3/PO7/Pz/C6, p = 0.94 |
+| `REFERENCE_VALUES_MISMATCH` | 7/24 compared values outside tolerance (017 face − car; parent waves) | 2/24 (015 face, car mean: the parent-wave offset) |
+
+As expected with 4 subjects, one of whom (019) has a positive face − car difference in ERP
+CORE's own data, nothing is significant: `GROUP_UNDERPOWERED` notes that the smallest possible
+one-tailed permutation p is 1/16 = 0.0625 > 0.05. No d_z confidence interval is given below 8
+subjects (the bootstrap is degenerate: with N = 4 it gave a lower bound of −45). The group
+numbers that can be compared with ERP CORE's 40-subject results are M-E6b.

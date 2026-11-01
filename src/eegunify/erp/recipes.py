@@ -11,7 +11,7 @@ face - car = -2.24 µV at PO8, 110-150 ms. It is a regression anchor, not ERP CO
 the same preprocessed data can go through ERPLAB.
 
 ``erpcore_exact`` (BLUEPRINT_PHASES 8.2a) is built per dataset from ERP CORE's own per-subject
-parameters (``tests/golden/erpcore_reference/<component>_exact.json``, written by ``eegunify
+parameters (``src/eegunify/erp/reference/<component>_exact.json``, written by ``eegunify
 fetch erpcore-values``) and their ICA weight files; see :func:`erpcore_exact`.
 """
 

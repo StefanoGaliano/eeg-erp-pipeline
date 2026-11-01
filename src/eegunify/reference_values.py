@@ -39,6 +39,9 @@ CITATION = (
     "NeuroImage, 225, 117465. CC-BY-4.0."
 )
 N_SUBJECTS = 40
+#: Where the tidy tables ship with the package (small, CC-BY-4.0; rewritten by
+#: ``eegunify fetch erpcore-values``).
+REFERENCE_DIR = Path(__file__).parent / "erp" / "reference"
 
 
 @dataclass(frozen=True)

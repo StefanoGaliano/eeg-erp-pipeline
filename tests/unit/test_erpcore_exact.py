@@ -10,7 +10,7 @@ import pytest
 
 from eegunify import erpcore_exact as ex
 
-GOLDEN = Path(__file__).parents[1] / "golden" / "erpcore_reference"
+GOLDEN = Path(ex.__file__).parent / "erp" / "reference"
 NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 
 

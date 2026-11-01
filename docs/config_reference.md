@@ -264,7 +264,10 @@ Group statistics (Phase 6).
 |---|---|---|---|
 | `tests` | list[`paired_t` \| `wilcoxon`] | `["paired_t", "wilcoxon"]` | Tests run per component and measure. |
 | `cluster` | ClusterSpec | see section | Cluster permutation settings. |
-| `reference_values` | `erpcore` \| `none` | `"none"` | Compare measures with published values (``erpcore``) or not. |
+| `reference_values` | `erpcore` \| `none` | `"none"` | Compare measures with published values (``erpcore``: ERP CORE's per-subject values for the component named by ``dataset.task``) or not. |
+| `alpha` | number | `0.05` | Significance level the ``GROUP_UNDERPOWERED`` note refers to. |
+| `n_bootstrap` | integer | `10000` | Bootstrap resamples for the d_z confidence interval. |
+| `random_state` | integer | `97` | Seed of the bootstrap; part of the cache key. |
 
 ## `IcLabelSpec`
 

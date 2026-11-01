@@ -417,4 +417,11 @@ class GroupSection(_Strict):
     cluster: ClusterSpec = Field(default_factory=ClusterSpec)
     """Cluster permutation settings."""
     reference_values: Literal["erpcore", "none"] = "none"
-    """Compare measures with published values (``erpcore``) or not."""
+    """Compare measures with published values (``erpcore``: ERP CORE's per-subject values for
+    the component named by ``dataset.task``) or not."""
+    alpha: float = Field(default=0.05, gt=0, lt=1)
+    """Significance level the ``GROUP_UNDERPOWERED`` note refers to."""
+    n_bootstrap: int = Field(default=10_000, ge=100)
+    """Bootstrap resamples for the d_z confidence interval."""
+    random_state: int = 97
+    """Seed of the bootstrap; part of the cache key."""

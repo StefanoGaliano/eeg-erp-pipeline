@@ -9,7 +9,7 @@
 - Bipolar EOG is derived in preproc, so the HEOG step rejection also runs without ICA.
 - **ERP CORE published values:** `eegunify fetch erpcore-values` downloads the per-subject
   measurement files and subject summaries of N170, P3 and N2pc from OSF and writes tidy TSVs to
-  `tests/golden/erpcore_reference/` (CC-BY-4.0).
+  `src/eegunify/erp/reference/` (CC-BY-4.0).
 - **Correct-response trials:** `epochs.sets.<name>.response: {selector, window_ms}` keeps only
   events followed by a matching response in the window (ERPLAB binlister `{t<lo-hi>code}`);
   the others are logged as `NO_RESPONSE` and not counted as artifact rejections. The ERP CORE
@@ -17,6 +17,12 @@
 - **ERP CORE comparison:** `eegunify.erp.comparison` compares measures with the published values
   (sign equal to ERP CORE's, ±0.5 µV per subject, ±0.3 µV mean, ±8 ms; ERP CORE's excluded
   subjects only reported). N170 sub-015..019: see docs/validation_erp.md.
+- **group stage:** grand averages, all subjects' measures, `stats.tsv` (paired t and Wilcoxon on
+  contrast mean amplitudes, Cohen's d_z with a bootstrap CI from 8 subjects up, descriptive rows
+  for the rest), cluster permutation test, the ERP CORE comparison
+  (`group.reference_values: erpcore`), QA `GROUP_SUBJECTS_EXCLUDED`, `GROUP_UNDERPOWERED`,
+  `REFERENCE_VALUES_MISMATCH`. ERP CORE's published tables now ship in
+  `src/eegunify/erp/reference/`.
 - **`erpcore-exact` recipe:** follows ERP CORE's own per-subject processing (their ICA
   weights and components, reference over all 33 sites, interpolation after ICA, five ERPLAB
   rejection tests with their parameters, 20 Hz peak low-pass), built from their OSF files.

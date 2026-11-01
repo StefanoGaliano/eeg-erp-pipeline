@@ -267,7 +267,7 @@ def fetch_erpcore_values_cmd(
     ] = None,
     dest: Annotated[Path, typer.Option(help="Download folder.")] = Path("sourcedata/erpcore"),
     out: Annotated[Path, typer.Option(help="Where the tidy TSVs go.")] = Path(
-        "tests/golden/erpcore_reference"
+        "src/eegunify/erp/reference"
     ),
 ) -> None:
     """ERP CORE published per-subject measurements (OSF) as tidy TSVs for the comparison."""

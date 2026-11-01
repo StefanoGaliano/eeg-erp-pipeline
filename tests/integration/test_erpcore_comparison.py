@@ -1,7 +1,7 @@
 """M-E6a: ERP CORE N170 sub-015..019 vs ERP CORE's published per-subject values (BLUEPRINT 8.2).
 
 Two recipes run on the five subjects of the BIDS archive and are compared with
-``tests/golden/erpcore_reference/N170.tsv``:
+``src/eegunify/erp/reference/N170.tsv``:
 
 * ``default``: ``code/configs/erpcore_n170.yaml`` (picard + ICLabel, one rejection rule set);
 * ``exact``: :func:`eegunify.erp.recipes.erpcore_exact`, ERP CORE's own per-subject choices
@@ -27,17 +27,17 @@ from eegunify.config.loader import load_config
 from eegunify.config.schema import Config
 from eegunify.datasets import ERPCORE_SUBJECTS, fetch_erpcore
 from eegunify.erp import paths
-from eegunify.erp.comparison import comparison_table, failures
+from eegunify.erp.comparison import failures
 from eegunify.erp.recipes import erpcore_exact
 from eegunify.erp.runner import Runner
 from eegunify.erpcore_exact import fetch_exact
 from eegunify.pipeline import convert
-from eegunify.reference_values import read_tidy
+from eegunify.reference_values import REFERENCE_DIR, read_tidy
 
 pytestmark = [pytest.mark.realdata, pytest.mark.filterwarnings("ignore::RuntimeWarning")]
 PROJECT = Path(__file__).parents[2]
 CONFIG = PROJECT / "code" / "configs" / "erpcore_n170.yaml"
-GOLDEN = PROJECT / "tests" / "golden" / "erpcore_reference"
+GOLDEN = REFERENCE_DIR
 SUBJECTS = list(ERPCORE_SUBJECTS)
 #: ERP CORE AR-percentage bin names -> our condition names (BDF_N170.txt bins 1-2).
 AR_BINS = {"Faces - Correct": "face", "Cars - Correct": "car"}
@@ -74,27 +74,21 @@ def _exact_config(cfg: Config, root: Path, data_cache: Path) -> Config:
 def _run(cfg: Config, root: Path, tag: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Run the ERP stages; return (comparison table, kept trials per subject x condition)."""
     outs = Runner(cfg, root).run(subjects=SUBJECTS)
-    published, summary = read_tidy(GOLDEN, "N170")
+    _, summary = read_tidy(GOLDEN, "N170")
     excluded_by_them = set(summary.loc[~summary["included"], "subject"])
     failed = {o.item.subject: o.message for o in outs if o.status == "failed"}
     # Our own QA may exclude a subject (EPOCHS_MIN_TRIALS), but only one ERP CORE excluded too;
     # excluding a subject they kept would be a deviation to document, not to pass silently.
-    assert set(failed) <= excluded_by_them, failed
-    measured = [s for s in SUBJECTS if s not in failed]
+    assert set(failed) <= excluded_by_them | {None}, failed
+    group = next(o for o in outs if o.item.stage == "group")
+    assert group.status == "ok", group.message
+    # The group stage writes the comparison (group.reference_values: erpcore).
+    gdir = paths.group_dir(root, cfg)
+    table = pd.read_csv(gdir / "task-N170_erpcore-comparison.tsv", sep="\t", dtype={"subject": str})
 
     def stage_file(stage: str, s: str, desc: str, suffix: str, ext: str) -> Path:
         return paths.stage_path(root, stage, cfg, s, description=desc, suffix=suffix, extension=ext)
 
-    measures = pd.concat(
-        pd.read_csv(
-            stage_file("erp", s, "stim", "measures", ".tsv"), sep="\t", dtype={"subject": str}
-        )
-        for s in measured
-    )
-    table = comparison_table("N170", measures, published, summary, SUBJECTS)
-    for sub, why in failed.items():
-        mask = table["subject"] == sub
-        table.loc[mask, "note"] = table.loc[mask, "note"] + f"; excluded by eegunify too: {why}"
     kept = []
     for s in SUBJECTS:
         log = pd.read_csv(stage_file("epochs", s, "stim", "log", ".tsv"), sep="\t")

@@ -102,7 +102,7 @@ derivatives/
 │       └── provenance/qa
 └── eegunify-group/
     └── task-N170/
-        ├── task-N170_desc-stim_grandave.fif
+        ├── task-N170_desc-stim_ave.fif                # grand averages (MNE wants *_ave.fif)
         ├── task-N170_measures.tsv                   # all subjects, long format
         ├── task-N170_stats.tsv                      # tests + effect sizes + CIs
         ├── task-N170_desc-<contrast>_clusters.tsv  # cluster permutation output
@@ -375,7 +375,11 @@ Units in the TSV are µV and ms.
 measure, window_start_ms, window_end_ms, value, unit, n_trials, stage_key`.
 
 ### 6.7 group (Phase 6)
-Grand averages (`mne.grand_average`, plus per-subject N), tests per component/measure: paired t
+Implemented (2026-11-01) with two refinements: tests run on contrast **mean amplitudes** only
+(linear, so a one-sample test on the contrast is exactly the paired test; peak and latency rows
+are descriptive, latency tests would need jackknifing), and no d_z bootstrap CI below 8 subjects
+(degenerate with fewer). Grand averages are `task-<task>_desc-<set>_ave.fif` (MNE requires
+`*_ave.fif`). Original plan: Grand averages (`mne.grand_average`, plus per-subject N), tests per component/measure: paired t
 (`scipy.stats.ttest_rel`) / one-sample on the contrast, Wilcoxon, Cohen's d_z with bootstrap 95 % CI
 (`scipy.stats.bootstrap`, seed), mean ± SEM, ERP CORE-style **SME** (standardized measurement error,
 Luck et al. 2021, bootstrapped per subject from epochs) as a data-quality number. Cluster-based
@@ -455,7 +459,7 @@ What we compare (in `derivatives/eegunify-group/task-N170_erpcore-comparison.tsv
    compared subjects (apples to apples), not vs the 40-subject grand mean.
 4. **Sign**: per compared subject, our sign equals ERP CORE's published sign. Not "all N170
    differences negative": ERP CORE's own sub-019 N170 face − car is positive (+2.041 µV).
-5. **Subjects ERP CORE excluded** (`tests/golden/erpcore_reference/<component>_subjects.tsv`,
+5. **Subjects ERP CORE excluded** (`src/eegunify/erp/reference/<component>_subjects.tsv`,
    `included = False`; N170: sub-016, TC = fewer than 50 % of face trials left after artifact
    rejection) are still run and listed in the comparison TSV with `status = excluded_by_erpcore`
    and their reason, but they are not part of checks 1-4 or of the subject mean. If our own
@@ -475,7 +479,7 @@ one row per included subject (`Mean_Amplitude_Diff_Waves_*`, `Mean_Amplitude_Par
 `<component>_Subject_Summary.xlsx` with the excluded subjects and reasons.
 `eegunify.reference_values` + `eegunify fetch erpcore-values [-c N170]` downloads them (sha256
 in the manifest), checks that the measured subjects are exactly the included ones, and writes
-`tests/golden/erpcore_reference/<component>.tsv` and `<component>_subjects.tsv` (small,
+`src/eegunify/erp/reference/<component>.tsv` and `<component>_subjects.tsv` (small,
 committed; CC-BY-4.0 attribution in the file header). If the files for a component can't be located, the builder writes the OSF URLs it
 searched into `docs/validation_erp.md` and marks the comparison as "not available" instead of
 inventing numbers. **Never type reference numbers from memory.**
@@ -506,7 +510,7 @@ over the dataset config with per-subject `overrides`; the default recipe stays t
 | rejection: `pop_artextval` ±200 µV, `pop_artmwppth` on EEG (per-subject threshold/window), `pop_artmwppth` blinks on uncorrected VEOG, `pop_artstep` on uncorrected HEOG (stimulus period) and on corrected HEOG | `AR_Parameters_for_{SVT_CRAP,MW_CRAP,MW_Blinks,SL_HEOG_Stim_Pres,SL_HEOG}_N170.xlsx` | `epochs.reject.method: rules` with a list of `{test: extval|ptp|step, channels, window_ms, ...}`; ERPLAB semantics incl. `window2sample` (`round(t*fs) + round(|xmin|*fs)`, clipped, inclusive) and `>=`/`<=` for extval |
 | 20 Hz low-pass, 48 dB/oct, before peak measures only | README_N170, Script #7 | `erp.peak_lowpass_hz: 20`, `erp.peak_lowpass_order: 8` |
 
-`eegunify fetch erpcore-values` also writes `tests/golden/erpcore_reference/<component>_exact.json`
+`eegunify fetch erpcore-values` also writes `src/eegunify/erp/reference/<component>_exact.json`
 (per-subject parameters from the files above) and fetches the ICA weight headers (~1.5 MB each,
 cache only, sha256 in the manifest). Acceptance: the M-E6a comparison run with `erpcore-exact`,
 reported next to the default recipe in `docs/validation_erp.md`; trial counts per bin are also
