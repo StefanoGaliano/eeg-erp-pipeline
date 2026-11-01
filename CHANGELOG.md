@@ -17,6 +17,12 @@
 - **ERP CORE comparison:** `eegunify.erp.comparison` compares measures with the published values
   (sign equal to ERP CORE's, ±0.5 µV per subject, ±0.3 µV mean, ±8 ms; ERP CORE's excluded
   subjects only reported). N170 sub-015..019: see docs/validation_erp.md.
+- **P3 and N2pc:** `code/configs/erpcore_p3.yaml` and `erpcore_n2pc.yaml` (P9/P10 reference,
+  ERP CORE's event codes, correct-response bins, 26 ms shift), and lateralized contrasts
+  (`contrasts.<name>.type: lateralized`, `left`/`right` conditions, channel `pairs`): contra and
+  ipsi waves as ERP CORE's ERPLAB bin operations, measured at PO7/PO8 by the `n2pc` preset.
+  Published values are matched by exact wave label.
+- OSF downloads retry HTTP 403 (OSF sometimes answers bursts with it for public files).
 - **group stage:** grand averages, all subjects' measures, `stats.tsv` (paired t and Wilcoxon on
   contrast mean amplitudes, Cohen's d_z with a bootstrap CI from 8 subjects up, descriptive rows
   for the rest), cluster permutation test, the ERP CORE comparison

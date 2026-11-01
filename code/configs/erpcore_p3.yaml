@@ -1,0 +1,108 @@
+# ERP CORE P3 (Kappenman et al., 2021, NeuroImage 225:117465; CC-BY-4.0).
+# Fetch: eegunify fetch erpcore --component P3 -s 015 --dest sourcedata/erpcore
+# Active visual oddball: letters A-E, one of them the block's target (rare, p = 0.2); the P3 is
+# the rare - frequent difference at Pz (300-600 ms).
+schema_version: 1
+dataset:
+  name: ERP CORE P3
+  bids_root: rawdata
+  source_root: sourcedata/erpcore/ERP_CORE
+  task: P3
+  authors: [Kappenman ES, Farrens JL, Zhang W, Stewart AX, Luck SJ]
+  license: CC-BY-4.0
+recordings:
+  pattern: sub-{subject}/ses-P3/eeg/sub-{subject}_ses-P3_task-P3_eeg.set
+  subjects: ["015", "016", "017", "018", "019"]
+  session: P3
+reference:
+  online: CMS/DRL (reference-free)   # BioSemi ActiveTwo
+  # P3 is referenced to the mean of P9 and P10: Rereference_Add_Uncorrected_Bipolars_P3.txt
+  # (OSF etdkz) "chN - ( (ch9 + ch27)/2 )".
+  scheme: channels
+  channels: [P9, P10]
+events:
+  # Codes from ERP CORE's task-P3_events.json: <block target><stimulus>, so 11, 22, 33, 44, 55
+  # are rare (stimulus = target), as bins 1-2 of their BDF_P3.txt.
+  mapping:
+    "11": stimulus/rare
+    "12": stimulus/frequent
+    "13": stimulus/frequent
+    "14": stimulus/frequent
+    "15": stimulus/frequent
+    "21": stimulus/frequent
+    "22": stimulus/rare
+    "23": stimulus/frequent
+    "24": stimulus/frequent
+    "25": stimulus/frequent
+    "31": stimulus/frequent
+    "32": stimulus/frequent
+    "33": stimulus/rare
+    "34": stimulus/frequent
+    "35": stimulus/frequent
+    "41": stimulus/frequent
+    "42": stimulus/frequent
+    "43": stimulus/frequent
+    "44": stimulus/rare
+    "45": stimulus/frequent
+    "51": stimulus/frequent
+    "52": stimulus/frequent
+    "53": stimulus/frequent
+    "54": stimulus/frequent
+    "55": stimulus/rare
+    "201": response/correct
+    "202": response/error
+  unmapped: error
+  # Stimuli appeared 26 ms after their trigger (LCD delay): Script1_Import_Raw_EEG_Shift_DS_
+  # Reref_Hpfilt.m shifts the stimulus codes by 26 ms (pop_erplabShiftEventCodes).
+  onset_shift_ms:
+    "stimulus/*": 26
+
+# --- ERP phases (docs/BLUEPRINT_PHASES.md) -------------------------------------------------------
+# Recipe = ERP CORE's own, from Kappenman et al. 2021 (NeuroImage 225:117465), Methods
+# (checked against PMC7909723 on 2026-10-31): downsampled to 256 Hz; non-causal Butterworth
+# high-pass, half-amplitude cutoff 0.1 Hz, 12 dB/oct; no low-pass on the data that get measured
+# (20 Hz only for peak measures and plots); noisy channels spherically interpolated; N170
+# is referenced to the average of all sites, P3 and N2pc to the mean of P9/P10 (above).
+preproc:
+  line_noise: {method: none}          # ERP CORE applies no notch
+  resample_hz: 256
+  highpass_hz: 0.1
+  lowpass_hz: null
+  filter: {method: iir, iir_order: 2, phase: zero}   # = ERPLAB pop_basicfilter order 2
+  bad_channels: {method: config_only} # bads from ERP CORE's channels.tsv (channels.bads above)
+  interpolate: true
+artifacts:
+  method: ica                         # picard (extended infomax) + ICLabel, EOG vote second
+  # ERP CORE has no VEOG/HEOG channels, only the three EOG electrodes: derive bipolar ones so the
+  # EOG vote and QA ICA_BLINK_RESIDUAL work. VEOG uses Fp2 as the upper site, which leaves Fp1
+  # independent for the residual check (VEOG vs Fp1).
+  eog_bipolar: {VEOG: [Fp2, VEOG_lower], HEOG: [HEOG_left, HEOG_right]}
+epochs:
+  sets:
+    stim:
+      lock: "stimulus/*"
+      tmin_ms: -200
+      tmax_ms: 800
+      baseline_ms: [-200, 0]
+      # Correct trials only: BDF_P3.txt bins ".{11;22;33;44;55}{t<200-1000>201}" etc.
+      response: {selector: "response/correct", window_ms: [200, 1000]}
+  # Blueprint defaults (ERPLAB semantics), as for N170.
+  reject: {method: thresholds, ptp_uv: 100, ptp_window_ms: 200, ptp_step_ms: 100, step_heog_uv: 32}
+conditions:
+  rare: ["stimulus/rare"]
+  frequent: ["stimulus/frequent"]
+contrasts:
+  rare_minus_frequent: {plus: rare, minus: frequent}   # P3_Diff_Wave.txt: b3 = b1 - b2
+components:
+  preset: erpcore
+  use: [p3]
+group:
+  tests: [paired_t, wilcoxon]
+  cluster:
+    enabled: true
+    contrast: rare_minus_frequent
+    tmin_ms: 0
+    tmax_ms: 800
+    n_permutations: 5000
+    tail: 1                             # rare > frequent
+  reference_values: erpcore

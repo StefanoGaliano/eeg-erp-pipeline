@@ -131,12 +131,18 @@ Which ERP components to measure, from the component library.
 
 ## `Contrast`
 
-A difference wave between two named conditions.
+A difference wave: two named conditions (``difference``), or contralateral minus ipsilateral to a target over left/right channel pairs (``lateralized``: N2pc, LRP).
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `plus` | string | **required** | Condition with weight +1. |
-| `minus` | string | **required** | Condition with weight -1. |
+| `type` | `difference` \| `lateralized` | `"difference"` | ``difference`` = ``plus - minus``; ``lateralized`` = contra - ipsi (BLUEPRINT 5.3). |
+| `plus` | string \| null | `null` | Condition with weight +1 (``difference``). |
+| `minus` | string \| null | `null` | Condition with weight -1 (``difference``). |
+| `left` | string \| null | `null` | Condition with the target in the left hemifield (``lateralized``). |
+| `right` | string \| null | `null` | Condition with the target in the right hemifield (``lateralized``). |
+| `pairs` | list[list[…]] | `[]` | ``[left-hemisphere, right-hemisphere]`` channel pairs (``lateralized``). For a pair (L, R): contra = (left-target trials at R + right-target trials at L) / 2, ipsi = (left at L + right at R) / 2, as ERP CORE's ERPLAB bin operations. Both L and R carry the pair's value in the lateralized waves; channels outside every pair are NaN. |
+| `contra_wave` | string | `"contra"` | Name of the contralateral parent wave (``lateralized``). |
+| `ipsi_wave` | string | `"ipsi"` | Name of the ipsilateral parent wave (``lateralized``). |
 
 ## `CsvHints`
 

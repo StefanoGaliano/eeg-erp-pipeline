@@ -60,7 +60,7 @@ def checked_conditions(cfg: Config, project_root: Path) -> dict[str, list[str]]:
             d = rc.definition
             if d.contrast and d.contrast in cfg.contrasts:
                 c = cfg.contrasts[d.contrast]
-                for cond in (c.plus, c.minus):
+                for cond in c.conditions:
                     out[f"{d.epoch_set}/{cond}"] = cfg.conditions[cond]
         return out
     for set_name in cfg.epochs.sets:

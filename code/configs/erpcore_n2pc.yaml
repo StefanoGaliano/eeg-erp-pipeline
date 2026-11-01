@@ -1,0 +1,101 @@
+# ERP CORE N2pc (Kappenman et al., 2021, NeuroImage 225:117465; CC-BY-4.0).
+# Fetch: eegunify fetch erpcore --component N2pc -s 015 --dest sourcedata/erpcore
+# Simple visual search: find the target colour (blue or pink, by block) left or right of
+# fixation; the N2pc is the contralateral - ipsilateral negativity at PO7/PO8 (200-275 ms).
+schema_version: 1
+dataset:
+  name: ERP CORE N2pc
+  bids_root: rawdata
+  source_root: sourcedata/erpcore/ERP_CORE
+  task: N2pc
+  authors: [Kappenman ES, Farrens JL, Zhang W, Stewart AX, Luck SJ]
+  license: CC-BY-4.0
+recordings:
+  pattern: sub-{subject}/ses-N2pc/eeg/sub-{subject}_ses-N2pc_task-N2pc_eeg.set
+  subjects: ["015", "016", "017", "018", "019"]
+  session: N2pc
+reference:
+  online: CMS/DRL (reference-free)   # BioSemi ActiveTwo
+  # Mean of P9 and P10: Rereference_Add_Uncorrected_Bipolars_N2pc.txt (OSF yefrq).
+  scheme: channels
+  channels: [P9, P10]
+events:
+  # Codes from ERP CORE's task-N2pc_events.json: <colour 1 blue / 2 pink><side 1 left /
+  # 2 right><gap 1 top / 2 bottom>.
+  mapping:
+    "111": stimulus/left/blue
+    "112": stimulus/left/blue
+    "121": stimulus/right/blue
+    "122": stimulus/right/blue
+    "211": stimulus/left/pink
+    "212": stimulus/left/pink
+    "221": stimulus/right/pink
+    "222": stimulus/right/pink
+    "201": response/correct
+    "202": response/error
+  unmapped: error
+  # Script1 shifts the stimulus codes by 26 ms (LCD delay), as for N170 and P3.
+  onset_shift_ms:
+    "stimulus/*": 26
+
+# --- ERP phases (docs/BLUEPRINT_PHASES.md) -------------------------------------------------------
+# Recipe = ERP CORE's own, from Kappenman et al. 2021 (NeuroImage 225:117465), Methods
+# (checked against PMC7909723 on 2026-10-31): downsampled to 256 Hz; non-causal Butterworth
+# high-pass, half-amplitude cutoff 0.1 Hz, 12 dB/oct; no low-pass on the data that get measured
+# (20 Hz only for peak measures and plots); noisy channels spherically interpolated; N170
+# is referenced to the average of all sites, P3 and N2pc to the mean of P9/P10 (above).
+preproc:
+  line_noise: {method: none}          # ERP CORE applies no notch
+  resample_hz: 256
+  highpass_hz: 0.1
+  lowpass_hz: null
+  filter: {method: iir, iir_order: 2, phase: zero}   # = ERPLAB pop_basicfilter order 2
+  bad_channels: {method: config_only} # bads from ERP CORE's channels.tsv (channels.bads above)
+  interpolate: true
+artifacts:
+  method: ica                         # picard (extended infomax) + ICLabel, EOG vote second
+  # ERP CORE has no VEOG/HEOG channels, only the three EOG electrodes: derive bipolar ones so the
+  # EOG vote and QA ICA_BLINK_RESIDUAL work. VEOG uses Fp2 as the upper site, which leaves Fp1
+  # independent for the residual check (VEOG vs Fp1).
+  eog_bipolar: {VEOG: [Fp2, VEOG_lower], HEOG: [HEOG_left, HEOG_right]}
+epochs:
+  sets:
+    stim:
+      lock: "stimulus/*"
+      tmin_ms: -200
+      tmax_ms: 800
+      baseline_ms: [-200, 0]
+      # Correct trials only: BDF_N2pc.txt ".{111;112;211;212}{t<200-1000>201}" etc.
+      response: {selector: "response/correct", window_ms: [200, 1000]}
+  # Blueprint defaults; the HEOG step rule matters here: eye movements toward the target fake an
+  # N2pc.
+  reject: {method: thresholds, ptp_uv: 100, ptp_window_ms: 200, ptp_step_ms: 100, step_heog_uv: 32}
+conditions:
+  left: ["stimulus/left"]
+  right: ["stimulus/right"]
+contrasts:
+  # N2pc_Diff_Wave.txt: nb1 = ((b1@RH + b2@LH)/2 - (b1@LH + b2@RH)/2), with LH/RH the 11 left/
+  # right channel pairs listed there (channels 1-11 and 15, 17-19, 22-28 of their data).
+  contra_minus_ipsi:
+    type: lateralized
+    left: left
+    right: right
+    pairs:
+      - [Fp1, Fp2]
+      - [F3, F4]
+      - [F7, F8]
+      - [FC3, FC4]
+      - [C3, C4]
+      - [C5, C6]
+      - [P3, P4]
+      - [P7, P8]
+      - [PO7, PO8]
+      - [PO3, PO4]
+      - [O1, O2]
+components:
+  preset: erpcore
+  use: [n2pc]
+group:
+  tests: [paired_t, wilcoxon]
+  cluster: {enabled: false}             # a lateralized wave has no scalp map to cluster over
+  reference_values: erpcore

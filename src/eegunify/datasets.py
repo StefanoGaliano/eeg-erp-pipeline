@@ -57,11 +57,13 @@ def _retry(fn: Callable[[], T], what: str, attempts: int = 5) -> T:
         try:
             return fn()
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
-            # 4xx (except 429 rate limiting) is permanent: retrying a dead link only wastes time.
+            # 4xx is permanent (retrying a dead link only wastes time), except 429 rate limiting
+            # and 403: OSF's file server sometimes answers bursts of requests for public files
+            # with 403 (seen 2026-11-01, archive range requests and single files alike).
             permanent = (
                 isinstance(err, urllib.error.HTTPError)
                 and 400 <= err.code < 500
-                and err.code != 429
+                and err.code not in (403, 429)
             )
             if permanent or i == attempts - 1:
                 raise

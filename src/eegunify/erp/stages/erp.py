@@ -140,7 +140,7 @@ class ErpStage(Stage):
         diff = None
         if d.contrast:
             c = cfg.contrasts[d.contrast]
-            conds = {c.plus: evokeds[c.plus], c.minus: evokeds[c.minus]}
+            conds = {w: evokeds[w] for w in c.parents}
             diff = (d.contrast, evokeds[d.contrast])
         else:
             conds = {n: ev for n, ev in evokeds.items() if n in cfg.conditions}

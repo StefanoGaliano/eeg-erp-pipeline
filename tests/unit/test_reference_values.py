@@ -130,10 +130,14 @@ def test_tidy_component_roundtrip(tmp_path: Path) -> None:
     assert text.startswith("# ERP CORE N170") and "CC-BY-4.0" in text
     back, subs = rv.read_tidy(tmp_path / "out", "N170")
     assert back["subject"].iloc[0] == "001"  # leading zeros kept
-    assert rv.published_value(back, "015", "mean_amplitude", "minus") == pytest.approx(-1.5)
-    assert rv.published_value(back, "016", "mean_amplitude", "minus") is None  # excluded
+    assert rv.published_value(back, "015", "mean_amplitude", "Faces minus Cars") == pytest.approx(
+        -1.5
+    )
+    assert rv.published_value(back, "016", "mean_amplitude", "faces minus cars") is None  # excluded
     last = f"{measured[-1]:03d}"
-    assert rv.published_value(back, last, "fractional_area_latency", "minus") is None  # NaN
+    assert (
+        rv.published_value(back, last, "fractional_area_latency", "Faces minus Cars") is None
+    )  # NaN
     assert not bool(subs.set_index("subject").loc["016", "included"])
 
 
@@ -144,17 +148,20 @@ def test_tidy_component_refuses_inconsistent_summary(tmp_path: Path) -> None:
         rv.tidy_component(tmp_path, "N170")
 
 
-def test_published_value_refuses_ambiguous_wave() -> None:
+def test_published_value_matches_labels_exactly() -> None:
+    """N2pc: 'Ipsi, All' is a substring of 'Contra minus Ipsi, All'; exact match needed."""
     df = pd.DataFrame(
         {
-            "subject": ["015", "015"],
-            "measure": ["mean_amplitude"] * 2,
-            "wave": ["Faces, Correct", "Cars, Correct"],
-            "value": [1.0, 2.0],
+            "subject": ["015", "015", "015"],
+            "measure": ["mean_amplitude"] * 3,
+            "wave": ["Contra minus Ipsi, All", "Ipsi, All", "Ipsi, All"],
+            "value": [-1.0, 2.0, 3.0],
         }
     )
-    with pytest.raises(ValueError, match="several waves"):
-        rv.published_value(df, "015", "mean_amplitude", "Correct")
+    assert rv.published_value(df, "015", "mean_amplitude", "contra minus ipsi, all") == -1.0
+    assert rv.published_value(df, "015", "mean_amplitude", "Ipsi") is None
+    with pytest.raises(ValueError, match="several rows"):  # duplicated rows are refused
+        rv.published_value(df, "015", "mean_amplitude", "Ipsi, All")
 
 
 def test_unknown_component_refused(tmp_path: Path) -> None:

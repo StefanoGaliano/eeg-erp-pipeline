@@ -19,6 +19,7 @@ from typing import Any
 import mne
 import numpy as np
 
+from eegunify.config.erp_sections import Contrast
 from eegunify.config.schema import Config
 from eegunify.erp.components.library import ResolvedComponent
 from eegunify.erp.events import matches
@@ -73,14 +74,48 @@ def average_conditions(
     return out
 
 
+def lateralized_waves(
+    left: mne.Evoked, right: mne.Evoked, pairs: list[tuple[str, str]]
+) -> tuple[mne.Evoked, mne.Evoked]:
+    """Contra and ipsi waves for left-/right-target averages (``Contrast.pairs`` docstring).
+
+    Same channel layout as the inputs (MNE stores one layout per file): both channels of a
+    pair carry the pair's value, every other channel is NaN.
+    """
+    names = left.ch_names
+    missing = sorted({c for p in pairs for c in p} - set(names))
+    if missing:
+        raise ErpError(f"lateralized pairs: channels {missing} not in the data")
+    contra = left.copy()
+    ipsi = left.copy()
+    contra.data[:] = np.nan
+    ipsi.data[:] = np.nan
+    for lh, rh in pairs:
+        i, j = names.index(lh), names.index(rh)
+        c = (left.data[j] + right.data[i]) / 2
+        p = (left.data[i] + right.data[j]) / 2
+        contra.data[[i, j]] = c
+        ipsi.data[[i, j]] = p
+    for ev in (contra, ipsi):
+        ev.nave = int(left.nave + right.nave)
+    return contra, ipsi
+
+
 def add_contrasts(evokeds: dict[str, mne.Evoked], cfg: Config) -> dict[str, mne.Evoked]:
     out = dict(evokeds)
     for name, c in cfg.contrasts.items():
-        if c.plus in evokeds and c.minus in evokeds:
-            ev = mne.combine_evoked([evokeds[c.plus], evokeds[c.minus]], [1, -1])
-            ev.comment = name
-            ev.nave = round(ev.nave)  # FIF stores an integer; round instead of MNE's truncation
-            out[name] = ev
+        a, b = c.conditions
+        if a not in evokeds or b not in evokeds:
+            continue
+        if c.type == "lateralized":
+            contra, ipsi = lateralized_waves(evokeds[a], evokeds[b], list(c.pairs))
+            contra.comment, ipsi.comment = c.contra_wave, c.ipsi_wave
+            out[c.contra_wave], out[c.ipsi_wave] = contra, ipsi
+            a, b = c.contra_wave, c.ipsi_wave
+        ev = mne.combine_evoked([out[a], out[b]], [1, -1])
+        ev.comment = name
+        ev.nave = round(ev.nave)  # FIF stores an integer; round instead of MNE's truncation
+        out[name] = ev
     return out
 
 
@@ -89,7 +124,10 @@ def _n_trials(wave: str, evokeds: dict[str, mne.Evoked], cfg: Config) -> int:
     count; MNE's ``nave`` of a difference is an effective, non-integer number)."""
     if wave in cfg.contrasts:
         c = cfg.contrasts[wave]
-        return min(int(evokeds[c.plus].nave), int(evokeds[c.minus].nave))
+        if c.type == "lateralized":  # contra and ipsi both use every left and right trial
+            return int(evokeds[c.contra_wave].nave)
+        a, b = c.conditions
+        return min(int(evokeds[a].nave), int(evokeds[b].nave))
     return int(evokeds[wave].nave)
 
 
@@ -114,10 +152,21 @@ def _waves(rc: ResolvedComponent, cfg: Config, evokeds: dict[str, mne.Evoked]) -
             f"({sorted(cfg.contrasts)})"
         )
     c = cfg.contrasts[d.contrast]
-    missing = [w for w in (d.contrast, c.plus, c.minus) if w not in evokeds]
+    if bool(d.lateralized_pairs) != (c.type == "lateralized"):
+        raise ErpError(
+            f"component {rc.id}: lateralized_pairs need a lateralized contrast and vice versa "
+            f"(contrast {d.contrast!r} is {c.type})"
+        )
+    missing_pairs = [p for p in d.lateralized_pairs if tuple(p) not in set(c.pairs)]
+    if missing_pairs:
+        raise ErpError(
+            f"component {rc.id}: pairs {missing_pairs} are not in contrast {d.contrast!r}"
+        )
+    waves = [d.contrast, *c.parents]
+    missing = [w for w in waves if w not in evokeds]
     if missing:
         raise ErpError(f"component {rc.id}: no epochs for {missing} in set {d.epoch_set!r}")
-    return [d.contrast, c.plus, c.minus]
+    return waves
 
 
 def _trials(epochs: mne.BaseEpochs, cfg: Config, wave: str, picks: list[str]) -> np.ndarray:
@@ -137,9 +186,40 @@ def sme(
     """SME of the mean amplitude; for a contrast, the two independent SMEs combined."""
     if wave in cfg.contrasts:
         c = cfg.contrasts[wave]
-        parts = [sme(epochs, cfg, w, picks, times_ms, window) for w in (c.plus, c.minus)]
+        if c.type == "lateralized":
+            return lateralized_sme(epochs, cfg, c, picks, times_ms, window)
+        parts = [sme(epochs, cfg, w, picks, times_ms, window) for w in c.conditions]
         return float(np.sqrt(sum(p**2 for p in parts)))
+    for c in cfg.contrasts.values():  # a lateralized parent wave: no per-trial SME
+        if c.type == "lateralized" and wave in c.parents:
+            return float("nan")
     return sme_mean_amplitude(times_ms, _trials(epochs, cfg, wave, picks), window)
+
+
+def lateralized_sme(
+    epochs: mne.BaseEpochs,
+    cfg: Config,
+    c: Contrast,
+    picks: list[str],
+    times_ms: np.ndarray,
+    window: tuple[float, float],
+) -> float:
+    """SME of a contra - ipsi mean amplitude over the ``picks`` pairs.
+
+    contra - ipsi = (mean over left-target trials of (R - L) + mean over right-target trials of
+    (L - R)) / 2, so its SME is half the root sum of squares of the two per-trial SMEs.
+    """
+    pairs = [p for p in c.pairs if p[0] in picks or p[1] in picks]
+    parts = []
+    for cond, sign in ((c.conditions[0], 1.0), (c.conditions[1], -1.0)):
+        ids = condition_ids(epochs, cfg.conditions[cond])
+        sub = epochs[ids]
+        diff = np.mean(
+            [sub.get_data(picks=[rh])[:, 0] - sub.get_data(picks=[lh])[:, 0] for lh, rh in pairs],
+            axis=0,
+        )
+        parts.append(sme_mean_amplitude(times_ms, sign * diff * UV, window))
+    return float(np.sqrt(sum(p**2 for p in parts)) / 2)
 
 
 def measure_component(
@@ -152,11 +232,6 @@ def measure_component(
     stage_key: str,
 ) -> ComponentMeasures:
     d = rc.definition
-    if d.lateralized_pairs:
-        raise ErpError(
-            f"component {rc.id}: lateralised (contra-ipsi) waves are not implemented yet "
-            "(M-E6a, N2pc/LRP)"
-        )
     waves = _waves(rc, cfg, evokeds)
     any_ev = evokeds[waves[0]]
     available = set(any_ev.ch_names)

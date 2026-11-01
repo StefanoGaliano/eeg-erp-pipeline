@@ -362,12 +362,57 @@ class ErpSection(_Strict):
 
 
 class Contrast(_Strict):
-    """A difference wave between two named conditions."""
+    """A difference wave: two named conditions (``difference``), or contralateral minus
+    ipsilateral to a target over left/right channel pairs (``lateralized``: N2pc, LRP)."""
 
-    plus: str
-    """Condition with weight +1."""
-    minus: str
-    """Condition with weight -1."""
+    type: Literal["difference", "lateralized"] = "difference"
+    """``difference`` = ``plus - minus``; ``lateralized`` = contra - ipsi (BLUEPRINT 5.3)."""
+    plus: str | None = None
+    """Condition with weight +1 (``difference``)."""
+    minus: str | None = None
+    """Condition with weight -1 (``difference``)."""
+    left: str | None = None
+    """Condition with the target in the left hemifield (``lateralized``)."""
+    right: str | None = None
+    """Condition with the target in the right hemifield (``lateralized``)."""
+    pairs: list[tuple[str, str]] = Field(default_factory=list)
+    """``[left-hemisphere, right-hemisphere]`` channel pairs (``lateralized``). For a pair
+    (L, R): contra = (left-target trials at R + right-target trials at L) / 2, ipsi = (left at
+    L + right at R) / 2, as ERP CORE's ERPLAB bin operations. Both L and R carry the pair's
+    value in the lateralized waves; channels outside every pair are NaN."""
+    contra_wave: str = "contra"
+    """Name of the contralateral parent wave (``lateralized``)."""
+    ipsi_wave: str = "ipsi"
+    """Name of the ipsilateral parent wave (``lateralized``)."""
+
+    @model_validator(mode="after")
+    def _fields(self) -> Contrast:
+        if self.type == "difference":
+            if self.plus is None or self.minus is None:
+                raise ValueError("a difference contrast needs plus and minus")
+            if self.left or self.right or self.pairs:
+                raise ValueError("left/right/pairs are only used by lateralized contrasts")
+        else:
+            if self.left is None or self.right is None or not self.pairs:
+                raise ValueError("a lateralized contrast needs left, right and pairs")
+            if self.plus or self.minus:
+                raise ValueError("plus/minus are only used by difference contrasts")
+            chans = [c for p in self.pairs for c in p]
+            if len(set(chans)) != len(chans):
+                raise ValueError("lateralized pairs must not repeat a channel")
+        return self
+
+    @property
+    def conditions(self) -> tuple[str, str]:
+        """The two conditions the contrast is built from."""
+        a, b = (self.plus, self.minus) if self.type == "difference" else (self.left, self.right)
+        assert a is not None and b is not None  # validated
+        return a, b
+
+    @property
+    def parents(self) -> tuple[str, str]:
+        """The two waves whose difference the contrast is (conditions, or contra/ipsi)."""
+        return self.conditions if self.type == "difference" else (self.contra_wave, self.ipsi_wave)
 
 
 class ComponentsSection(_Strict):

@@ -107,7 +107,7 @@ def test_unknown_roi_and_lateralized_refused(erp_truth: ErpTruth) -> None:
     epochs = _epochs(erp_truth, _erp_only(erp_truth))
     for override, match in (
         ({"rois": {"primary": ["PO10"]}}, "not in the data"),
-        ({"lateralized_pairs": [["PO7", "PO8"]]}, "lateralised"),
+        ({"lateralized_pairs": [["PO7", "PO8"]]}, "need a lateralized contrast"),
     ):
         cfg = _cfg(
             components={"preset": "erpcore", "use": ["n170"], "overrides": {"n170": override}}

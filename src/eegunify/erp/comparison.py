@@ -52,7 +52,7 @@ class Pairing:
     """One of our waves/measures and the ERP CORE wave it is compared with."""
 
     ours_wave: str  # wave in our measures.tsv (condition or contrast name)
-    theirs_wave: str  # substring of ERP CORE's wave label, unique per measure
+    theirs_wave: str  # ERP CORE's wave label (from their measurement files), matched exactly
     measure: str
     note: str = ""
 
@@ -67,6 +67,20 @@ PAIRINGS: dict[str, tuple[Pairing, ...]] = {
         Pairing("car", "Cars, Correct", "mean_amplitude"),
         Pairing("face_minus_car", "Faces minus Cars", "fractional_area_latency"),
         Pairing("face_minus_car", "Faces minus Cars", "peak_latency", PEAK_NOTE),
+    ),
+    "P3": (
+        Pairing("rare_minus_frequent", "Rare minus Frequent", "mean_amplitude"),
+        Pairing("rare", "Rare, Correct", "mean_amplitude"),
+        Pairing("frequent", "Frequent, Correct", "mean_amplitude"),
+        Pairing("rare_minus_frequent", "Rare minus Frequent", "fractional_area_latency"),
+        Pairing("rare_minus_frequent", "Rare minus Frequent", "peak_latency", PEAK_NOTE),
+    ),
+    "N2pc": (
+        Pairing("contra_minus_ipsi", "Contra minus Ipsi, All", "mean_amplitude"),
+        Pairing("contra", "Contra, All", "mean_amplitude"),
+        Pairing("ipsi", "Ipsi, All", "mean_amplitude"),
+        Pairing("contra_minus_ipsi", "Contra minus Ipsi, All", "fractional_area_latency"),
+        Pairing("contra_minus_ipsi", "Contra minus Ipsi, All", "peak_latency", PEAK_NOTE),
     ),
 }
 

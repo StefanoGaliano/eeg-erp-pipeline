@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -102,3 +103,24 @@ def test_erpcore_rejects_unknown_subject(tmp_path: Path) -> None:
         datasets.fetch_erpcore(tmp_path, "N170", ["001"])
     with pytest.raises(ValueError, match="unknown ERP CORE component"):
         datasets.fetch_erpcore(tmp_path, "P300", ["015"])
+
+
+def test_retry_retries_403_and_429_but_not_other_4xx(monkeypatch: pytest.MonkeyPatch) -> None:
+    """OSF answers bursts with 403 for public files: retried; a 404 is permanent."""
+    import urllib.error
+
+    monkeypatch.setattr(datasets.time, "sleep", lambda s: None)
+
+    def flaky(codes: list[int]) -> Callable[[], str]:
+        def call() -> str:
+            if codes:
+                raise urllib.error.HTTPError("u", codes.pop(0), "x", {}, None)  # type: ignore[arg-type]
+            return "ok"
+
+        return call
+
+    assert datasets._retry(flaky([403, 429, 403]), "f") == "ok"
+    with pytest.raises(urllib.error.HTTPError):
+        datasets._retry(flaky([404]), "f")
+    with pytest.raises(urllib.error.HTTPError):  # gives up after the attempts
+        datasets._retry(flaky([403] * 9), "f", attempts=3)

@@ -429,7 +429,7 @@ class Config(_Strict):
     @model_validator(mode="after")
     def _contrasts_use_conditions(self) -> Config:
         for name, c in self.contrasts.items():
-            for side in (c.plus, c.minus):
+            for side in c.conditions:
                 if side not in self.conditions:
                     raise ValueError(
                         f"contrast {name!r} uses unknown condition {side!r}; "
@@ -437,6 +437,14 @@ class Config(_Strict):
                     )
         if self.group.cluster.enabled and self.group.cluster.contrast not in self.contrasts:
             raise ValueError("group.cluster.contrast must name one of 'contrasts'")
+        if (
+            self.group.cluster.enabled
+            and self.contrasts[str(self.group.cluster.contrast)].type == "lateralized"
+        ):
+            raise ValueError(
+                "group.cluster.contrast: a lateralized contrast has no scalp topography to "
+                "cluster over (its waves are defined on channel pairs)"
+            )
         return self
 
     def bads_for(self, subject: str) -> list[str]:
