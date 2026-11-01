@@ -10,6 +10,13 @@
 - **ERP CORE published values:** `eegunify fetch erpcore-values` downloads the per-subject
   measurement files and subject summaries of N170, P3 and N2pc from OSF and writes tidy TSVs to
   `tests/golden/erpcore_reference/` (CC-BY-4.0).
+- **Correct-response trials:** `epochs.sets.<name>.response: {selector, window_ms}` keeps only
+  events followed by a matching response in the window (ERPLAB binlister `{t<lo-hi>code}`);
+  the others are logged as `NO_RESPONSE` and not counted as artifact rejections. The ERP CORE
+  N170 config uses it, as ERP CORE's bins do.
+- **ERP CORE comparison:** `eegunify.erp.comparison` compares measures with the published values
+  (sign equal to ERP CORE's, ±0.5 µV per subject, ±0.3 µV mean, ±8 ms; ERP CORE's excluded
+  subjects only reported). N170 sub-015..019: see docs/validation_erp.md.
 
 ## 0.2.0 (2026-10-31)
 

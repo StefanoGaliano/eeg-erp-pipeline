@@ -97,16 +97,27 @@ def test_erplab_matches_sub015(project: Path, tmp_path: Path) -> None:
         sep="\t",
     )
     log = log[log["trial_type"].isin(["stimulus/face", "stimulus/car"])].reset_index(drop=True)
-    events = pd.DataFrame(
-        {
-            "sample": np.round(log["onset_s"] * raw.info["sfreq"]).astype(int) + 1,
-            "code": log["code"],
-        }
-    )
-    events_tsv = tmp_path / "events.tsv"
-    events.to_csv(events_tsv, sep="\t", index=False, encoding="utf-8")
-
     eset, rej = cfg.epochs.sets["stim"], cfg.epochs.reject
+    stim = pd.DataFrame({"onset": log["onset_s"], "code": log["code"], "row": log.index})
+    # The response rule needs the response events in ERPLAB's event list too.
+    rawdata_events = next(
+        p for p in paths.rawdata_files(project, cfg, "015") if p.name.endswith("_events.tsv")
+    )
+    rev = pd.read_csv(rawdata_events, sep="\t", na_values="n/a", encoding="utf-8")
+    resp = rev[rev["trial_type"].astype(str).str.startswith("response/")]
+    resp = pd.DataFrame({"onset": resp["onset"], "code": resp["value"].astype(int), "row": -1})
+    events = pd.concat([stim, resp]).sort_values("onset", kind="stable").reset_index(drop=True)
+    events["sample"] = np.round(events["onset"] * raw.info["sfreq"]).astype(int) + 1
+    events_tsv = tmp_path / "events.tsv"
+    events[["sample", "code"]].to_csv(events_tsv, sep="\t", index=False, encoding="utf-8")
+    item_of_row = {int(r): i + 1 for i, r in enumerate(events["row"]) if r >= 0}  # 1-based
+    suffix = ""
+    if eset.response is not None:
+        lo, hi = eset.response.window_ms
+        codes = sorted(rev.loc[rev["trial_type"] == eset.response.selector, "value"].astype(int))
+        assert codes, eset.response.selector
+        suffix = f"{{t<{lo:g}-{hi:g}>{';'.join(map(str, sorted(set(codes))))}}}"
+
     params = {
         "epoch_ms": [eset.tmin_ms, eset.tmax_ms],
         "baseline_ms": list(eset.baseline_ms or (eset.tmin_ms, 0.0)),
@@ -117,6 +128,7 @@ def test_erplab_matches_sub015(project: Path, tmp_path: Path) -> None:
         "channel": "PO8",
         "eeg_channels": [raw.ch_names[i] for i in mne.pick_types(raw.info, eeg=True)],
         "bins": BINS,
+        "bin_suffix": suffix,  # ERPLAB sequencer for the response rule, e.g. {t<200-1000>201}
         "step_uv": rej.step_heog_uv or 0,
         "heog": "HEOG",
         "step_window_ms": rej.step_window_ms,
@@ -139,7 +151,9 @@ def test_erplab_matches_sub015(project: Path, tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stdout[-3000:] + proc.stderr[-2000:]
     theirs = json.loads(out_json.read_text(encoding="utf-8"))
 
-    ours_rejected = sorted(int(i) + 1 for i in np.flatnonzero(~log["kept"].to_numpy()))
+    # NO_RESPONSE events are in no ERPLAB bin, so they are never epoched or flagged there.
+    rejected_rows = np.flatnonzero((~log["kept"] & (log["reason"] != "NO_RESPONSE")).to_numpy())
+    ours_rejected = sorted(item_of_row[int(i)] for i in rejected_rows)
     assert sorted(np.atleast_1d(theirs["rejected_events"]).astype(int).tolist()) == ours_rejected
     kept = log[log["kept"]]
     assert list(np.atleast_1d(theirs["trials_per_bin"])[:2]) == [
@@ -155,7 +169,8 @@ def test_erplab_matches_sub015(project: Path, tmp_path: Path) -> None:
     prim = m.query("roi == 'primary' and measure == 'mean_amplitude'").set_index("wave")["value"]
     ours = [prim["face"], prim["car"], prim["face_minus_car"]]
     print(  # recorded in docs/validation_erp.md (run with -s)
-        f"\nERPLAB {theirs['erplab_version']}: rejected {len(ours_rejected)}/{len(log)}, "
+        f"\nERPLAB {theirs['erplab_version']}: rejected {len(ours_rejected)}/{len(log)} "
+        f"({int((log['reason'] == 'NO_RESPONSE').sum())} without response), "
         f"trials {theirs['trials_per_bin']}, mean µV theirs {theirs['mean_uv']} ours {ours}"
     )
     np.testing.assert_allclose(theirs["mean_uv"], ours, atol=TOL_UV)

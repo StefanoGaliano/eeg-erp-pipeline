@@ -174,6 +174,24 @@ class ArtifactsSection(_Strict):
 # --- epochs ----------------------------------------------------------------------------------
 
 
+class ResponseRule(_Strict):
+    """Keep only events followed by a matching response (ERPLAB bin descriptor
+    ``{t<lo-hi>code}``, e.g. ERP CORE's correct-response bins)."""
+
+    selector: str
+    """Trial-type prefix selector of the response events (``response/correct``)."""
+    window_ms: tuple[float, float] = (200.0, 1000.0)
+    """A matching response must start this many ms after the event, edges inclusive (as ERPLAB's
+    binlister); any matching response in the window counts, not only the next event."""
+
+    @model_validator(mode="after")
+    def _window(self) -> ResponseRule:
+        lo, hi = self.window_ms
+        if not 0 <= lo < hi:
+            raise ValueError("response.window_ms must be an increasing window starting at >= 0")
+        return self
+
+
 class EpochSet(_Strict):
     """One set of epochs, written as ``desc-<name>``."""
 
@@ -186,6 +204,9 @@ class EpochSet(_Strict):
     """Epoch end relative to the event."""
     baseline_ms: tuple[float, float] | None = (-200.0, 0.0)
     """Baseline window; ``null`` for no baseline correction."""
+    response: ResponseRule | None = None
+    """Only keep events followed by a matching response; the others are logged with reason
+    ``NO_RESPONSE`` and are not counted as artifact rejections."""
 
     @model_validator(mode="after")
     def _window(self) -> EpochSet:

@@ -201,6 +201,38 @@ class EpochSetResult:
     details: dict[str, Any]
 
 
+NO_RESPONSE = "NO_RESPONSE"
+
+
+def followed_by_response(
+    all_events: np.ndarray,
+    event_id: dict[str, int],
+    events: np.ndarray,
+    sfreq: float,
+    eset: EpochSet,
+    name: str,
+) -> np.ndarray:
+    """For each row of ``events``: is a response matching ``eset.response`` in its window?
+
+    ERPLAB binlister semantics for a timed sequencer ``{t<lo-hi>code}``: any matching event
+    with ``lo <= lag_ms <= hi`` counts, whether or not other events come between.
+    """
+    if eset.response is None:
+        return np.ones(len(events), dtype=bool)
+    try:
+        resp_ids = select(event_id, eset.response.selector)
+    except KeyError as err:
+        raise EpochsError(f"epochs.sets.{name}.response.selector: {err.args[0]}") from err
+    resp = np.sort(all_events[np.isin(all_events[:, 2], list(resp_ids.values())), 0])
+    lo, hi = eset.response.window_ms
+    eps = 1e-9  # lags are sample counts / sfreq: exact edges must stay inclusive
+    out = np.zeros(len(events), dtype=bool)
+    for i, onset in enumerate(events[:, 0]):
+        lag = (resp - onset) / sfreq * 1000.0
+        out[i] = bool(np.any((lag >= lo - eps) & (lag <= hi + eps)))
+    return out
+
+
 def make_epochs(
     raw: mne.io.BaseRaw,
     name: str,
@@ -213,14 +245,15 @@ def make_epochs(
     Events whose epoch would extend past the data or overlaps a ``BAD_`` annotation are
     logged as rejected with MNE's reason. The log lists every selected event.
     """
-    events, event_id = mne.events_from_annotations(raw, verbose=False)
+    all_events, event_id = mne.events_from_annotations(raw, verbose=False)
     event_id = {k: v for k, v in event_id.items() if not k.upper().startswith("BAD")}
     try:
         chosen = select(event_id, eset.lock)
     except KeyError as err:
         raise EpochsError(f"epochs.sets.{name}.lock: {err.args[0]}") from err
-    keep = np.isin(events[:, 2], list(chosen.values()))
-    events = events[keep]
+    keep = np.isin(all_events[:, 2], list(chosen.values()))
+    events = all_events[keep]
+    responded = followed_by_response(all_events, event_id, events, raw.info["sfreq"], eset, name)
     labels = {v: k for k, v in chosen.items()}
     epochs = mne.Epochs(
         raw,
@@ -256,16 +289,20 @@ def make_epochs(
     for j, i in enumerate(kept_idx):
         reason[i] = rej.reasons[j]
         ptp[i], step[i] = rej.ptp_uv[j], rej.step_uv[j]
+    for i in np.flatnonzero(~responded):
+        reason[i] = NO_RESPONSE  # not in a bin (ERPLAB): not an artifact rejection
     log["kept"] = [not r for r in reason]
     log["reason"] = [r or "kept" for r in reason]
     log["ptp_uv"] = np.round(ptp, 3)
     log["step_uv"] = np.round(step, 3)
-    bad = [j for j, r in enumerate(rej.reasons) if r]
+    bad = [j for j, i in enumerate(kept_idx) if rej.reasons[j] or not responded[i]]
     epochs.drop(bad, reason="eegunify", verbose=False)
     details = {
         "lock": eset.lock,
         "labels": sorted(chosen),
         "n_events": len(events),
+        "n_no_response": int((~responded).sum()),
+        "response": None if eset.response is None else eset.response.model_dump(mode="json"),
         "n_kept": int(log["kept"].sum()),
         "reject": {"method": spec.method, **rej.details},
     }

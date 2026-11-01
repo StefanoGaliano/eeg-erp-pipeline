@@ -183,6 +183,7 @@ One set of epochs, written as ``desc-<name>``.
 | `tmin_ms` | number | `-200.0` | Epoch start relative to the event. |
 | `tmax_ms` | number | `800.0` | Epoch end relative to the event. |
 | `baseline_ms` | list[…] \| null | `[-200.0, 0.0]` | Baseline window; ``null`` for no baseline correction. |
+| `response` | ResponseRule \| null | `null` | Only keep events followed by a matching response; the others are logged with reason ``NO_RESPONSE`` and are not counted as artifact rejections. |
 
 ## `EpochsSection`
 
@@ -357,6 +358,15 @@ Epoch rejection.
 | `flat_uv` | number \| null | `null` | Reject epochs whose peak-to-peak on any EEG channel is below this. |
 | `min_trials_per_condition` | integer | `30` | Fewer kept trials fails ``EPOCHS_MIN_TRIALS`` and excludes the subject from group. |
 | `random_state` | integer | `97` | Seed for autoreject; part of the cache key. |
+
+## `ResponseRule`
+
+Keep only events followed by a matching response (ERPLAB bin descriptor ``{t<lo-hi>code}``, e.g. ERP CORE's correct-response bins).
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `selector` | string | **required** | Trial-type prefix selector of the response events (``response/correct``). |
+| `window_ms` | list[…] | `[200.0, 1000.0]` | A matching response must start this many ms after the event, edges inclusive (as ERPLAB's binlister); any matching response in the window counts, not only the next event. |
 
 ## `UnitsSection`
 

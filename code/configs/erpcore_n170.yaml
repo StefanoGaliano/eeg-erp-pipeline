@@ -63,7 +63,15 @@ artifacts:
   eog_bipolar: {VEOG: [Fp2, VEOG_lower], HEOG: [HEOG_left, HEOG_right]}
 epochs:
   sets:
-    stim: {lock: "stimulus/*", tmin_ms: -200, tmax_ms: 800, baseline_ms: [-200, 0]}
+    stim:
+      lock: "stimulus/*"
+      tmin_ms: -200
+      tmax_ms: 800
+      baseline_ms: [-200, 0]
+      # ERP CORE averages correct trials only: BDF_N170.txt (OSF pfde9, file cvszm) has bins
+      # ".{1-40}{t<200-1000>201}" etc., i.e. a correct response (201) 200-1000 ms after the
+      # (shifted) stimulus; README_N170.txt, Script #5 step 3.
+      response: {selector: "response/correct", window_ms: [200, 1000]}
   # Blueprint defaults (ERPLAB semantics). ERP CORE tuned thresholds per subject; their values
   # come from their files in M-E6a, not from memory.
   reject: {method: thresholds, ptp_uv: 100, ptp_window_ms: 200, ptp_step_ms: 100, step_heog_uv: 32}

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eegunify.config.erp_sections import EpochSet, RejectSpec
+from eegunify.config.erp_sections import EpochSet, RejectSpec, ResponseRule
 from eegunify.config.loader import parse_config
 from eegunify.config.schema import Config
 from eegunify.erp import paths, qa
@@ -272,3 +272,68 @@ def test_f1_trial_type_with_several_codes(tmp_path: Path, erp_truth: ErpTruth) -
     assert (log["trial_type"] == "stimulus/face").all()
     assert out.result is not None
     assert out.result.extra["kept_per_condition"] == {"stim/face": len(erp_truth.samples)}
+
+
+def _raw_with_responses(sfreq: float = 256.0) -> mne.io.RawArray:
+    """Six stimuli, 3 s apart; responses placed to probe ERPLAB's ``{t<200-1000>201}`` rule."""
+    n = int(20 * sfreq)
+    rng = np.random.default_rng(0)
+    info = mne.create_info(["Oz", "PO8"], sfreq, "eeg")
+    raw = mne.io.RawArray(rng.normal(0, 1e-6, (2, n)), info, verbose=False)
+    stim = [1.0 + 3 * i for i in range(6)]
+    # lags in samples at 256 Hz: 200 ms is not a whole sample count, so use exact sample lags
+    resp = [
+        ("response/correct", stim[0] + 0.5),  # inside -> kept
+        ("response/correct", stim[1] + 0.1),  # too early -> dropped
+        ("response/error", stim[2] + 0.5),  # wrong response -> dropped
+        ("response/correct", stim[3] + 1.0),  # exactly at 1000 ms -> kept (inclusive)
+        ("response/error", stim[4] + 0.3),  # error first, then a correct one in the window:
+        ("response/correct", stim[4] + 0.6),  #   any match counts (not only the next event)
+        # stim[5]: no response at all -> dropped
+    ]
+    onsets = stim + [t for _, t in resp]
+    labels = ["stimulus/face"] * 6 + [lab for lab, _ in resp]
+    raw.set_annotations(mne.Annotations(onsets, 0.0, labels))
+    return raw
+
+
+def test_response_rule_follows_erplab_binlister() -> None:
+    eset = EpochSet(
+        lock="stimulus/*",
+        response=ResponseRule(selector="response/correct", window_ms=(200.0, 1000.0)),
+    )
+    res = make_epochs(_raw_with_responses(), "stim", eset, RejectSpec(method="none"))
+    assert list(res.log["kept"]) == [True, False, False, True, True, False]
+    assert list(res.log["reason"]) == ["kept", *["NO_RESPONSE"] * 2, "kept", "kept", "NO_RESPONSE"]
+    assert len(res.epochs) == 3
+    assert res.details["n_no_response"] == 3
+
+
+def test_response_rule_edges_inclusive() -> None:
+    raw = _raw_with_responses()
+    lo_exact = EpochSet(
+        lock="stimulus/*", response=ResponseRule(selector="response/correct", window_ms=(500, 999))
+    )
+    kept = make_epochs(raw, "stim", lo_exact, RejectSpec(method="none")).log["kept"]
+    # stim[0] at exactly 500 ms kept (lower edge); stim[3] at 1000 ms now outside
+    assert list(kept) == [True, False, False, False, True, False]
+
+
+def test_no_response_rule_keeps_everything() -> None:
+    res = make_epochs(
+        _raw_with_responses(), "stim", EpochSet(lock="stimulus/*"), RejectSpec(method="none")
+    )
+    assert res.log["kept"].all()
+    assert res.details["n_no_response"] == 0
+
+
+def test_response_selector_matching_nothing_refused() -> None:
+    eset = EpochSet(lock="stimulus/*", response=ResponseRule(selector="response/miss"))
+    with pytest.raises(EpochsError, match=r"response\.selector"):
+        make_epochs(_raw_with_responses(), "stim", eset, RejectSpec(method="none"))
+
+
+@pytest.mark.parametrize("window", [(500.0, 200.0), (-100.0, 200.0)])
+def test_response_window_validated(window: tuple[float, float]) -> None:
+    with pytest.raises(ValueError, match="window_ms"):
+        ResponseRule(selector="response/correct", window_ms=window)

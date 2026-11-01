@@ -141,3 +141,34 @@ component (from `<component>_Subject_Summary.xlsx`; the measurement files hold e
 
 ERP CORE's N170 face − car mean amplitude for sub-019 is positive, so the comparison checks that
 our sign equals theirs instead of "all negative" (BLUEPRINT_PHASES section 0 and 8.2).
+
+## M-E6a N170 sub-015..019 vs ERP CORE (2026-11-01)
+
+ERP CORE recipe (`code/configs/erpcore_n170.yaml`) with ERP CORE's correct-response bins
+(`response: response/correct` within 200-1000 ms, from their `BDF_N170.txt`
+`.{1-40}{t<200-1000>201}`; ERPLAB binlister semantics: any 201 in the window, edges inclusive).
+Test `tests/integration/test_erpcore_comparison.py`; primary ROI PO8, 110-150 ms.
+
+| Subject | face − car ours | ERP CORE | Δ | status |
+|---|---|---|---|---|
+| 015 | −0.926 µV | −1.024 µV | +0.10 | ok |
+| 016 | — | — | — | excluded by ERP CORE (TC) and by eegunify (`EPOCHS_MIN_TRIALS`: 2 face epochs left) |
+| 017 | −2.192 µV | −2.874 µV | +0.68 | **out of tolerance (±0.5)** |
+| 018 | −0.885 µV | −0.644 µV | −0.24 | ok |
+| 019 | +2.483 µV | +2.041 µV | +0.44 | ok (sign equal to ERP CORE's, positive) |
+| mean of 4 | −0.380 µV | −0.625 µV | +0.25 | ok (±0.3) |
+
+Signs match for all four compared subjects. 50 % area latency: within ±8 ms for 015/017/018
+(019 has no published value: no negative area). Peak latency: 019 differs by 11.7 ms (ours on the
+unfiltered ERP, ERP CORE's on the 20 Hz low-passed one). Parent waves: faces within ±0.5 µV for
+3/4 subjects; cars lower than ERP CORE's in 015, 017, 019 (−0.58 to −0.85 µV; mean −0.44 µV).
+
+Remaining recipe differences, all published by ERP CORE per subject and not adopted yet:
+artifact-rejection thresholds (`AR_Parameters_for_*_N170.xlsx`: moving-window peak-to-peak on
+EEG and on the uncorrected VEOG for blinks, step functions on HEOG), interpolated channels
+(`Interpolate_Channels_N170.xlsx`), the ICA components they removed (`ICA_Components_N170.xlsx`,
+EEGLAB runica vs our picard + ICLabel), and the 20 Hz low-pass before peak measures.
+
+With the correct-response rule, the ERPLAB cross-check (M-E5) still agrees exactly on sub-015:
+17 of 160 face/car trials have no correct response, the same 49 epochs are rejected and the mean
+amplitudes are equal to 1e-6 µV.

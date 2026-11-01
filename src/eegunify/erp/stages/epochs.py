@@ -21,7 +21,13 @@ import mne
 from eegunify.config.schema import Config
 from eegunify.erp import paths, qa
 from eegunify.erp.components.library import resolve
-from eegunify.erp.epochs import baseline_offset_uv, condition_counts, make_epochs, rawdata_codes
+from eegunify.erp.epochs import (
+    NO_RESPONSE,
+    baseline_offset_uv,
+    condition_counts,
+    make_epochs,
+    rawdata_codes,
+)
 from eegunify.erp.events import matches
 from eegunify.erp.stages.base import (
     Stage,
@@ -66,7 +72,7 @@ def checked_conditions(cfg: Config, project_root: Path) -> dict[str, list[str]]:
 @register_stage
 class EpochsStage(Stage):
     name = "epochs"
-    schema_version = 1
+    schema_version = 2  # 2: NO_RESPONSE rows, rejected fraction among candidates
 
     def enabled(self, cfg: Config) -> bool:
         return bool(cfg.epochs.sets)
@@ -97,9 +103,12 @@ class EpochsStage(Stage):
             name: make_epochs(raw, name, eset, cfg.epochs.reject, codes)
             for name, eset in cfg.epochs.sets.items()
         }
-        n_total = sum(len(r.log) for r in results.values())
-        n_rej = sum(int((~r.log["kept"]).sum()) for r in results.values())
-        by_set = {n: f"{int((~r.log['kept']).sum())}/{len(r.log)}" for n, r in results.items()}
+        # Events without the required response were never candidates (ERPLAB: not in a bin),
+        # so they count neither as rejected nor in the total.
+        cand = {n: r.log[r.log["reason"] != NO_RESPONSE] for n, r in results.items()}
+        n_total = sum(len(c) for c in cand.values())
+        n_rej = sum(int((~c["kept"]).sum()) for c in cand.values())
+        by_set = {n: f"{int((~c['kept']).sum())}/{len(c)}" for n, c in cand.items()}
         counts: dict[str, int] = {}
         offsets: dict[str, float] = {}
         for key, sels in wanted.items():

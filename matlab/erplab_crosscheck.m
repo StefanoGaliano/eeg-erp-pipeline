@@ -10,7 +10,8 @@ function result = erplab_crosscheck(setfile, eventsfile, outjson, p)
 %   p          struct: epoch_ms [-200 800], baseline_ms [-200 0], ptp_uv, window_ms,
 %              step_ms, measure_ms [110 150], channel 'PO8', eeg_channels (cellstr of
 %              the channels pop_artmwppth tests), bins (cell of
-%              {label, '{codes}'} pairs, e.g. {'face', '1-40'}).
+%              {label, '{codes}'} pairs, e.g. {'face', '1-40'}), bin_suffix (optional
+%              sequencer appended to every bin, e.g. '{t<200-1000>201}').
 %
 %   Steps (docs/BLUEPRINT_PHASES.md section 8.4): event list -> binlister -> pop_epochbin
 %   -> pop_artmwppth on the EEG channels (and pop_artstep on HEOG when p.step_uv > 0, with
@@ -43,10 +44,14 @@ EEG.event = struct('type', num2cell(ev.code(:)'), 'latency', num2cell(ev.sample(
 EEG.urevent = rmfield(EEG.event, 'urevent');
 EEG = eeg_checkset(EEG, 'eventconsistency');
 
+% p.bin_suffix: optional sequencer after the time-locking codes, e.g. '{t<200-1000>201}'
+% (ERP CORE's correct-response bins).
+suffix = '';
+if isfield(p, 'bin_suffix'), suffix = p.bin_suffix; end
 bdf = [tempname '.txt'];
 fid = fopen(bdf, 'w');
 for b = 1:numel(p.bins)
-    fprintf(fid, 'bin %d\n%s\n.{%s}\n\n', b, p.bins{b}{1}, p.bins{b}{2});
+    fprintf(fid, 'bin %d\n%s\n.{%s}%s\n\n', b, p.bins{b}{1}, p.bins{b}{2}, suffix);
 end
 fclose(fid);
 cleanup = onCleanup(@() delete(bdf));
