@@ -153,9 +153,71 @@ def autoreject_rejection(epochs: mne.BaseEpochs, spec: RejectSpec) -> Rejection:
     )
 
 
+def erplab_window(
+    times_s: np.ndarray, window_ms: tuple[float, float] | None, sfreq: float
+) -> tuple[int, int]:
+    """ERPLAB ``window2sample``: 0-based inclusive (p1, p2) of a test period.
+
+    ``p = round(t * fs) + round(|xmin| * fs)`` (MATLAB rounding), clipped to the epoch.
+    """
+    n = len(times_s)
+    if window_ms is None:
+        return 0, n - 1
+    off = matlab_round(abs(times_s[0]) * sfreq)
+    p1 = matlab_round(window_ms[0] / 1000 * sfreq) + off
+    p2 = matlab_round(window_ms[1] / 1000 * sfreq) + off
+    if p1 < -2 or p2 > n + 1:
+        raise EpochsError(f"rejection window {window_ms} ms is outside the epoch")
+    return max(p1, 0), min(p2, n - 1)
+
+
+def rules_rejection(epochs: mne.BaseEpochs, spec: RejectSpec) -> Rejection:
+    """Apply ``spec.rules`` (ERPLAB ``pop_artextval``/``pop_artmwppth``/``pop_artstep``)."""
+    sfreq = epochs.info["sfreq"]
+    lower = {c.lower(): c for c in epochs.ch_names}
+    n = len(epochs)
+    why: list[list[str]] = [[] for _ in range(n)]
+    ptp_max = np.full(n, np.nan)
+    step_max = np.full(n, np.nan)
+    details: list[dict[str, Any]] = []
+    for r, rule in enumerate(spec.rules):
+        missing = [c for c in rule.channels if c.lower() not in lower]
+        if missing:
+            raise EpochsError(f"epochs.reject.rules[{r}]: channels {missing} not in the epochs")
+        names = [lower[c.lower()] for c in rule.channels]
+        p1, p2 = erplab_window(epochs.times, rule.window_ms, sfreq)
+        x = epochs.get_data(picks=names)[..., p1 : p2 + 1] * UV
+        if rule.test == "extval":
+            assert rule.min_uv is not None and rule.max_uv is not None
+            # ERPLAB's bounds are inclusive; 1e-9 µV keeps them so after the V <-> µV round
+            # trip (200 µV stored in volts reads back as 199.99999999999997).
+            tol = 1e-9
+            hit = (x.max(axis=-1) >= rule.max_uv - tol) | (x.min(axis=-1) <= rule.min_uv + tol)
+            value = np.abs(x).max(axis=-1)
+            label = f"extval [{rule.min_uv:g}, {rule.max_uv:g}]"
+        else:
+            assert rule.threshold_uv is not None
+            win = ms_to_samples(rule.win_ms, sfreq)
+            stp = ms_to_samples(rule.step_ms, sfreq)
+            fn = moving_window_ptp if rule.test == "ptp" else step_like
+            value = fn(x, win, stp)
+            hit = value > rule.threshold_uv
+            label = f"{rule.test} > {rule.threshold_uv:g}"
+            target = ptp_max if rule.test == "ptp" else step_max
+            np.fmax(target, value.max(axis=1), out=target)
+        for i in np.flatnonzero(hit.any(axis=1)):
+            ch = names[int(np.argmax(np.where(hit[i], value[i], -np.inf)))]
+            why[i].append(f"rule {r + 1} {label} uV at {ch}")
+        details.append({"rule": r + 1, "test": rule.test, "samples": [p1, p2]})
+    reasons = ["; ".join(w) for w in why]
+    return Rejection(ptp_max, step_max, reasons, None, {"method": "rules", "rules": details})
+
+
 def reject(epochs: mne.BaseEpochs, spec: RejectSpec) -> Rejection:
     if spec.method == "thresholds":
         return threshold_rejection(epochs, spec)
+    if spec.method == "rules":
+        return rules_rejection(epochs, spec)
     if spec.method == "autoreject":
         return autoreject_rejection(epochs, spec)
     n = len(epochs)

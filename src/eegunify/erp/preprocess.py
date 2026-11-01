@@ -16,6 +16,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -223,9 +224,14 @@ def interpolate(raw: mne.io.BaseRaw, bads: list[str], enabled: bool) -> list[str
 
 
 def rereference(
-    raw: mne.io.BaseRaw, ref: ReferenceSection, *, reference_free: bool
+    raw: mne.io.BaseRaw,
+    ref: ReferenceSection,
+    *,
+    reference_free: bool,
+    derived: Iterable[str] = (),
 ) -> dict[str, Any]:
-    """Apply ``reference.scheme`` to the EEG channels (EOG and other types never change).
+    """Apply ``reference.scheme`` to the EEG channels (other types never change, except the
+    recorded EOG electrodes with ``apply_to_eog``; ``derived`` bipolar channels never change).
 
     Raises
     ------
@@ -248,10 +254,27 @@ def rereference(
         if missing:
             raise PreprocError(f"reference channels {missing} not in the data")
         bad = [c for c in ref.channels if c in raw.info["bads"]]
-        if bad:
+        if bad and not ref.allow_bad_channels:
             raise PreprocError(f"reference channels {bad} are bad and were not interpolated")
-        raw.set_eeg_reference(ref_channels=list(ref.channels), ch_type="eeg", verbose=False)
-        return {"scheme": "channels", "channels": list(ref.channels)}
+        # Explicit arithmetic rather than set_eeg_reference: the reference may include EOG
+        # electrodes and bad channels, and may be applied to the EOG electrodes as well.
+        ref_idx = [raw.ch_names.index(c) for c in ref.channels]
+        skip = set(derived)
+        types = ["eeg", "eog"] if ref.apply_to_eog else ["eeg"]
+        targets = [
+            i
+            for i, name in enumerate(raw.ch_names)
+            if raw.get_channel_types(picks=[i])[0] in types and name not in skip
+        ]
+        data = raw.get_data()
+        reference = data[ref_idx].mean(axis=0)
+        raw._data[targets] = data[targets] - reference
+        return {
+            "scheme": "channels",
+            "channels": list(ref.channels),
+            "applied_to": [raw.ch_names[i] for i in targets],
+            "bad_in_reference": bad,
+        }
     sphere = mne.make_sphere_model("auto", "auto", raw.info, verbose=False)
     src = mne.setup_volume_source_space(sphere=sphere, exclude=30.0, pos=15.0, verbose=False)
     fwd = mne.make_forward_solution(raw.info, trans=None, src=src, bem=sphere, verbose=False)
@@ -286,6 +309,11 @@ def preprocess(
     before re-referencing; check ``result.failed``.
     """
     pre = cfg.preproc
+    if pre.interpolate_after_ica and cfg.artifacts.method == "none":
+        raise PreprocError(
+            "preproc.interpolate_after_ica needs an ica stage (artifacts.method ica or "
+            "precomputed); with method none set interpolate_after_ica: false"
+        )
     line_freq = raw.info.get("line_freq") or detect_line_freq(raw)
     steps: dict[str, Any] = {}
     if cfg.artifacts.eog_bipolar:
@@ -316,10 +344,15 @@ def preprocess(
         return result
     if result.failed:
         return result
-    result.interpolated = interpolate(raw, sorted(bads), pre.interpolate)
+    # interpolate_after_ica: the bads stay in raw.info["bads"]; the ica stage interpolates them.
+    result.interpolated = interpolate(
+        raw, sorted(bads), pre.interpolate and not pre.interpolate_after_ica
+    )
     steps["interpolated"] = result.interpolated
     checks.append(qa.roi_interpolated_check(result.interpolated, roi_channels or {}))
-    steps["reference"] = rereference(raw, cfg.reference, reference_free=reference_free)
+    steps["reference"] = rereference(
+        raw, cfg.reference, reference_free=reference_free, derived=cfg.artifacts.eog_bipolar
+    )
     ref = steps["reference"]
     chans = ref.get("channels")
     checks.append(

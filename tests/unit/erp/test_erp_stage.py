@@ -200,3 +200,31 @@ def test_erplab_recipe_patch() -> None:
     assert cfg.preproc == base.preproc and cfg.epochs.sets == base.epochs.sets
     assert cfg.epochs.reject.ptp_uv == base.epochs.reject.ptp_uv
     assert cfg.artifacts.eog_bipolar == base.artifacts.eog_bipolar
+
+
+def test_peak_lowpass_changes_peaks_only(erp_truth: ErpTruth) -> None:
+    """erp.peak_lowpass_hz (ERP CORE: 20 Hz) filters the average for peak measures only."""
+    data = _erp_only(erp_truth)
+    t = np.arange(data.shape[1]) / erp_truth.sfreq
+    data = data + 3.0 * np.sin(2 * np.pi * 60 * t)  # 60 Hz ripple on every channel
+    epochs = _epochs(erp_truth, data)
+
+    def rows(**erp: Any) -> pd.DataFrame:
+        cfg = _cfg(erp=erp) if erp else _cfg()
+        evokeds = add_contrasts(average_conditions(epochs, cfg.conditions), cfg)
+        [rc] = resolve(cfg.components).components.values()
+        cm = measure_component(rc, evokeds, epochs, cfg, subject="01", stage_key="k")
+        r = pd.DataFrame(cm.rows, columns=MEASURES_COLUMNS)
+        return r.query("wave == 'face' and roi == 'primary'").set_index("measure")["value"]
+
+    raw_rows, lp_rows = rows(), rows(peak_lowpass_hz=20.0)
+    assert lp_rows["mean_amplitude"] == raw_rows["mean_amplitude"]
+    assert lp_rows["fractional_area_latency"] == raw_rows["fractional_area_latency"]
+    # the ripple moves the unfiltered peak; the low-passed one is back at the injected latency
+    assert lp_rows["peak_latency"] == pytest.approx(N170_MS, abs=2 * 1000 / erp_truth.sfreq)
+    assert abs(lp_rows["peak_latency"] - N170_MS) <= abs(raw_rows["peak_latency"] - N170_MS)
+
+
+def test_peak_lowpass_order_must_be_even() -> None:
+    with pytest.raises(ValueError):
+        _cfg(erp={"peak_lowpass_hz": 20.0, "peak_lowpass_order": 5})

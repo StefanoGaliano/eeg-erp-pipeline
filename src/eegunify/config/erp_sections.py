@@ -90,6 +90,9 @@ class PreprocSection(_Strict):
     """Bad-channel detection."""
     interpolate: bool = True
     """Spherical-spline interpolation of bad channels before re-referencing."""
+    interpolate_after_ica: bool = False
+    """Interpolate bad channels in the ica stage, after cleaning, instead of here (ERP CORE's
+    order); bad channels then stay in the data, as recorded, until ICA has run."""
 
     @model_validator(mode="after")
     def _band(self) -> PreprocSection:
@@ -157,18 +160,50 @@ class AsrSpec(_Strict):
     """Standard-deviation cutoff for burst rejection."""
 
 
+class PrecomputedIcaSpec(_Strict):
+    """An ICA decomposition computed elsewhere (EEGLAB), applied as is."""
+
+    weights: str
+    """EEGLAB ``.set`` holding ``icaweights``/``icasphere``/``icachansind`` (only the header is
+    read); relative paths are relative to the project root."""
+    exclude_eeglab: list[int] = Field(default_factory=list)
+    """Components to remove, numbered as EEGLAB does (from 1)."""
+
+    @field_validator("exclude_eeglab")
+    @classmethod
+    def _one_based(cls, v: list[int]) -> list[int]:
+        if any(i < 1 for i in v):
+            raise ValueError("exclude_eeglab numbers start at 1 (EEGLAB numbering)")
+        return v
+
+
 class ArtifactsSection(_Strict):
     """Artifact correction (Phase 3)."""
 
-    method: Literal["ica", "none"] = "ica"
-    """``ica`` runs the ICA stage; ``none`` epochs the preprocessed data directly."""
+    method: Literal["ica", "precomputed", "none"] = "ica"
+    """``ica`` fits ICA (picard + ICLabel); ``precomputed`` applies an EEGLAB decomposition
+    (``precomputed``) in the data's own reference; ``none`` epochs the preprocessed data."""
     ica: IcaSpec = Field(default_factory=IcaSpec)
     """ICA settings."""
+    precomputed: PrecomputedIcaSpec | None = None
+    """Decomposition and components for ``method: precomputed`` (usually per subject)."""
+    corrected_bipolar: dict[str, tuple[str, str]] = Field(default_factory=dict)
+    """Bipolar EOG channels derived after ICA cleaning, ``{HEOG: [HEOG_left, HEOG_right]}``
+    (ERP CORE's corrected bipolars; ``eog_bipolar`` gives the uncorrected ones)."""
     asr: AsrSpec | None = None
     """ASR settings; ``null`` (default) keeps ASR off."""
     eog_bipolar: dict[str, tuple[str, str]] = Field(default_factory=dict)
     """Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. Derived by
     the preproc stage before any filtering, whether or not ICA runs."""
+
+    @model_validator(mode="after")
+    def _precomputed(self) -> ArtifactsSection:
+        if self.method == "precomputed" and self.precomputed is None:
+            raise ValueError("artifacts.method 'precomputed' requires artifacts.precomputed")
+        clash = set(self.corrected_bipolar) & set(self.eog_bipolar)
+        if clash:
+            raise ValueError(f"corrected_bipolar and eog_bipolar both define {sorted(clash)}")
+        return self
 
 
 # --- epochs ----------------------------------------------------------------------------------
@@ -219,11 +254,47 @@ class EpochSet(_Strict):
         return self
 
 
+class RejectRule(_Strict):
+    """One ERPLAB artifact-detection call (``epochs.reject.method: rules``)."""
+
+    test: Literal["extval", "ptp", "step"]
+    """``extval`` = ``pop_artextval`` (any sample <= ``min_uv`` or >= ``max_uv``), ``ptp`` =
+    ``pop_artmwppth`` (moving-window peak-to-peak > ``threshold_uv``), ``step`` =
+    ``pop_artstep`` (|mean of second half - mean of first half| > ``threshold_uv``)."""
+    channels: list[str]
+    """Channels tested (matched case-insensitively)."""
+    window_ms: tuple[float, float] | None = None
+    """Test period (ERPLAB ``Twindow``); ``null`` = the whole epoch."""
+    threshold_uv: float | None = Field(default=None, gt=0)
+    """Threshold for ``ptp`` and ``step``."""
+    min_uv: float | None = None
+    """Lower bound for ``extval``."""
+    max_uv: float | None = None
+    """Upper bound for ``extval``."""
+    win_ms: float = Field(default=200.0, gt=0)
+    """Moving-window width for ``ptp``/``step``."""
+    step_ms: float = Field(default=100.0, gt=0)
+    """Moving-window step for ``ptp``/``step``."""
+
+    @model_validator(mode="after")
+    def _params(self) -> RejectRule:
+        if self.test == "extval" and (self.min_uv is None or self.max_uv is None):
+            raise ValueError("an extval rule needs min_uv and max_uv")
+        if self.test != "extval" and self.threshold_uv is None:
+            raise ValueError(f"a {self.test} rule needs threshold_uv")
+        if not self.channels:
+            raise ValueError("a rejection rule needs channels")
+        return self
+
+
 class RejectSpec(_Strict):
     """Epoch rejection."""
 
-    method: Literal["thresholds", "autoreject", "none"] = "thresholds"
-    """``thresholds`` (ERPLAB semantics), ``autoreject`` (local) or ``none``."""
+    method: Literal["thresholds", "rules", "autoreject", "none"] = "thresholds"
+    """``thresholds`` (ERPLAB semantics, the fields below), ``rules`` (a list of ERPLAB calls,
+    ``rules``), ``autoreject`` (local) or ``none``."""
+    rules: list[RejectRule] = Field(default_factory=list)
+    """Rules for ``method: rules``, applied in order; an epoch fails if any rule flags it."""
     ptp_uv: float | None = Field(default=100.0, gt=0)
     """Moving-window peak-to-peak threshold on EEG (ERPLAB ``pop_artmwppth``)."""
     ptp_window_ms: float = Field(default=200.0, gt=0)
@@ -271,6 +342,12 @@ class ErpSection(_Strict):
 
     peak_neighborhood: int = Field(default=3, ge=1)
     """Samples on each side a local peak must exceed on average (ERPLAB "neighborhood")."""
+    peak_lowpass_hz: float | None = Field(default=None, gt=0)
+    """Low-pass (zero-phase Butterworth, half-amplitude cutoff) applied to the averaged
+    waveforms before peak amplitude/latency only (ERP CORE: 20 Hz); ``null`` measures peaks on
+    the unfiltered average. Mean amplitude and area latency never use it."""
+    peak_lowpass_order: int = Field(default=8, ge=2, multiple_of=2)
+    """Total forward-backward order of that low-pass, as ERPLAB counts it (8 = 48 dB/oct)."""
     plot_lowpass_hz: float | None = Field(default=20.0, gt=0)
     """Low-pass applied to figures only, never to the measured waveforms; ``null`` plots the
     data as measured."""

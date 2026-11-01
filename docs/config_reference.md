@@ -54,8 +54,10 @@ Artifact correction (Phase 3).
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `method` | `ica` \| `none` | `"ica"` | ``ica`` runs the ICA stage; ``none`` epochs the preprocessed data directly. |
+| `method` | `ica` \| `precomputed` \| `none` | `"ica"` | ``ica`` fits ICA (picard + ICLabel); ``precomputed`` applies an EEGLAB decomposition (``precomputed``) in the data's own reference; ``none`` epochs the preprocessed data. |
 | `ica` | IcaSpec | see section | ICA settings. |
+| `precomputed` | PrecomputedIcaSpec \| null | `null` | Decomposition and components for ``method: precomputed`` (usually per subject). |
+| `corrected_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG channels derived after ICA cleaning, ``{HEOG: [HEOG_left, HEOG_right]}`` (ERP CORE's corrected bipolars; ``eog_bipolar`` gives the uncorrected ones). |
 | `asr` | AsrSpec \| null | `null` | ASR settings; ``null`` (default) keeps ASR off. |
 | `eog_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. Derived by the preproc stage before any filtering, whether or not ICA runs. |
 
@@ -201,6 +203,8 @@ Averaging, measurement and figures (Phase 5).
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `peak_neighborhood` | integer | `3` | Samples on each side a local peak must exceed on average (ERPLAB "neighborhood"). |
+| `peak_lowpass_hz` | number \| null | `null` | Low-pass (zero-phase Butterworth, half-amplitude cutoff) applied to the averaged waveforms before peak amplitude/latency only (ERP CORE: 20 Hz); ``null`` measures peaks on the unfiltered average. Mean amplitude and area latency never use it. |
+| `peak_lowpass_order` | integer | `8` | Total forward-backward order of that low-pass, as ERPLAB counts it (8 = 48 dB/oct). |
 | `plot_lowpass_hz` | number \| null | `20.0` | Low-pass applied to figures only, never to the measured waveforms; ``null`` plots the data as measured. |
 | `figures` | boolean | `true` | Write one PNG per measured component. |
 
@@ -306,6 +310,15 @@ Electrode positions.
 | `file` | string \| null | `null` | Position file (``.elc``, ``.sfp``, ``.bvct``, ...) relative to the recording's folder; may contain ``{subject}``. |
 | `on_missing` | `raise` \| `warn` \| `ignore` | `"warn"` | What to do with EEG channels that get no position. |
 
+## `PrecomputedIcaSpec`
+
+An ICA decomposition computed elsewhere (EEGLAB), applied as is.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `weights` | string | **required** | EEGLAB ``.set`` holding ``icaweights``/``icasphere``/``icachansind`` (only the header is read); relative paths are relative to the project root. |
+| `exclude_eeglab` | list[integer] | `[]` | Components to remove, numbered as EEGLAB does (from 1). |
+
 ## `PreprocSection`
 
 Continuous-data cleaning (Phase 2): line noise, filter, bad channels, interpolation.
@@ -319,6 +332,7 @@ Continuous-data cleaning (Phase 2): line noise, filter, bad channels, interpolat
 | `resample_hz` | number \| null | `null` | Resample to this rate before filtering; ``null`` keeps the recorded rate. |
 | `bad_channels` | BadChannelsSpec | see section | Bad-channel detection. |
 | `interpolate` | boolean | `true` | Spherical-spline interpolation of bad channels before re-referencing. |
+| `interpolate_after_ica` | boolean | `false` | Interpolate bad channels in the ica stage, after cleaning, instead of here (ERP CORE's order); bad channels then stay in the data, as recorded, until ICA has run. |
 
 ## `RecordingsSection`
 
@@ -340,7 +354,24 @@ Reference: ``online``/``ground`` describe the recording (Phase 1 never re-refere
 | `online` | string | `"n/a"` | Recorded (online) reference, e.g. ``Cz``, ``linked mastoids``; BioSemi defaults to ``CMS/DRL (reference-free)``. Written to ``EEGReference``; never changes the data. |
 | `ground` | string \| null | `null` | Ground electrode, if known. |
 | `scheme` | `average` \| `channels` \| `rest` \| `none` | `"average"` | Offline re-reference applied by the ERP preproc stage (not by ``convert``): ``average`` of good EEG channels, the mean of ``channels``, ``rest``, or ``none`` (refused for reference-free recordings such as BioSemi). |
-| `channels` | list[string] | `[]` | Reference channels for ``scheme: channels``, e.g. ``[P9, P10]``. |
+| `channels` | list[string] | `[]` | Reference channels for ``scheme: channels``, e.g. ``[P9, P10]``; EOG electrodes may be listed (ERP CORE averages all 33 recorded sites, EOG included). |
+| `apply_to_eog` | boolean | `false` | With ``scheme: channels``, also re-reference the recorded (unipolar) EOG electrodes, as ERP CORE does; derived bipolar channels never change. |
+| `allow_bad_channels` | boolean | `false` | With ``scheme: channels``, accept bad (not yet interpolated) channels in the reference (ERP CORE interpolates only after ICA, so its average includes them). |
+
+## `RejectRule`
+
+One ERPLAB artifact-detection call (``epochs.reject.method: rules``).
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `test` | `extval` \| `ptp` \| `step` | **required** | ``extval`` = ``pop_artextval`` (any sample <= ``min_uv`` or >= ``max_uv``), ``ptp`` = ``pop_artmwppth`` (moving-window peak-to-peak > ``threshold_uv``), ``step`` = ``pop_artstep`` (\|mean of second half - mean of first half\| > ``threshold_uv``). |
+| `channels` | list[string] | **required** | Channels tested (matched case-insensitively). |
+| `window_ms` | list[…] \| null | `null` | Test period (ERPLAB ``Twindow``); ``null`` = the whole epoch. |
+| `threshold_uv` | number \| null | `null` | Threshold for ``ptp`` and ``step``. |
+| `min_uv` | number \| null | `null` | Lower bound for ``extval``. |
+| `max_uv` | number \| null | `null` | Upper bound for ``extval``. |
+| `win_ms` | number | `200.0` | Moving-window width for ``ptp``/``step``. |
+| `step_ms` | number | `100.0` | Moving-window step for ``ptp``/``step``. |
 
 ## `RejectSpec`
 
@@ -348,7 +379,8 @@ Epoch rejection.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `method` | `thresholds` \| `autoreject` \| `none` | `"thresholds"` | ``thresholds`` (ERPLAB semantics), ``autoreject`` (local) or ``none``. |
+| `method` | `thresholds` \| `rules` \| `autoreject` \| `none` | `"thresholds"` | ``thresholds`` (ERPLAB semantics, the fields below), ``rules`` (a list of ERPLAB calls, ``rules``), ``autoreject`` (local) or ``none``. |
+| `rules` | list[RejectRule] | `[]` | Rules for ``method: rules``, applied in order; an epoch fails if any rule flags it. |
 | `ptp_uv` | number \| null | `100.0` | Moving-window peak-to-peak threshold on EEG (ERPLAB ``pop_artmwppth``). |
 | `ptp_window_ms` | number | `200.0` | Moving-window width. |
 | `ptp_step_ms` | number | `100.0` | Moving-window step. |

@@ -30,7 +30,9 @@ from eegunify.config.erp_sections import (
     IcaSpec,
     IcLabelSpec,
     LineNoiseSpec,
+    PrecomputedIcaSpec,
     PreprocSection,
+    RejectRule,
     RejectSpec,
     ResponseRule,
 )
@@ -38,6 +40,7 @@ from eegunify.config.erp_sections import (
 # The ERP models not referenced below are only re-exported (see the comment above).
 __all__ = ["AsrSpec", "BadChannelsSpec", "ClusterSpec", "EogCorrelationSpec", "EpochSet"]
 __all__ += ["FilterSpec", "IcLabelSpec", "IcaSpec", "LineNoiseSpec", "RejectSpec", "ResponseRule"]
+__all__ += ["PrecomputedIcaSpec", "RejectRule"]
 
 FormatName = Literal[
     "auto",
@@ -209,14 +212,26 @@ class ReferenceSection(_Strict):
     of good EEG channels, the mean of ``channels``, ``rest``, or ``none`` (refused for
     reference-free recordings such as BioSemi)."""
     channels: list[str] = Field(default_factory=list)
-    """Reference channels for ``scheme: channels``, e.g. ``[P9, P10]``."""
+    """Reference channels for ``scheme: channels``, e.g. ``[P9, P10]``; EOG electrodes may be
+    listed (ERP CORE averages all 33 recorded sites, EOG included)."""
+    apply_to_eog: bool = False
+    """With ``scheme: channels``, also re-reference the recorded (unipolar) EOG electrodes, as
+    ERP CORE does; derived bipolar channels never change."""
+    allow_bad_channels: bool = False
+    """With ``scheme: channels``, accept bad (not yet interpolated) channels in the reference
+    (ERP CORE interpolates only after ICA, so its average includes them)."""
 
     @model_validator(mode="after")
     def _channels_needed(self) -> ReferenceSection:
         if self.scheme == "channels" and not self.channels:
             raise ValueError("reference.scheme 'channels' requires reference.channels")
-        if self.scheme != "channels" and self.channels:
-            raise ValueError("reference.channels is only used with reference.scheme 'channels'")
+        if self.scheme != "channels" and (
+            self.channels or self.apply_to_eog or self.allow_bad_channels
+        ):
+            raise ValueError(
+                "reference.channels, apply_to_eog and allow_bad_channels are only used with "
+                "reference.scheme 'channels'"
+            )
         return self
 
 

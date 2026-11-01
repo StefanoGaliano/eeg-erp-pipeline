@@ -205,7 +205,8 @@ def apply_ica(
 class IcaResult:
     raw: mne.io.BaseRaw
     """The cleaned data."""
-    ica: mne.preprocessing.ICA
+    ica: mne.preprocessing.ICA | None
+    """``None`` for a precomputed (EEGLAB) decomposition."""
     decision: Decision
     steps: dict[str, Any]
 

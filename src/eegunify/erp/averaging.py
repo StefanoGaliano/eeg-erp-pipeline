@@ -188,8 +188,24 @@ def measure_component(
     primary_latency = float("nan")
     for wave in waves:
         ev = evokeds[wave]
+        ev_peak = ev
+        if cfg.erp.peak_lowpass_hz is not None:
+            # As ERP CORE: peaks are measured on the low-passed average, everything else not.
+            ev_peak = ev.copy().filter(
+                None,
+                cfg.erp.peak_lowpass_hz,
+                method="iir",
+                iir_params={
+                    "order": cfg.erp.peak_lowpass_order // 2,
+                    "ftype": "butter",
+                    "output": "sos",
+                },
+                phase="zero",
+                verbose=False,
+            )
         for roi, chs in rois:
             x = pool(ev.copy().pick(chs).data * UV)
+            x_peak = pool(ev_peak.copy().pick(chs).data * UV) if ev_peak is not ev else x
             common = {
                 **base,
                 "wave": wave,
@@ -201,7 +217,7 @@ def measure_component(
                 if m == "mean_amplitude":
                     vals = [("mean_amplitude", mean_amplitude(times_ms, x, window), "uV")]
                 elif m in ("peak_amplitude", "peak_latency"):
-                    pk = peak(times_ms, x, window, d.polarity, cfg.erp.peak_neighborhood)
+                    pk = peak(times_ms, x_peak, window, d.polarity, cfg.erp.peak_neighborhood)
                     if not pk.local:
                         no_local.append(f"{wave}@{roi}:{'+'.join(chs)}")
                     vals = (
