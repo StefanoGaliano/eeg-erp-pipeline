@@ -103,11 +103,16 @@ overrides). A failing subject is reported in its `ConvertResult` and doesn't sto
 (`cli.py`) imports heavy modules lazily and maps outcomes to exit codes: 0 ok, 1 recording failed,
 2 config/usage, 3 reader error. A QA FAIL also exits with 1.
 
-App (`app/main.py`, Phase A): three pages selected by a sidebar radio (a radio, not `st.navigation`,
+App (`app/main.py`, Phase A): Phase-1 pages plus the ERP pages of `app/erp_pages.py` (A2) in one sidebar radio (a radio, not `st.navigation`,
 so `AppTest` can drive it). Pages hold no logic: drafting is in `config/draft.py` (shared with
 `config init`), validation in `config/loader.parse_config`, and running in `pipeline.convert`. To move
 between pages, set `session_state["nav"]`; `main()` applies it before the radio is drawn, because a
 widget's value can't change after it renders.
+ERP pages edit the dataset config as the loaded YAML dict in `session_state["erp_cfg"]` (`get`/`put`/`drop`
+with dotted keys; saving writes back only keys that are there), validate it with `parse_config` on every rerun,
+read derivatives via `erp/paths.py`, plot only via `erp/plots.py` (functions return figures). Tables absent from
+the YAML must show and keep schema defaults (an absent `baseline_ms` is -200..0, not "none").
+Tests: `tests/unit/erp/test_app_erp.py` (precomputed project per module; acceptance: UI config == hand config).
 
 Tests: `tests/synthetic/generate.py` writes a signal with known content in each format (`Truth` holds
 exact samples, codes and µV data). Round-trip tests compare against it. The `make_project` fixture in

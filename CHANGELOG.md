@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **App, ERP pages (A2):** Preprocess (filter, bad channels, reference; 60 s PSD preview),
+  ICA review (decision table, manual exclude/keep written per subject to `overrides`,
+  topographies), Epochs (sets, rejection rules, per-condition summary, peak-to-peak histogram
+  with the threshold, rejected epochs), Components (conditions, contrasts, preset and
+  components, window/ROI overrides shown as a diff, the subject's ERPs and measures) and Group
+  (tests, cluster settings, grand average, statistics, ERP CORE comparison). All five edit one
+  dataset config, validated on every change, saved as YAML; a run panel calls the stage runner.
+  New figure functions in `erp/plots.py`.
+
 ## 0.3.0 (2026-11-01)
 
 **Group statistics and the ERP CORE reproduction** (docs/BLUEPRINT_PHASES.md, M-E5 and M-E6a).

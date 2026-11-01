@@ -163,7 +163,8 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   averages, paired tests and effect sizes, cluster permutation, comparison with published
   values), lateralized contrasts (N2pc), N170/P3/N2pc configs, the `erpcore-exact` recipe and
   the ERPLAB cross-check.
-- **Next:** app pages for the ERP stages (A2, v0.4.0); optionally the 40-subject N170 (M-E6b).
+- **App pages for the ERP stages (A2, in progress for v0.4.0):** Preprocess, ICA review,
+  Epochs, Components and Group in `eegunify app`. Optionally the 40-subject N170 (M-E6b).
 - **Phase M:** the same ingestion natively in MATLAB, with outputs that match Python.
 
 ## Repository layout

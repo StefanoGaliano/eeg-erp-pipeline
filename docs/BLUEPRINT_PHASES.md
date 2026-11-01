@@ -559,6 +559,13 @@ Python API (`eegunify.erp`): `run(config, subjects=None, from_=None, to=None, fo
 
 ## 10. Phase A2 (app)
 
+Status 2026-11-01: the five pages are implemented (`src/eegunify/app/erp_pages.py`) with the
+acceptance test (`tests/unit/erp/test_app_erp.py`: a config built through the pages equals the
+hand-written one; `erp run` on it gives identical `measures.tsv`). Left for v0.4.0: the README
+GIF of the Components page (section 15). Simplifications: rejection `rules` and lateralized
+contrasts are edited in the YAML (kept untouched by the pages); the Preprocess page lists the
+detected bad channels instead of drawing them on a topomap.
+
 Extend `app/main.py` with pages in the same sidebar radio (no `st.navigation`, CLAUDE.md):
 **Preprocess**, **ICA review**, **Epochs**, **Components**, **Group**. Each page edits a config
 section in `session_state["config"]` (a dict validated by `parse_config` on every change, errors

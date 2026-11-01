@@ -1,4 +1,4 @@
-"""eegunify app: Inspect -> Configure -> Convert + QA.
+"""eegunify app: Inspect -> Configure -> Convert + QA, then the ERP pages (``erp_pages``).
 
 Run with ``eegunify app`` (or ``streamlit run src/eegunify/app/main.py``). Every choice made
 here is a config key, and the saved YAML reproduces the run with ``eegunify convert``.
@@ -17,6 +17,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
+from eegunify.app.erp_pages import ERP_PAGES, PAGE_FUNCS, dataset_configs
 from eegunify.canonical import CanonicalError, Recording, Violation
 from eegunify.config.draft import (
     draft_config,
@@ -29,7 +30,8 @@ from eegunify.config.loader import ConfigError, load_config, parse_config
 from eegunify.detect import EXTENSIONS
 from eegunify.pipeline import convert, read_recording
 
-PAGES = ("1 · Inspect", "2 · Configure", "3 · Convert + QA")
+PHASE1_PAGES = ("1 · Inspect", "2 · Configure", "3 · Convert + QA")
+PAGES = (*PHASE1_PAGES, *ERP_PAGES)
 _ENTRY_SUFFIXES = {*EXTENSIONS, ".cnt", ".raw"}
 
 
@@ -296,23 +298,11 @@ def page_configure() -> None:
             st.success(f"Saved `{out.relative_to(root).as_posix()}`. Next: Convert + QA.")
 
 
-def _dataset_configs(root: Path) -> list[str]:
-    """YAML files under code/configs that are dataset configs (others are skipped)."""
-    out = []
-    for p in sorted((root / "code" / "configs").glob("*.yaml")):
-        try:
-            load_config(p)
-        except ConfigError:
-            continue
-        out.append(p.relative_to(root).as_posix())
-    return out
-
-
 def page_convert() -> None:
     st.header("Convert + QA")
     st.caption("Writes BIDS to rawdata/ and QA reports to derivatives/eegunify-qa/.")
     root = project_root()
-    configs = _dataset_configs(root)
+    configs = dataset_configs(root)
     if not configs:
         st.info("No dataset configs in code/configs/. Create one on the Configure page.")
         return
@@ -408,11 +398,18 @@ def main() -> None:
         st.divider()
         st.caption(
             "Every choice here is a config key; the saved YAML reproduces the run with "
-            "`eegunify convert`."
+            "`eegunify convert` (pages 1-3) and `eegunify erp run` (pages 4-8)."
         )
-    {PAGES[0]: page_inspect, PAGES[1]: page_configure, PAGES[2]: page_convert}[
-        st.session_state["page"]
-    ]()
+    page = st.session_state["page"]
+    phase1 = {
+        PHASE1_PAGES[0]: page_inspect,
+        PHASE1_PAGES[1]: page_configure,
+        PHASE1_PAGES[2]: page_convert,
+    }
+    if page in phase1:
+        phase1[page]()
+    else:
+        PAGE_FUNCS[page](project_root())
 
 
 main()
