@@ -63,6 +63,10 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Reference numbers (ERP CORE) only from fetched files or the paper, never typed from memory.
 - ERP CORE comparison: sign must equal ERP CORE's per subject (their sub-019 N170 is positive); subjects ERP CORE
   excluded (`*_subjects.tsv`, N170 sub-016) are reported, not checked (BLUEPRINT_PHASES §0, §8.2).
+- `erpcore-exact` recipe (`erp.recipes.erpcore_exact`, BLUEPRINT_PHASES §8.2a): ERP CORE's own per-subject choices
+  from `tests/golden/erpcore_reference/N170_exact.json` + their ICA weights (`erpcore_exact.fetch_exact`, cache only).
+  ERPLAB semantics to keep: `window2sample` = `round(t*fs) + round(|xmin|*fs)` clipped; `pop_artextval` bounds
+  inclusive; binlister `{t<a-b>code}` = any matching event in [a, b] ms. OSF sometimes answers bursts with 403.
 - New QA IDs go in the `erp/qa.py` docstring table; IDs are API.
 
 ## Architecture (data flow)

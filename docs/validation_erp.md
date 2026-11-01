@@ -163,12 +163,46 @@ Signs match for all four compared subjects. 50 % area latency: within ±8 ms for
 unfiltered ERP, ERP CORE's on the 20 Hz low-passed one). Parent waves: faces within ±0.5 µV for
 3/4 subjects; cars lower than ERP CORE's in 015, 017, 019 (−0.58 to −0.85 µV; mean −0.44 µV).
 
-Remaining recipe differences, all published by ERP CORE per subject and not adopted yet:
-artifact-rejection thresholds (`AR_Parameters_for_*_N170.xlsx`: moving-window peak-to-peak on
-EEG and on the uncorrected VEOG for blinks, step functions on HEOG), interpolated channels
-(`Interpolate_Channels_N170.xlsx`), the ICA components they removed (`ICA_Components_N170.xlsx`,
-EEGLAB runica vs our picard + ICLabel), and the 20 Hz low-pass before peak measures.
+With this automatic recipe sub-017 is a documented deviation (0.68 µV, outside ±0.5); the
+realdata test marks it `xfail(strict=True)`. The `erpcore-exact` recipe below closes it, which
+shows the gap comes from ERP CORE's per-subject decisions (their ICA components, rejection
+thresholds, interpolation), not from an implementation error.
 
 With the correct-response rule, the ERPLAB cross-check (M-E5) still agrees exactly on sub-015:
 17 of 160 face/car trials have no correct response, the same 49 epochs are rejected and the mean
 amplitudes are equal to 1e-6 µV.
+
+## M-E6a `erpcore-exact` recipe, N170 sub-015..019 (2026-11-01)
+
+`eegunify.erp.recipes.erpcore_exact` (BLUEPRINT_PHASES 8.2a) follows ERP CORE's own processing of
+each subject, from their files (`tests/golden/erpcore_reference/N170_exact.json`): average
+reference over all 33 recorded sites (EOG electrodes included, applied to them too), their
+EEGLAB ICA decomposition with their removed components (`*_ica_weighted.set` headers), corrected
+bipolar EOG after ICA, interpolation after ICA (015 F8, 017 C6, 018 FP2), their five rejection
+tests with per-subject parameters (`pop_artextval` ±200 µV; `pop_artmwppth` on 28 EEG channels at
+85-115 µV; blinks on the uncorrected VEOG; two `pop_artstep` on HEOG), and the 20 Hz, 48 dB/oct
+low-pass before peak measures.
+
+| Subject | face − car ours | ERP CORE | Δ | status |
+|---|---|---|---|---|
+| 015 | −1.464 µV | −1.024 µV | −0.44 | ok |
+| 016 | — | — | — | excluded by ERP CORE (TC); only 2 correct face trials |
+| 017 | −2.390 µV | −2.874 µV | +0.48 | ok |
+| 018 | −0.600 µV | −0.644 µV | +0.04 | ok |
+| 019 | +2.157 µV | +2.041 µV | +0.12 | ok |
+| mean of 4 | −0.574 µV | −0.625 µV | +0.05 | ok |
+
+Latencies: 50 % area latency within one sample (3.9 ms) for 015/017/018; peak latency (now on
+the 20 Hz low-passed ERP, as theirs) equal or one sample off for all four (019: 109.4 ms both,
+was 11.7 ms off with the default recipe).
+
+Trials per bin vs ERP CORE's `<sub>_AR_Percentages_N170.csv`: the correct-response candidates
+are identical for every subject and bin; kept trials are identical for 015, 016, 017 and 019 car,
+and differ by 1 (018 face, 019 face) or 3 (018 car).
+
+Parent waves: faces and cars come out lower than ERP CORE's by 0.27 and 0.32 µV on average
+(face 015 −0.71 µV, outside ±0.5; car mean −0.32 µV, outside ±0.3). Difference waves cancel it.
+A common offset on both conditions points at slow-signal processing that is still not identical:
+resampling (MNE vs EEGLAB `pop_resample`), the 0.1 Hz high-pass implementation, and spherical
+interpolation (MNE vs EEGLAB). Not pursued further for M-E6a, whose acceptance is on the
+difference wave.

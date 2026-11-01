@@ -70,6 +70,9 @@ class BadChannelsSpec(_Strict):
     1 Hz high-passed copy (pyprep needs electrode positions)."""
     random_state: int = 97
     """Seed for pyprep RANSAC; part of the cache key."""
+    extra: list[str] = Field(default_factory=list)
+    """More bad channels for the ERP stages only (rawdata is not changed), usually per subject
+    in ``overrides`` (e.g. the channels ERP CORE interpolated)."""
 
 
 class PreprocSection(_Strict):

@@ -77,6 +77,7 @@ How bad channels are found before interpolation.
 |---|---|---|---|
 | `method` | `config_only` \| `pyprep_ransac` \| `pyprep_full` \| `lof` | `"config_only"` | ``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a 1 Hz high-passed copy (pyprep needs electrode positions). |
 | `random_state` | integer | `97` | Seed for pyprep RANSAC; part of the cache key. |
+| `extra` | list[string] | `[]` | More bad channels for the ERP stages only (rawdata is not changed), usually per subject in ``overrides`` (e.g. the channels ERP CORE interpolated). |
 
 ## `BehaviorSection`
 

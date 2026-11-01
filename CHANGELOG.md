@@ -17,6 +17,13 @@
 - **ERP CORE comparison:** `eegunify.erp.comparison` compares measures with the published values
   (sign equal to ERP CORE's, ±0.5 µV per subject, ±0.3 µV mean, ±8 ms; ERP CORE's excluded
   subjects only reported). N170 sub-015..019: see docs/validation_erp.md.
+- **`erpcore-exact` recipe:** follows ERP CORE's own per-subject processing (their ICA
+  weights and components, reference over all 33 sites, interpolation after ICA, five ERPLAB
+  rejection tests with their parameters, 20 Hz peak low-pass), built from their OSF files.
+  N170 face − car within 0.5 µV for every compared subject (mean of 4 within 0.05 µV). New
+  config: `reference.apply_to_eog/allow_bad_channels`, `artifacts.method: precomputed`,
+  `artifacts.corrected_bipolar`, `preproc.interpolate_after_ica`,
+  `preproc.bad_channels.extra`, `epochs.reject.method: rules`, `erp.peak_lowpass_hz/order`.
 
 ## 0.2.0 (2026-10-31)
 

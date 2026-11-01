@@ -316,3 +316,14 @@ def test_stage_hash_includes_used_component_rois(erp_project: Make) -> None:
         Runner(cfg, root).run(to="preproc")
     cfg2 = parse_config(erp_config(components={"use": ["n170"]}))
     assert Runner(cfg2, root).status()[0].status == "stale"
+
+
+def test_detect_bads_extra_channels(erp_truth: ErpTruth) -> None:
+    """preproc.bad_channels.extra adds bads for the ERP stages (ERP CORE's interpolation list)."""
+    raw = _raw(erp_truth)
+    raw.info["bads"] = ["O1"]
+    bads = detect_bads(raw, BadChannelsSpec(extra=["po8"]))  # matched case-insensitively
+    assert bads == {"O1": "rawdata channels.tsv", "PO8": "config bad_channels.extra"}
+    assert raw.info["bads"] == ["O1", "PO8"]
+    with pytest.raises(PreprocError, match="not in the data"):
+        detect_bads(raw, BadChannelsSpec(extra=["Nope"]))

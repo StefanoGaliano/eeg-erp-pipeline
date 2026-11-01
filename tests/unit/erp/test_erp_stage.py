@@ -228,3 +228,41 @@ def test_peak_lowpass_changes_peaks_only(erp_truth: ErpTruth) -> None:
 def test_peak_lowpass_order_must_be_even() -> None:
     with pytest.raises(ValueError):
         _cfg(erp={"peak_lowpass_hz": 20.0, "peak_lowpass_order": 5})
+
+
+def test_erpcore_exact_recipe_from_golden_parameters(tmp_path: Path) -> None:
+    """erpcore_exact builds a valid config with one override per subject from the JSON."""
+    from eegunify.config.loader import load_config, resolve_for_subject
+    from eegunify.erp.recipes import RecipeError, erpcore_exact
+
+    root = Path(__file__).parents[3]
+    params = json.loads(
+        (root / "tests" / "golden" / "erpcore_reference" / "N170_exact.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    cfg = load_config(root / "code" / "configs" / "erpcore_n170.yaml")
+    eeg = ["Fp1", "F3", "F7", "FC3", "C3", "C5", "P3", "P7", "P9", "PO7", "PO3", "O1", "Oz"]
+    eeg += ["Pz", "CPz", "Fp2", "Fz", "F4", "F8", "FC4", "FCz", "Cz", "C4", "C6", "P4", "P8"]
+    recorded = [*eeg, "P10", "PO8", "PO4", "O2", "HEOG_left", "HEOG_right", "VEOG_lower"]
+    with pytest.raises(RecipeError, match="ICA weights"):
+        erpcore_exact(cfg, params, recorded, tmp_path)
+    for p in params["subjects"].values():
+        (tmp_path / p["ica_weights"]).write_bytes(b"")
+    with pytest.raises(RecipeError, match="averaged 33"):
+        erpcore_exact(cfg, params, recorded[:-1], tmp_path)
+    exact = erpcore_exact(cfg, params, recorded, tmp_path)
+    assert exact.reference.scheme == "channels" and len(exact.reference.channels) == 33
+    assert exact.reference.apply_to_eog and exact.preproc.interpolate_after_ica
+    assert exact.artifacts.eog_bipolar["VEOG_uncorr"] == ("VEOG_lower", "Fp2")  # names mapped
+    assert exact.erp.peak_lowpass_hz == 20.0
+    sub17 = resolve_for_subject(exact, "017")
+    assert sub17.preproc.bad_channels.extra == ["C6"]
+    assert sub17.artifacts.precomputed is not None
+    assert (
+        sub17.artifacts.precomputed.exclude_eeglab
+        == params["subjects"]["017"]["ica_exclude_eeglab"]
+    )
+    ptp = next(r for r in sub17.epochs.reject.rules if r.test == "ptp")
+    assert ptp.threshold_uv == params["subjects"]["017"]["reject"][1]["threshold_uv"]
+    assert "PO8" in ptp.channels and "P9" not in ptp.channels  # Script6 default 1:28

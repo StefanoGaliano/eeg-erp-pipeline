@@ -76,6 +76,24 @@
    "VEOG_uncorr"
   ]
  },
+ "bipolar": {
+  "HEOG_uncorr": [
+   "HEOG_left",
+   "HEOG_right"
+  ],
+  "VEOG_uncorr": [
+   "VEOG_lower",
+   "FP2"
+  ],
+  "HEOG": [
+   "HEOG_left",
+   "HEOG_right"
+  ],
+  "VEOG": [
+   "VEOG_lower",
+   "FP2"
+  ]
+ },
  "subjects": {
   "015": {
    "interpolate": [

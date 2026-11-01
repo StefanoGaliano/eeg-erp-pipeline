@@ -171,6 +171,13 @@ def _missing_positions(raw: mne.io.BaseRaw, names: list[str]) -> list[str]:
 def detect_bads(raw: mne.io.BaseRaw, spec: BadChannelsSpec) -> dict[str, str]:
     """Bad EEG channels -> reason. Channels already bad in rawdata are kept (``rawdata``)."""
     bads = {ch: "rawdata channels.tsv" for ch in raw.info["bads"]}
+    lower = {c.lower(): c for c in raw.ch_names}
+    unknown = [c for c in spec.extra if c.lower() not in lower]
+    if unknown:
+        raise PreprocError(f"preproc.bad_channels.extra {unknown} not in the data")
+    for c in spec.extra:
+        bads.setdefault(lower[c.lower()], "config bad_channels.extra")
+    raw.info["bads"] = list(bads)
     if spec.method == "config_only":
         return bads
     copy = raw.copy().pick("eeg", exclude="bads")
