@@ -9,7 +9,8 @@
   components, window/ROI overrides shown as a diff, the subject's ERPs and measures) and Group
   (tests, cluster settings, grand average, statistics, ERP CORE comparison). All five edit one
   dataset config, validated on every change, saved as YAML; a run panel calls the stage runner.
-  New figure functions in `erp/plots.py`.
+  New figure functions in `erp/plots.py`. README: the app's eight steps and a GIF of the
+  Components page.
 
 ## 0.3.0 (2026-11-01)
 

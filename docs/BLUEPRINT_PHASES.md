@@ -561,8 +561,9 @@ Python API (`eegunify.erp`): `run(config, subjects=None, from_=None, to=None, fo
 
 Status 2026-11-01: the five pages are implemented (`src/eegunify/app/erp_pages.py`) with the
 acceptance test (`tests/unit/erp/test_app_erp.py`: a config built through the pages equals the
-hand-written one; `erp run` on it gives identical `measures.tsv`). Left for v0.4.0: the README
-GIF of the Components page (section 15). Simplifications: rejection `rules` and lateralized
+hand-written one; `erp run` on it gives identical `measures.tsv`). The README GIF of the
+Components page (section 15) is `docs/img/app_components.gif` (recorded from the running app
+with headless Chrome). Simplifications: rejection `rules` and lateralized
 contrasts are edited in the YAML (kept untouched by the pages); the Preprocess page lists the
 detected bad channels instead of drawing them on a topomap.
 

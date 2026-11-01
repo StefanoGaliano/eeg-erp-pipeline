@@ -120,13 +120,26 @@ eegunify convert code/configs/study.yaml                                # BIDS +
 eegunify app                                                            # the same, interactively
 ```
 
-The app (Streamlit) has three steps:
+The app (Streamlit) has eight steps:
 1. **Inspect** a recording.
 2. **Configure** the dataset: event codes → conditions, bad channels, reference, units and
    electrode positions, validated as you type.
 3. **Convert + QA.**
+4. **Preprocess:** filter, bad channels and reference, with a before/after spectrum.
+5. **ICA review:** the component decisions, with manual exclude/keep per subject.
+6. **Epochs:** epoch sets and rejection rules, with what they removed.
+7. **Components:** conditions, contrasts and components; windows and ROIs as overrides of the
+   preset, next to the subject's ERPs and measures.
+8. **Group:** grand averages, statistics and the comparison with published values.
 
-Every choice is a config key, so the saved YAML reproduces the run from the command line.
+Every choice is a config key, so the saved YAML reproduces the run from the command line
+(`eegunify convert`, `eegunify erp run`).
+
+![The Components page: moving the N170 window writes an override of the preset](docs/img/app_components.gif)
+
+*The Components page on ERP CORE N170: moving the window start from 110 to 130 ms shows the
+override of the `n170@erpcore` preset, moves the shaded window in the subject's ERP, and is what
+the saved YAML contains.*
 
 For MATLAB users:
 - `eegunify export <config> --to eeglab` writes `.set` files.
