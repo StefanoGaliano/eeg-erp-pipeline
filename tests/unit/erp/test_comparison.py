@@ -133,3 +133,12 @@ def test_peak_latency_rows_carry_the_lowpass_note() -> None:
 def test_unknown_component_refused() -> None:
     with pytest.raises(ValueError, match="no comparison defined"):
         comparison_table("MMN", pd.DataFrame(), pd.DataFrame(), SUMMARY, SUBJECTS)
+
+
+def test_measure_we_do_not_take_is_not_measured() -> None:
+    ours = _ours(dict.fromkeys(SUBJECTS, -1.0))
+    ours = ours[ours["measure"] != "peak_latency"]  # e.g. a preset without peak latency
+    t = comparison_table("N170", ours, _published(THEIRS), SUMMARY, SUBJECTS)
+    peak = t[t["measure"] == "peak_latency"]
+    assert set(peak["status"]) == {"not_measured"}
+    assert failures(peak).empty

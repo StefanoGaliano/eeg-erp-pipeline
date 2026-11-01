@@ -228,3 +228,52 @@ CORE's own data, nothing is significant: `GROUP_UNDERPOWERED` notes that the sma
 one-tailed permutation p is 1/16 = 0.0625 > 0.05. No d_z confidence interval is given below 8
 subjects (the bootstrap is degenerate: with N = 4 it gave a lower bound of −45). The group
 numbers that can be compared with ERP CORE's 40-subject results are M-E6b.
+
+## M-E6a P3 and N2pc, sub-015..019 (2026-11-01)
+
+`code/configs/erpcore_p3.yaml` (rare - frequent at Pz, 300-600 ms) and `erpcore_n2pc.yaml`
+(contra - ipsi at PO7/PO8, 200-275 ms, lateralized contrast over ERP CORE's 11 channel pairs),
+both referenced to the mean of P9/P10, correct-response bins, 26 ms shift; each run with the
+default recipe and with `erpcore-exact` (ERP CORE's per-subject parameters,
+`src/eegunify/erp/reference/{P3,N2pc}_exact.json`). ERP CORE excluded none of 015..019 for
+these two components. Test `tests/integration/test_erpcore_p3_n2pc.py`.
+
+Contrast mean amplitude, ours - ERP CORE (µV; tolerance ±0.5 per subject, ±0.3 for the mean):
+
+| Subject | P3 default | P3 exact | N2pc default | N2pc exact |
+|---|---|---|---|---|
+| 015 | +0.01 | +0.00 | +0.03 | −0.09 |
+| 016 | excluded by us | −0.08 | +0.06 | −0.11 |
+| 017 | +0.28 | −0.04 | −0.22 | +0.10 |
+| 018 | +0.35 | +0.04 | +0.03 | +0.05 |
+| 019 | **−0.62** | −0.05 | **−1.34** | +0.15, **sign differs** (ours +0.002, theirs −0.151) |
+| mean | +0.004 (of 4) | −0.02 | −0.29 | +0.02 |
+
+50 % area latency: within one sample (3.9 ms) everywhere except P3 exact sub-015 (−11.7 ms).
+P3 exact parent waves (rare, frequent) are all within ±0.25 µV of ERP CORE's, unlike N170's
+(where a 0.3 µV offset remains with the average reference).
+
+### Documented deviations
+
+These are known and accepted; the realdata tests report them (they fail on them) rather than
+encode exceptions.
+
+- **P3, default recipe, sub-016 excluded.** One 100 µV peak-to-peak threshold for everyone
+  rejects 57 % of its epochs and leaves 13 rare trials (< 30): `EPOCHS_MIN_TRIALS` fails and
+  the subject leaves the group. ERP CORE kept it with its own threshold of 160 µV
+  (`AR_Parameters_for_MW_CRAP_P3.xlsx`); with `erpcore-exact` it is kept and within 0.08 µV.
+- **P3, default recipe, sub-019: −0.62 µV** (outside ±0.5). Within 0.05 µV with
+  `erpcore-exact`, so it comes from ERP CORE's per-subject choices (ICA components, thresholds).
+- **N2pc, default recipe, sub-019: −1.34 µV.** ERP CORE's N2pc for this subject is almost
+  absent (−0.15 µV); ours with the automatic recipe is −1.50 µV. Within 0.15 µV with
+  `erpcore-exact`.
+- **N2pc, `erpcore-exact`, sub-019: sign differs.** Ours is +0.002 µV, ERP CORE's −0.151 µV:
+  0.15 µV apart, well inside the amplitude tolerance, but the sign rule (section 8.2) fails
+  because both values are essentially zero. Every other check passes for this subject.
+- **N170, default recipe, sub-017** (above): 0.68 µV; within 0.48 µV with `erpcore-exact`.
+
+Summary: with ERP CORE's own per-subject choices (`erpcore-exact`) all three components
+reproduce their published per-subject contrast amplitudes within ±0.5 µV for every compared
+subject (P3 within ±0.08 µV, N2pc within ±0.15 µV), with one sign disagreement on a
+near-zero N2pc value. The automatic default recipe agrees within tolerance for 10 of the 13
+subject-component pairs it measures and excludes one subject ERP CORE kept.

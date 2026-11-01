@@ -100,7 +100,8 @@ def erpcore_exact(
     """``cfg`` following ERP CORE's own processing of every configured subject.
 
     ``params`` is the ``<component>_exact.json`` content, ``recorded`` the recording's EEG and
-    EOG channel names (rawdata ``channels.tsv``; ERP CORE averages all of them), and
+    EOG channel names in recorded order (rawdata ``channels.tsv``; ERP CORE's reference is given
+    by recorded channel numbers: all 33 sites for N170, P9/P10 for P3 and N2pc), and
     ``weights_dir`` the folder holding the ``*_ica_weighted.set`` files. Settings that differ
     per subject go into ``overrides``; the base config carries the first subject's values so it
     validates, and every subject gets its own override.
@@ -112,11 +113,24 @@ def erpcore_exact(
             raise RecipeError(f"ERP CORE channel {x!r} not in the recording {sorted(recorded)}")
         return canon[x.lower()]
 
-    n_sites = int(params["reference"]["n_sites"])
-    if len(recorded) != n_sites:
+    ref = params["reference"]
+    # ERP CORE numbers channels in recorded order: check this recording has the same order.
+    wrong = {
+        int(k): (v, recorded[int(k) - 1] if int(k) <= len(recorded) else None)
+        for k, v in ref["recorded_labels"].items()
+        if int(k) > len(recorded) or recorded[int(k) - 1].lower() != v.lower()
+    }
+    if wrong:
         raise RecipeError(
-            f"ERP CORE averaged {n_sites} recorded sites; this recording has {len(recorded)}"
+            f"recorded channel order differs from ERP CORE's (number: theirs, ours): {wrong}"
         )
+    ref_numbers = [int(i) for i in ref["recorded_channels"]]
+    if max(ref_numbers) > len(recorded):
+        raise RecipeError(
+            f"ERP CORE's reference uses recorded channels {ref_numbers}; this recording has "
+            f"{len(recorded)}"
+        )
+    reference_channels = [recorded[i - 1] for i in ref_numbers]
     subjects = list(cfg.recordings.subjects)
     missing = [s for s in subjects if s not in params["subjects"]]
     if missing:
@@ -159,7 +173,7 @@ def erpcore_exact(
     }
     data["reference"] |= {
         "scheme": "channels",
-        "channels": list(recorded),
+        "channels": reference_channels,
         "apply_to_eog": True,
         "allow_bad_channels": True,
     }

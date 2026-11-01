@@ -137,7 +137,7 @@ def test_unknown_component_refused(tmp_path: Path) -> None:
 def test_committed_exact_json_is_consistent() -> None:
     data = json.loads((GOLDEN / "N170_exact.json").read_text(encoding="utf-8"))
     chans = set(data["epoch_channels"])
-    assert data["reference"]["n_sites"] == 33
+    assert data["reference"]["recorded_channels"] == list(range(1, 34))
     assert sorted(data["subjects"]) == ["015", "016", "017", "018", "019"]
     for sub, p in data["subjects"].items():
         assert set(p["interpolate"]) <= chans, sub
@@ -165,3 +165,33 @@ def test_default_channels_are_script6_ranges() -> None:
     assert ex._channels("default", ex.SCRIPT6_DEFAULT_CHANNELS["mw"], chans) == chans[:28]
     with pytest.raises(ValueError, match="outside"):
         ex._channels("36", 0, chans)
+
+
+def test_several_interpolated_channels_in_one_cell(tmp_path: Path) -> None:
+    """N2pc sub-017: numbers '18 23' and names 'F8, C6' in one cell each."""
+    folder = _folder(tmp_path)
+    _xlsx(
+        folder / "Interpolate_Channels_N170.xlsx",
+        [["SUBID", "Bad", "Name"], ["15", "2 3", "F8, PO8"]],
+    )
+    assert ex.subject_parameters(folder, "N170", "015")["interpolate"] == ["F8", "PO8"]
+
+
+def test_reference_channels_avgchan_and_mean(tmp_path: Path) -> None:
+    p = tmp_path / "r.txt"
+    p.write_text(
+        "nch1 = ch1 - ( avgchan(1:33) ) Label FP1\nnch2 = (ch2 - ch3) Label X\n", encoding="latin-1"
+    )
+    assert ex.reference_channels(p) == list(range(1, 34))
+    p.write_text(
+        "nch1 = ch1 - ( (ch9 + ch27)/2 ) Label FP1\nnch2 = ch2 - ( (ch9 + ch27)/2 ) Label F3\n",
+        encoding="latin-1",
+    )
+    assert ex.reference_channels(p) == [9, 27]
+    assert ex.recorded_inputs(p) == {1: "FP1", 2: "F3"}
+    p.write_text(
+        "nch1 = ch1 - ( (ch9 + ch27)/2 ) Label FP1\nnch2 = ch2 - ( avgchan(1:33) ) Label F3\n",
+        encoding="latin-1",
+    )
+    with pytest.raises(ValueError, match="one reference expression"):
+        ex.reference_channels(p)

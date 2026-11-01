@@ -8,7 +8,8 @@ Rules (decided 2026-11-01, BLUEPRINT_PHASES section 0):
 * per compared subject: ``|ours - theirs|`` within the tolerance (µV for amplitudes, ms for
   latencies) and, for amplitudes, **our sign equal to theirs** (not "all negative");
 * the subject mean is taken over the compared subjects with both values, tolerance ``mean_uv``;
-* a published NaN (e.g. no negative area for a 50 % area latency) is ``not_available``.
+* a published NaN (e.g. no negative area for a 50 % area latency) is ``not_available``;
+* a measure our component definition does not take is ``not_measured`` (never a failure).
 
 ``comparison_table`` returns one row per (subject, wave, measure) plus ``subject = mean`` rows.
 """
@@ -112,6 +113,26 @@ def comparison_table(
     prim = ours[ours["roi"] == "primary"]
     rows: list[dict[str, object]] = []
     for p in PAIRINGS[component]:
+        if prim[(prim["wave"] == p.ours_wave) & (prim["measure"] == p.measure)].empty:
+            # Our component definition does not take this measure (e.g. the p3 preset has no
+            # peak latency): nothing to compare, and not a failure.
+            for sub in subjects:
+                rows.append(
+                    {
+                        "component": component,
+                        "subject": sub,
+                        "wave": p.ours_wave,
+                        "measure": p.measure,
+                        "unit": "ms" if p.measure.endswith("latency") else "uV",
+                        "ours": math.nan,
+                        "theirs": math.nan,
+                        "diff": math.nan,
+                        "tolerance": math.nan,
+                        "status": "not_measured",
+                        "note": "not in the component's measures",
+                    }
+                )
+            continue
         latency = p.measure.endswith("latency")
         unit = "ms" if latency else "uV"
         tolerance = tol.latency_ms if latency else tol.subject_uv

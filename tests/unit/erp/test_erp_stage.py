@@ -249,10 +249,13 @@ def test_erpcore_exact_recipe_from_golden_parameters(tmp_path: Path) -> None:
         erpcore_exact(cfg, params, recorded, tmp_path)
     for p in params["subjects"].values():
         (tmp_path / p["ica_weights"]).write_bytes(b"")
-    with pytest.raises(RecipeError, match="averaged 33"):
+    with pytest.raises(RecipeError, match="order differs"):  # a missing channel shifts order
         erpcore_exact(cfg, params, recorded[:-1], tmp_path)
+    swapped = [recorded[1], recorded[0], *recorded[2:]]
+    with pytest.raises(RecipeError, match="order differs"):
+        erpcore_exact(cfg, params, swapped, tmp_path)
     exact = erpcore_exact(cfg, params, recorded, tmp_path)
-    assert exact.reference.scheme == "channels" and len(exact.reference.channels) == 33
+    assert exact.reference.scheme == "channels" and exact.reference.channels == recorded
     assert exact.reference.apply_to_eog and exact.preproc.interpolate_after_ica
     assert exact.artifacts.eog_bipolar["VEOG_uncorr"] == ("VEOG_lower", "Fp2")  # names mapped
     assert exact.erp.peak_lowpass_hz == 20.0
@@ -266,3 +269,23 @@ def test_erpcore_exact_recipe_from_golden_parameters(tmp_path: Path) -> None:
     ptp = next(r for r in sub17.epochs.reject.rules if r.test == "ptp")
     assert ptp.threshold_uv == params["subjects"]["017"]["reject"][1]["threshold_uv"]
     assert "PO8" in ptp.channels and "P9" not in ptp.channels  # Script6 default 1:28
+
+
+def test_erpcore_exact_p3_uses_p9_p10_reference(tmp_path: Path) -> None:
+    """P3/N2pc: ERP CORE references to the mean of recorded channels 9 and 27 (P9, P10)."""
+    from eegunify.config.loader import load_config
+    from eegunify.erp.recipes import erpcore_exact
+
+    root = Path(__file__).parents[3]
+    ref_dir = root / "src" / "eegunify" / "erp" / "reference"
+    eeg = ["Fp1", "F3", "F7", "FC3", "C3", "C5", "P3", "P7", "P9", "PO7", "PO3", "O1", "Oz"]
+    eeg += ["Pz", "CPz", "Fp2", "Fz", "F4", "F8", "FC4", "FCz", "Cz", "C4", "C6", "P4", "P8"]
+    recorded = [*eeg, "P10", "PO8", "PO4", "O2", "HEOG_left", "HEOG_right", "VEOG_lower"]
+    for comp in ("P3", "N2pc"):
+        params = json.loads((ref_dir / f"{comp}_exact.json").read_text(encoding="utf-8"))
+        for p in params["subjects"].values():
+            (tmp_path / p["ica_weights"]).write_bytes(b"")
+        cfg = load_config(root / "code" / "configs" / f"erpcore_{comp.lower()}.yaml")
+        exact = erpcore_exact(cfg, params, recorded, tmp_path)
+        assert exact.reference.channels == ["P9", "P10"], comp
+        assert exact.reference.apply_to_eog

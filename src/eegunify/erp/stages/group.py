@@ -147,7 +147,9 @@ class GroupStage(Stage):
                 ).str.lstrip("; ")
             write_tsv(table, f"task-{task}_erpcore-comparison.tsv")
             bad = failures(table)
-            compared = table[~table["status"].isin(["excluded_by_erpcore", "not_available"])]
+            compared = table[
+                ~table["status"].isin(["excluded_by_erpcore", "not_available", "not_measured"])
+            ]
             failing = [f"{r.subject} {r.wave} {r.measure} ({r.status})" for r in bad.itertuples()]
             checks.append(qa.reference_values_check(len(bad), len(compared), failing))
             extra["erpcore_failures"] = len(bad)

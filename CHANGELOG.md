@@ -23,6 +23,10 @@
   ipsi waves as ERP CORE's ERPLAB bin operations, measured at PO7/PO8 by the `n2pc` preset.
   Published values are matched by exact wave label.
 - OSF downloads retry HTTP 403 (OSF sometimes answers bursts with it for public files).
+- **`erpcore-exact` for P3 and N2pc:** their parameter files and ICA weights are pinned too;
+  the reference is read from ERP CORE's channel-operation file (all 33 sites for N170, P9/P10
+  for P3 and N2pc) and the recording's channel order is checked against theirs. Group
+  comparison rows for measures a component does not take are `not_measured`.
 - **group stage:** grand averages, all subjects' measures, `stats.tsv` (paired t and Wilcoxon on
   contrast mean amplitudes, Cohen's d_z with a bootstrap CI from 8 subjects up, descriptive rows
   for the rest), cluster permutation test, the ERP CORE comparison
