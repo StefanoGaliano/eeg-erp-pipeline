@@ -28,7 +28,7 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E4 done)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E5 done)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.
@@ -42,8 +42,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
   cleaning average-references the data, applies ICA, then re-applies `reference.scheme` (linear, so exact).
   `scheme: none` is refused. picard runs as extended infomax (`ortho=False`). ICA tests check blink removal
   by applying the solution to the blink part alone (`blink_truth`), which is exact because cleaning is linear.
-- Epoch rejection is numpy with ERPLAB semantics (`pop_artmwppth`, `pop_artstep`), ms -> samples rounded half-up
-  (not Python's half-to-even `round`). The per-epoch log lists every selected event, also those MNE drops
+- Epoch rejection is numpy with ERPLAB semantics (`pop_artmwppth`, `pop_artstep`), ms -> samples is `floor`, the step
+  function's first half `round(winpnts/2)` with MATLAB rounding; ERPLAB parity is `test_erplab_crosscheck.py`. The per-epoch log lists every selected event, also those MNE drops
   (`TOO_SHORT`, `BAD_`); `code` is matched by onset to rawdata `events.tsv`.
 - Tests that run the default stages up to one stage use `Runner(...).run(to="preproc")[0]`: the plan lists
   every stage.
@@ -170,5 +170,8 @@ into `events.tsv` as `beh_<col>`; QA `BEHAVIOR_ALIGNMENT`. The format support ma
 - All text I/O passes `encoding="utf-8"` and relative paths shown or stored use `.as_posix()` (Windows CI;
   an AST test enforces the encoding rule).
 - MATLAB subprocesses need `stdin=subprocess.DEVNULL`.
+- `eeglab nogui` does not call plugin init functions: ERPLAB's subfolders are not on the path until
+  `addpath(genpath(<erplab>))` (done in `matlab/erplab_crosscheck.m`). ERPLAB epochs have no `urevent`;
+  use `EEG.EVENTLIST.eventinfo.bepoch`.
 - Pre-commit pins ruff/mypy. Keep their `rev:` in sync with the versions in `uv.lock`, or the hooks and CI
   will disagree.

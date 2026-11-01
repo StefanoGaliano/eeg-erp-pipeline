@@ -78,7 +78,7 @@ mean amplitude is within 3 SME + 0.2 µV of the injected value. The blueprint's 
 the whole difference wave" is not reachable at the synthetic noise level (~28 trials per
 condition give ~0.8 µV RMS of noise), so the bound is stated in SME units instead.
 
-## M-E5 ERPLAB cross-check (in progress, 2026-10-31)
+## M-E5 ERPLAB cross-check (2026-11-01)
 
 ERPLAB 13.10 (`ucdavis/erplab` release zip, sha256 `5b1c9d21…53fb9f3`) and bva-io 1.74
 (`sccn/bva-io` tag tarball, sha256 `e54a4395…77813a0c`) are installed in
@@ -106,6 +106,24 @@ On sub-015 nothing measured changed (same 4 ICA exclusions, 13/320 rejected, fac
 −1.22 µV); the VEOG-Fp1 residual after ICA went from r = −0.06 to −0.01 because VEOG is now
 Fp2 − VEOG_lower in the recorded reference rather than after the average reference.
 
-The numeric cross-check in MATLAB (same filtered, re-referenced data through ERPLAB
-`pop_epochbin`, `pop_artmwppth`, `pop_artstep`, `pop_averager`, `pop_geterpvalues`; target |Δ| < 0.05 µV and
-identical rejected epochs) is not run yet.
+Numeric cross-check, `tests/integration/test_erplab_crosscheck.py` (MATLAB R2026b, ERPLAB 13.10).
+eegunify's `desc-preproc` data for sub-015 (the `erplab` recipe: the dataset config without ICA)
+go through ERPLAB `pop_epochbin`, `pop_artmwppth`, `pop_artstep` (HEOG), `pop_averager`,
+`pop_binoperator` and `pop_geterpvalues` (`meanbl`, PO8, 110-150 ms):
+
+| Check | ERPLAB | eegunify |
+|---|---|---|
+| rejected epochs (face + car) | 56 of 160 | the same 56 events |
+| accepted trials face / car | 50 / 54 | 50 / 54 |
+| mean amplitude face | 3.951467 µV | 3.951467 µV |
+| mean amplitude car | 5.557152 µV | 5.557152 µV |
+| face − car | −1.605684 µV | −1.605685 µV |
+
+|Δ| < 1e-6 µV (the 6-decimal rounding of `measures.tsv`); the target was 0.05 µV. Without ICA
+the blinks stay in the data, so 35 % of these epochs fail the 100 µV peak-to-peak test (4 % with
+the ERP CORE recipe above); for the cross-check only agreement matters.
+
+Two harness fixes were needed to run it: `eeglab nogui` adds only each plugin's top folder and
+does not call `eegplugin_erplab`, so `matlab/erplab_crosscheck.m` adds ERPLAB's subfolders itself
+(keeping EEGLAB's `icadefs` first); and ERPLAB's epoching drops `urevent`, so rejected epochs are
+mapped back to events through `EEG.EVENTLIST.eventinfo(k).bepoch`.

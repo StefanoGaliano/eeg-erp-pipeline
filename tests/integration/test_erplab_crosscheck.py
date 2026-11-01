@@ -154,4 +154,8 @@ def test_erplab_matches_sub015(project: Path, tmp_path: Path) -> None:
     )
     prim = m.query("roi == 'primary' and measure == 'mean_amplitude'").set_index("wave")["value"]
     ours = [prim["face"], prim["car"], prim["face_minus_car"]]
+    print(  # recorded in docs/validation_erp.md (run with -s)
+        f"\nERPLAB {theirs['erplab_version']}: rejected {len(ours_rejected)}/{len(log)}, "
+        f"trials {theirs['trials_per_bin']}, mean µV theirs {theirs['mean_uv']} ours {ours}"
+    )
     np.testing.assert_allclose(theirs["mean_uv"], ours, atol=TOL_UV)

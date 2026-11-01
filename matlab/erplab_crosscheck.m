@@ -19,6 +19,22 @@ function result = erplab_crosscheck(setfile, eventsfile, outjson, p)
 %   1-based indices into the events file, the trials per bin and the mean amplitudes.
 %   Needs EEGLAB with ERPLAB (Practice/setup_eeg_toolboxes.m).
 
+% 'eeglab nogui' adds only each plugin's top folder and skips eegplugin_erplab, which is
+% what adds ERPLAB's subfolders (pop_functions, functions, ...). Do that here, then keep
+% EEGLAB's icadefs in front of ERPLAB's copy, as eeglab.m does with its GUI.
+if isempty(which('pop_creabasiceventlist'))
+    erplabdir = fileparts(which('eegplugin_erplab'));
+    if isempty(erplabdir)
+        error('erplab_crosscheck:noERPLAB', 'ERPLAB not found: run eeglab with ERPLAB installed');
+    end
+    addpath(genpath(erplabdir));
+    icadefsdir = fileparts(which('icadefs'));
+    if contains(lower(icadefsdir), 'erplab')
+        rmpath(icadefsdir);
+        if isempty(which('icadefs')), addpath(icadefsdir); end
+    end
+end
+
 ev = readtable(eventsfile, 'FileType', 'text', 'Delimiter', '\t');
 EEG = pop_loadset('filename', setfile);
 % Numeric event codes, as ERPLAB's binlister expects (the .set carries trial-type labels).
@@ -52,15 +68,12 @@ if isfield(p, 'step_uv') && p.step_uv > 0
         'Windowstep', p.step_step_ms, 'Review', 'off');
 end
 
-% Which events became rejected epochs: each epoch's time-locking event is its 'urevent'.
+% Which events became rejected epochs: ERPLAB's EVENTLIST keeps one item per original event
+% (same order as the events file) and its 'bepoch', the epoch made from it (0 = none).
 flags = EEG.reject.rejmanual;
-locking = zeros(1, EEG.trials);
-for i = 1:EEG.trials
-    lat0 = [EEG.epoch(i).eventlatency{:}];
-    ure = [EEG.epoch(i).eventurevent{:}];
-    if iscell(lat0), lat0 = cell2mat(lat0); end
-    locking(i) = ure(find(lat0 == 0, 1));
-end
+bepoch = [EEG.EVENTLIST.eventinfo.bepoch];
+items = find(bepoch > 0);
+rejected = items(flags(bepoch(items)) == 1);
 
 ERP = pop_averager(EEG, 'Criterion', 'good', 'ExcludeBoundary', 'on', 'SEM', 'on');
 nb = numel(p.bins);
@@ -75,7 +88,7 @@ result.erplab_version = geterplabversion;
 result.srate = EEG.srate;
 result.epoch_samples = EEG.pnts;
 result.epoch_xmin_ms = EEG.xmin * 1000;
-result.rejected_events = sort(locking(flags == 1));
+result.rejected_events = sort(rejected);
 result.n_epochs = EEG.trials;
 result.trials_per_bin = ERP.ntrials.accepted;
 result.mean_uv = amp(:)';

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **M-E5, ERPLAB cross-check:** rejection window sizes, the step function's half window and the
+  fractional-area latency now follow ERPLAB 13.10 exactly. On ERP CORE N170 sub-015 ERPLAB
+  rejects the same epochs and gives the same mean amplitudes (|Δ| < 1e-6 µV);
+  `tests/integration/test_erplab_crosscheck.py`, `matlab/erplab_crosscheck.m`.
+- Bipolar EOG is derived in preproc, so the HEOG step rejection also runs without ICA.
+
 ## 0.2.0 (2026-10-31)
 
 **Single-subject ERPs**: the ERP stages on canonical data (docs/BLUEPRINT_PHASES.md, M-E0 to
