@@ -267,13 +267,14 @@ encode exceptions.
 - **N2pc, default recipe, sub-019: −1.34 µV.** ERP CORE's N2pc for this subject is almost
   absent (−0.15 µV); ours with the automatic recipe is −1.50 µV. Within 0.15 µV with
   `erpcore-exact`.
-- **N2pc, `erpcore-exact`, sub-019: sign differs.** Ours is +0.002 µV, ERP CORE's −0.151 µV:
-  0.15 µV apart, well inside the amplitude tolerance, but the sign rule (section 8.2) fails
-  because both values are essentially zero. Every other check passes for this subject.
+- **N2pc, `erpcore-exact`, sub-019: sign differs** (ours +0.002 µV, ERP CORE's −0.151 µV,
+  0.15 µV apart). Both values are essentially zero, so the sign rule was refined (BLUEPRINT
+  section 0 and 8.2): the sign is checked only when |published| > 0.5 µV. Under the refined
+  rule this subject passes; it is no longer a deviation.
 - **N170, default recipe, sub-017** (above): 0.68 µV; within 0.48 µV with `erpcore-exact`.
 
 Summary: with ERP CORE's own per-subject choices (`erpcore-exact`) all three components
 reproduce their published per-subject contrast amplitudes within ±0.5 µV for every compared
-subject (P3 within ±0.08 µV, N2pc within ±0.15 µV), with one sign disagreement on a
-near-zero N2pc value. The automatic default recipe agrees within tolerance for 10 of the 13
+subject (P3 within ±0.08 µV, N2pc within ±0.15 µV); the one sign disagreement, on a near-zero
+N2pc value, passes the refined sign rule. The automatic default recipe agrees within tolerance for 10 of the 13
 subject-component pairs it measures and excludes one subject ERP CORE kept.

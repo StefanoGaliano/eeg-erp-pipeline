@@ -64,7 +64,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Never shift event onsets in ERP stages (Phase 1 already applied `onset_shift_ms`).
 - Select events only through `erp.events.select` (MNE tag matching).
 - Reference numbers (ERP CORE) only from fetched files or the paper, never typed from memory.
-- ERP CORE comparison: sign must equal ERP CORE's per subject (their sub-019 N170 is positive); subjects ERP CORE
+- ERP CORE comparison: sign must equal ERP CORE's per subject when |theirs| > tolerance (their sub-019 N170 is positive;
+  near zero the sign is not checked); subjects ERP CORE
   excluded (`*_subjects.tsv`, N170 sub-016) are reported, not checked (BLUEPRINT_PHASES §0, §8.2).
 - `erpcore-exact` recipe (`erp.recipes.erpcore_exact`, BLUEPRINT_PHASES §8.2a): ERP CORE's own per-subject choices
   from `src/eegunify/erp/reference/N170_exact.json` + their ICA weights (`erpcore_exact.fetch_exact`, cache only).

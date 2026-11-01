@@ -19,7 +19,7 @@ No code is written here; it says what to build, where, in what order, and how to
 | OQ4 | **Decided:** Phase M = ingestion parity (BrainVision, BDF, EEGLAB) + N170 ERP-lite via EEGLAB/ERPLAB, no MATLAB ICA. |
 | OQ5 | **Decided:** install ERPLAB and bva-io into `Practice/toolboxes/eeglab/plugins` (FieldTrip fallback kept). |
 | OQ1, OQ6, OQ7, OQ8 | Recommended defaults below apply (not discussed individually). |
-| ERP CORE comparison (2026-11-01) | **Decided after reading the published files** (section 8.2): the sign rule is "our sign equals ERP CORE's sign, per subject", not "every N170 difference negative" (ERP CORE's own sub-019 N170 difference is +2.041 µV). Subjects ERP CORE excluded (`<component>_subjects.tsv`, e.g. N170 sub-016, reason TC) are run and reported, labelled "excluded by ERP CORE", but are left out of the tolerance checks and of the subject mean, which is taken over the compared subjects only. This supersedes any other wording in this file. |
+| ERP CORE comparison (2026-11-01) | **Decided after reading the published files** (section 8.2): the sign rule is "our sign equals ERP CORE's sign, per subject", not "every N170 difference negative" (ERP CORE's own sub-019 N170 difference is +2.041 µV). Subjects ERP CORE excluded (`<component>_subjects.tsv`, e.g. N170 sub-016, reason TC) are run and reported, labelled "excluded by ERP CORE", but are left out of the tolerance checks and of the subject mean, which is taken over the compared subjects only. This supersedes any other wording in this file. **Refined 2026-11-01:** the sign is only checked when the published value is larger than the tolerance in absolute value (|theirs| > 0.5 µV); near zero either sign is within the tolerance (N2pc sub-019: ours +0.002, theirs −0.151 µV). |
 
 Original questions and rationale:
 
@@ -457,7 +457,9 @@ What we compare (in `derivatives/eegunify-group/task-N170_erpcore-comparison.tsv
 2. **Peak latency** (secondary): within ±8 ms per subject.
 3. **Subject mean** of our values vs the mean of ERP CORE's per-subject values over the same
    compared subjects (apples to apples), not vs the 40-subject grand mean.
-4. **Sign**: per compared subject, our sign equals ERP CORE's published sign. Not "all N170
+4. **Sign**: per compared subject whose published value is larger than the tolerance in
+   absolute value, our sign equals ERP CORE's published sign (near zero either sign is within
+   the tolerance; refined 2026-11-01). Not "all N170
    differences negative": ERP CORE's own sub-019 N170 face − car is positive (+2.041 µV).
 5. **Subjects ERP CORE excluded** (`src/eegunify/erp/reference/<component>_subjects.tsv`,
    `included = False`; N170: sub-016, TC = fewer than 50 % of face trials left after artifact

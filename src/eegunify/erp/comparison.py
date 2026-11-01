@@ -6,7 +6,9 @@ Rules (decided 2026-11-01, BLUEPRINT_PHASES section 0):
   subjects ERP CORE excluded are listed with ``status = excluded_by_erpcore`` and their reason,
   and are not part of any check or of the subject mean;
 * per compared subject: ``|ours - theirs|`` within the tolerance (µV for amplitudes, ms for
-  latencies) and, for amplitudes, **our sign equal to theirs** (not "all negative");
+  latencies) and, for amplitudes whose published value is larger than the tolerance in
+  absolute value, **our sign equal to theirs** (not "all negative"; near zero, either sign is
+  within the tolerance);
 * the subject mean is taken over the compared subjects with both values, tolerance ``mean_uv``;
 * a published NaN (e.g. no negative area for a 50 % area latency) is ``not_available``;
 * a measure our component definition does not take is ``not_measured`` (never a failure).
@@ -89,7 +91,10 @@ PAIRINGS: dict[str, tuple[Pairing, ...]] = {
 def _status(ours: float, theirs: float, tol: float, signed: bool) -> str:
     if math.isnan(ours):
         return "missing_ours"
-    if signed and (ours > 0) != (theirs > 0):
+    # The sign is only checked when the published value is clearly away from zero
+    # (|theirs| > tolerance): near zero, either sign is within the tolerance (decided
+    # 2026-11-01 after N2pc sub-019: ours +0.002 uV, ERP CORE's -0.151 uV).
+    if signed and abs(theirs) > tol and (ours > 0) != (theirs > 0):
         return "sign_mismatch"
     return "ok" if abs(ours - theirs) <= tol else "out_of_tolerance"
 

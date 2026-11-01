@@ -142,3 +142,16 @@ def test_measure_we_do_not_take_is_not_measured() -> None:
     peak = t[t["measure"] == "peak_latency"]
     assert set(peak["status"]) == {"not_measured"}
     assert failures(peak).empty
+
+
+def test_sign_only_checked_away_from_zero() -> None:
+    """N2pc sub-019: ours +0.002, ERP CORE's -0.151 uV: inside the tolerance, no sign check."""
+    theirs = {**THEIRS, "019": -0.151}
+    ours = _ours({"015": -1.0, "016": 0.0, "017": -2.9, "018": -0.6, "019": 0.002})
+    t = comparison_table("N170", ours, _published(theirs), SUMMARY, SUBJECTS)
+    assert _diff_rows(t).loc["019", "status"] == "ok"
+    # a published value beyond the tolerance still needs the same sign
+    theirs = {**THEIRS, "019": -0.6}
+    ours = _ours({"015": -1.0, "016": 0.0, "017": -2.9, "018": -0.6, "019": 0.05})
+    t = comparison_table("N170", ours, _published(theirs), SUMMARY, SUBJECTS)
+    assert _diff_rows(t).loc["019", "status"] == "sign_mismatch"
