@@ -31,7 +31,48 @@ First `measures.tsv` (sub-015, N170 window 110–150 ms at PO8, from the compone
 | face | mean amplitude | 4.42 µV | 77 |
 | car | mean amplitude | 5.64 µV | 78 |
 
-The comparison with ERP CORE's published per-subject values comes with the group stage (v0.3.0).
+## ERP CORE reproduction
+
+ERP CORE (Kappenman et al., 2021) publishes, per subject, the mean amplitude its own
+EEGLAB/ERPLAB pipeline measured. The five subjects of its BIDS archive (sub-015..019) run
+through eegunify, group stage included, with two recipes:
+
+- **default**: our automatic pipeline (picard ICA + ICLabel, one rejection rule set for everyone);
+- **`erpcore-exact`**: ERP CORE's own per-subject choices, read from their files (their ICA
+  weights and removed components, interpolated channels, rejection thresholds).
+
+Contrast mean amplitude, ours − ERP CORE, per subject ERP CORE included (µV):
+
+| Component (window, ROI) | Recipe | 015 | 016 | 017 | 018 | 019 | Mean |
+|---|---|---|---|---|---|---|---|
+| N170 face − car (110–150 ms, PO8) | default | +0.10 | excl.¹ | **+0.68** | −0.24 | +0.44 | +0.25 |
+| | exact | −0.44 | excl.¹ | +0.48 | +0.04 | +0.12 | +0.05 |
+| P3 rare − frequent (300–600 ms, Pz) | default | +0.01 | **excl.²** | +0.28 | +0.35 | **−0.62** | +0.00 |
+| | exact | +0.00 | −0.08 | −0.04 | +0.04 | −0.05 | −0.02 |
+| N2pc contra − ipsi (200–275 ms, PO7/PO8) | default | +0.03 | +0.06 | −0.22 | +0.03 | **−1.34** | −0.29 |
+| | exact | −0.09 | −0.11 | +0.10 | +0.05 | +0.15 | +0.02 |
+
+Tolerance ±0.5 µV per subject and ±0.3 µV for the mean, with the sign equal to ERP CORE's
+wherever their value is clearly away from zero. **With ERP CORE's own choices every compared
+subject is within tolerance** (P3 within 0.08 µV, N2pc within 0.15 µV); the automatic recipe is
+within tolerance for 10 of 13 subject-component pairs. Bold cells are the documented
+deviations: they come from per-subject decisions (thresholds, ICA components), not from the
+implementation. ¹ ERP CORE excluded N170 sub-016 too (2 correct face trials). ² Our single
+100 µV threshold rejects 57 % of its P3 epochs; ERP CORE used 160 µV for this subject. Details,
+latencies and parent waves: [validation_erp.md](docs/validation_erp.md).
+
+![ERP CORE N170, P3 and N2pc grand averages](docs/img/erpcore_grand_average.png)
+
+*Grand-average difference waves (blue) and every included subject (grey), default recipe,
+20 Hz low-pass for display; shaded: measurement window
+([`code/scripts/erpcore_grand_average.py`](code/scripts/erpcore_grand_average.py)).*
+
+**What five subjects can and cannot show.** They can show per-subject agreement with the
+published values (the strongest test, independent of N), that the waves have the right shape
+and that the pipeline is wired correctly. They cannot reproduce ERP CORE's 40-subject grand
+mean, effect sizes or significance: with N = 4 the smallest possible one-tailed permutation p
+is 1/16, and the group stage says so (`GROUP_UNDERPOWERED`). The N170 group effect is not
+significant here, because sub-019's face − car difference is positive in ERP CORE's own data.
 
 ## Why trust it
 
@@ -39,6 +80,9 @@ The comparison with ERP CORE's published per-subject values comes with the group
   - **ERP CORE N170:** all 640 event codes are identical to ERP CORE's own `events.tsv` and
     onsets agree within 0.05 ms. Golden-file tests run weekly in CI.
   - **MATLAB/EEGLAB:** the same data and events load in EEGLAB (verified in MATLAB).
+  - **ERPLAB:** on the same preprocessed data, ERPLAB 13.10 rejects the same epochs and measures
+    the same mean amplitudes (|Δ| < 10⁻⁶ µV).
+  - **ERP CORE's published measurements:** see the reproduction table above.
 - **Cross-format consistency.** The same recording exported in two formats gives identical data
   and events: ANT `.cnt` vs its BrainVision export, Curry 7/8 vs the BDF original.
 - **Tested on data it has never seen.** 21 open datasets were run with automatically drafted
@@ -52,8 +96,8 @@ The comparison with ERP CORE's published per-subject values comes with the group
   - Dropped triggers in behavioural logs leave one trial unmatched instead of shifting the rest.
 - **Engineering:**
   - CI on Linux, macOS and Windows with Python 3.11–3.13.
-  - Strict typing (mypy) and ~180 tests, including exact synthetic round trips for every
-    writable format.
+  - Strict typing (mypy) and ~390 tests, including exact synthetic round trips for every
+    writable format and synthetic ground truth for every ERP stage.
   - Every bug found on real data has a regression test named after the dataset that showed it.
 
 ## Quick start
@@ -115,8 +159,11 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   component measures (mean amplitude, peak, fractional-area latency) from a component library.
   Every stage is cached and writes QA. See [BLUEPRINT_PHASES.md](docs/BLUEPRINT_PHASES.md) and
   [validation_erp.md](docs/validation_erp.md).
-- **Next (v0.3.0):** group statistics and the ERP CORE reproduction (N170, P3, N2pc on
-  sub-015..019); an ERPLAB cross-check of the measurements; app pages for the ERP stages (A2).
+- **Group statistics and the ERP CORE reproduction (done, v0.3.0):** group stage (grand
+  averages, paired tests and effect sizes, cluster permutation, comparison with published
+  values), lateralized contrasts (N2pc), N170/P3/N2pc configs, the `erpcore-exact` recipe and
+  the ERPLAB cross-check.
+- **Next:** app pages for the ERP stages (A2, v0.4.0); optionally the 40-subject N170 (M-E6b).
 - **Phase M:** the same ingestion natively in MATLAB, with outputs that match Python.
 
 ## Repository layout
@@ -125,9 +172,9 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
 |---|---|
 | `src/eegunify/` | Python package (`readers/`, `events/`, `channels/`, `qa/`, `app/`, `erp/`) |
 | `tests/` | unit, synthetic round-trip, real-data (`pytest -m realdata`) and MATLAB tests |
-| `code/configs/` | dataset configs (ERP CORE N170, validation catalog) |
+| `code/configs/` | dataset configs (ERP CORE N170, P3, N2pc; validation catalog) |
 | `code/scripts/` | analysis scripts built on the canonical data |
-| `matlab/` | `load_canonical.m` and its tests |
+| `matlab/` | `load_canonical.m`, the ERPLAB cross-check, and their tests |
 | `sourcedata/`, `rawdata/`, `derivatives/` | BIDS data folders (git-ignored) |
 
 ## License and citation

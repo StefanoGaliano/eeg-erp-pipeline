@@ -27,10 +27,11 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Validation harness: `eegunify validate-datasets [--max-mb N] [--only dsXXXX] [--dry-run]` → `derivatives/validation/summary.{tsv,md}`; results written up in `docs/validation_results.md`
 - Export for MATLAB: `eegunify export <config> --to eeglab`; `matlab/load_canonical.m` (EEGLAB via bva-io, else FieldTrip readers). MATLAB tests: `pytest -m realdata` with `EEGUNIFY_MATLAB_SETUP=<.../setup_eeg_toolboxes.m>` and `matlab` on PATH (skipped otherwise, e.g. CI)
 - Config reference: `eegunify config schema --markdown --out docs/config_reference.md` (a test fails if stale; every field needs a docstring)
-- README figure: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015)
+- README figures: `python code/scripts/erp_preview.py` (needs converted ERP CORE sub-015);
+  `python code/scripts/erpcore_grand_average.py --root N170=. --root P3=. --root N2pc=.` (after `erp run` of the three configs)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E5 done, M-E6a in progress)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E6a done, v0.3.0)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.
@@ -182,6 +183,8 @@ into `events.tsv` as `beh_<col>`; QA `BEHAVIOR_ALIGNMENT`. The format support ma
 - All text I/O passes `encoding="utf-8"` and relative paths shown or stored use `.as_posix()` (Windows CI;
   an AST test enforces the encoding rule).
 - MATLAB subprocesses need `stdin=subprocess.DEVNULL`.
+- `eegunify convert` in the repo root makes MNE-BIDS append its references to the tracked `rawdata/README.md`:
+  `git checkout -- rawdata/README.md` before committing.
 - `eeglab nogui` does not call plugin init functions: ERPLAB's subfolders are not on the path until
   `addpath(genpath(<erplab>))` (done in `matlab/erplab_crosscheck.m`). ERPLAB epochs have no `urevent`;
   use `EEG.EVENTLIST.eventinfo.bepoch`.

@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 (2026-11-01)
+
+**Group statistics and the ERP CORE reproduction** (docs/BLUEPRINT_PHASES.md, M-E5 and M-E6a).
+N170, P3 and N2pc on ERP CORE sub-015..019 against ERP CORE's published per-subject values:
+with ERP CORE's own per-subject choices (`erpcore-exact`) every compared subject is within
+±0.5 µV; the automatic recipe is within tolerance for 10 of 13 subject-component pairs, the
+other three documented in docs/validation_erp.md.
 
 - **M-E5, ERPLAB cross-check:** rejection window sizes, the step function's half window and the
   fractional-area latency now follow ERPLAB 13.10 exactly. On ERP CORE N170 sub-015 ERPLAB

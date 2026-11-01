@@ -653,7 +653,7 @@ classes or decoding code until motor restoration work starts.
 | M-E3 | epochs + rejection (Phase 4) | M-E1 (M-E2 optional) | exact synthetic rejections; per-epoch log; F1 test |
 | M-E4 | erp + measure (Phase 5) → **v0.2.0** | M-E3 | analytic measure tests; preview recipe golden −2.24 ±0.05 µV; README updated with first `measures.tsv` |
 | M-E5 | ERPLAB cross-check (8.4) | M-E4, ERPLAB installed | Δ mean amplitude < 0.05 µV on sub-015 |
-| M-E6a | group + stats + ERP CORE comparison (Phase 6), N170/P3/N2pc on 015..019 → **v0.3.0, repo public** | M-E4 | comparison TSV within tolerances (8.2: sign equal to ERP CORE's, subjects ERP CORE excluded reported but not checked) or documented deviations; `docs/validation_erp.md` |
+| M-E6a | **done 2026-11-01 (v0.3.0)**: group + stats + ERP CORE comparison (Phase 6), N170/P3/N2pc on 015..019 → **v0.3.0, repo public** | M-E4 | comparison TSV within tolerances (8.2: sign equal to ERP CORE's, subjects ERP CORE excluded reported but not checked) or documented deviations; `docs/validation_erp.md` |
 | M-E6b | optional 40-subject N170 | M-E6a | grand average & d_z vs published |
 | A2 | app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | MATLAB ingestion parity (BrainVision, BDF, SET) | v0.1.0 | §11 tolerances |
