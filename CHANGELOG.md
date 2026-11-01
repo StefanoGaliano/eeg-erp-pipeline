@@ -7,6 +7,9 @@
   rejects the same epochs and gives the same mean amplitudes (|Δ| < 1e-6 µV);
   `tests/integration/test_erplab_crosscheck.py`, `matlab/erplab_crosscheck.m`.
 - Bipolar EOG is derived in preproc, so the HEOG step rejection also runs without ICA.
+- **ERP CORE published values:** `eegunify fetch erpcore-values` downloads the per-subject
+  measurement files and subject summaries of N170, P3 and N2pc from OSF and writes tidy TSVs to
+  `tests/golden/erpcore_reference/` (CC-BY-4.0).
 
 ## 0.2.0 (2026-10-31)
 

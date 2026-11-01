@@ -22,6 +22,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - `eegunify config init <file> --out code/configs/x.yaml` (draft), `eegunify config validate <yaml>`, `eegunify config schema`
 - Real data: `pytest -m realdata` (ERP CORE golden + cross-check; data cached in `EEGUNIFY_DATA` or `~/.cache/eegunify`); refresh golden files with `--update-golden` after reviewing the diff
 - Fetch: `eegunify fetch erpcore -s 015`, `eegunify fetch openneuro ds005841 -s 001`
+- ERP CORE published per-subject values: `eegunify fetch erpcore-values [-c N170] --dest ~/.cache/eegunify/erpcore`
+  (`reference_values.py`) rewrites `tests/golden/erpcore_reference/<comp>{,_subjects}.tsv`; a realdata test checks them against OSF
 - Validation harness: `eegunify validate-datasets [--max-mb N] [--only dsXXXX] [--dry-run]` → `derivatives/validation/summary.{tsv,md}`; results written up in `docs/validation_results.md`
 - Export for MATLAB: `eegunify export <config> --to eeglab`; `matlab/load_canonical.m` (EEGLAB via bva-io, else FieldTrip readers). MATLAB tests: `pytest -m realdata` with `EEGUNIFY_MATLAB_SETUP=<.../setup_eeg_toolboxes.m>` and `matlab` on PATH (skipped otherwise, e.g. CI)
 - Config reference: `eegunify config schema --markdown --out docs/config_reference.md` (a test fails if stale; every field needs a docstring)
@@ -59,6 +61,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Never shift event onsets in ERP stages (Phase 1 already applied `onset_shift_ms`).
 - Select events only through `erp.events.select` (MNE tag matching).
 - Reference numbers (ERP CORE) only from fetched files or the paper, never typed from memory.
+- ERP CORE comparison: sign must equal ERP CORE's per subject (their sub-019 N170 is positive); subjects ERP CORE
+  excluded (`*_subjects.tsv`, N170 sub-016) are reported, not checked (BLUEPRINT_PHASES §0, §8.2).
 - New QA IDs go in the `erp/qa.py` docstring table; IDs are API.
 
 ## Architecture (data flow)

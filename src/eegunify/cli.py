@@ -259,6 +259,37 @@ def fetch_erpcore_cmd(
         console.print(f"[green]ok[/] {p}")
 
 
+@fetch_app.command("erpcore-values")
+def fetch_erpcore_values_cmd(
+    component: Annotated[
+        list[str] | None,
+        typer.Option("--component", "-c", help="N170, P3 or N2pc; repeatable (default: all)."),
+    ] = None,
+    dest: Annotated[Path, typer.Option(help="Download folder.")] = Path("sourcedata/erpcore"),
+    out: Annotated[Path, typer.Option(help="Where the tidy TSVs go.")] = Path(
+        "tests/golden/erpcore_reference"
+    ),
+) -> None:
+    """ERP CORE published per-subject measurements (OSF) as tidy TSVs for the comparison."""
+    from eegunify.reference_values import (
+        ERPCORE_VALUES,
+        fetch_erpcore_values,
+        tidy_component,
+        write_tidy,
+    )
+
+    for comp in component or list(ERPCORE_VALUES):
+        try:
+            folder = fetch_erpcore_values(dest, comp)
+            values, subjects = tidy_component(folder, comp)
+        except ValueError as err:
+            console.print(f"[red]{err}")
+            raise typer.Exit(EXIT_USAGE) from err
+        write_tidy(values, subjects, out, comp)
+        n_in = int(subjects["included"].sum())
+        console.print(f"[green]ok[/] {comp}: {n_in}/{len(subjects)} subjects included -> {out}")
+
+
 @fetch_app.command("openneuro")
 def fetch_openneuro_cmd(
     dataset: Annotated[str, typer.Argument(help="Accession, e.g. ds005841.")],

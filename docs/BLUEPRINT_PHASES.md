@@ -19,6 +19,7 @@ No code is written here; it says what to build, where, in what order, and how to
 | OQ4 | **Decided:** Phase M = ingestion parity (BrainVision, BDF, EEGLAB) + N170 ERP-lite via EEGLAB/ERPLAB, no MATLAB ICA. |
 | OQ5 | **Decided:** install ERPLAB and bva-io into `Practice/toolboxes/eeglab/plugins` (FieldTrip fallback kept). |
 | OQ1, OQ6, OQ7, OQ8 | Recommended defaults below apply (not discussed individually). |
+| ERP CORE comparison (2026-11-01) | **Decided after reading the published files** (section 8.2): the sign rule is "our sign equals ERP CORE's sign, per subject", not "every N170 difference negative" (ERP CORE's own sub-019 N170 difference is +2.041 µV). Subjects ERP CORE excluded (`<component>_subjects.tsv`, e.g. N170 sub-016, reason TC) are run and reported, labelled "excluded by ERP CORE", but are left out of the tolerance checks and of the subject mean, which is taken over the compared subjects only. This supersedes any other wording in this file. |
 
 Original questions and rationale:
 
@@ -44,8 +45,9 @@ and the other ERP CORE components second (MMN, N400, ERN, LRP).
 
 **Headline acceptance (portfolio number):** ERP CORE N170, sub-015..019, PO8 face−car mean
 amplitude in 110–150 ms: our per-subject values within **±0.5 µV** of the ERP CORE published
-per-subject values (if the published table includes these subjects; see 8.3) and every subject's
-sign matching; README shows the table.
+per-subject values and each subject's sign equal to ERP CORE's sign, for every subject ERP CORE
+included (N170: 015, 017, 018, 019; sub-016 was excluded by ERP CORE and is only reported; see
+8.2); README shows the table.
 
 **Non-goals now:** source localisation, time-frequency analyses, mixed models, real-time. Seams are
 left for TF and BCI (section 13).
@@ -446,23 +448,35 @@ reference, ICA and rejection parameters from the ERP CORE paper and the per-comp
 
 What we compare (in `derivatives/eegunify-group/task-N170_erpcore-comparison.tsv`):
 1. **Subject level:** our N170 face−car mean amplitude at PO8 (110–150 ms) vs ERP CORE's
-   published per-subject value for 015..019; same for P3 (rare−frequent, Pz, 300–600) and N2pc
+   published per-subject value for each of 015..019 that ERP CORE included; same for P3 (rare−frequent, Pz, 300–600) and N2pc
    (contra−ipsi PO7/PO8, 200–275).
 2. **Peak latency** (secondary): within ±8 ms per subject.
-3. **Grand average over the 5 subjects** vs the mean of ERP CORE's per-subject values for the same 5
-   subjects (apples to apples), not vs the 40-subject grand mean.
-4. **Sign and existence** across all 5 subjects (all N170 differences negative).
+3. **Subject mean** of our values vs the mean of ERP CORE's per-subject values over the same
+   compared subjects (apples to apples), not vs the 40-subject grand mean.
+4. **Sign**: per compared subject, our sign equals ERP CORE's published sign. Not "all N170
+   differences negative": ERP CORE's own sub-019 N170 face − car is positive (+2.041 µV).
+5. **Subjects ERP CORE excluded** (`tests/golden/erpcore_reference/<component>_subjects.tsv`,
+   `included = False`; N170: sub-016, TC = fewer than 50 % of face trials left after artifact
+   rejection) are still run and listed in the comparison TSV with `status = excluded_by_erpcore`
+   and their reason, but they are not part of checks 1-4 or of the subject mean. If our own
+   pipeline excludes a subject ERP CORE kept, that is a documented deviation, not a silent skip.
 
-Tolerances: ±0.5 µV mean amplitude per subject, ±0.3 µV for the 5-subject mean, ±8 ms latency.
+Tolerances: ±0.5 µV mean amplitude per compared subject, ±0.3 µV for the subject mean over the
+compared subjects, ±8 ms latency. A missing published value (NaN, e.g. N170 sub-019's 50 % area
+latency, which has no negative area) is reported as "not available" for that measure.
 Why not tighter: ICA decompositions differ between EEGLAB runica and picard; their rejection used
 their artifact flags. The **deterministic comparison** is 8.4.
 
-Where published values come from: `reference_values.py` + `eegunify fetch erpcore-values
---component N170` downloads the per-component OSF project's measurement file(s) (the ERP CORE
-component projects publish per-subject mean amplitude/latency spreadsheets with the
-EEGLAB/ERPLAB scripts), records them in the manifest with sha256, converts to a tidy
-`tests/golden/erpcore_reference/<component>.tsv` (small, committed; CC-BY-4.0 attribution in the
-file header). If the files for a component can't be located, the builder writes the OSF URLs it
+Where published values come from (located 2026-11-01): each component's OSF project (N170
+`pfde9`, P3 `etdkz`, N2pc `yefrq`, children of ERP CORE `thsqg`) holds, under
+`<component> All Data and Scripts/EEG_ERP_Processing/ERP_Measurements/`, ERPLAB text files with
+one row per included subject (`Mean_Amplitude_Diff_Waves_*`, `Mean_Amplitude_Parent_Waves_*`,
+`50%_Area_Latency_Diff_Waves_*`, `Peak_Latency_Diff_Waves_*` on the 20 Hz low-passed ERPs), and
+`<component>_Subject_Summary.xlsx` with the excluded subjects and reasons.
+`eegunify.reference_values` + `eegunify fetch erpcore-values [-c N170]` downloads them (sha256
+in the manifest), checks that the measured subjects are exactly the included ones, and writes
+`tests/golden/erpcore_reference/<component>.tsv` and `<component>_subjects.tsv` (small,
+committed; CC-BY-4.0 attribution in the file header). If the files for a component can't be located, the builder writes the OSF URLs it
 searched into `docs/validation_erp.md` and marks the comparison as "not available" instead of
 inventing numbers. **Never type reference numbers from memory.**
 
@@ -609,7 +623,7 @@ classes or decoding code until motor restoration work starts.
 | M-E3 | epochs + rejection (Phase 4) | M-E1 (M-E2 optional) | exact synthetic rejections; per-epoch log; F1 test |
 | M-E4 | erp + measure (Phase 5) → **v0.2.0** | M-E3 | analytic measure tests; preview recipe golden −2.24 ±0.05 µV; README updated with first `measures.tsv` |
 | M-E5 | ERPLAB cross-check (8.4) | M-E4, ERPLAB installed | Δ mean amplitude < 0.05 µV on sub-015 |
-| M-E6a | group + stats + ERP CORE comparison (Phase 6), N170/P3/N2pc on 015..019 → **v0.3.0, repo public** | M-E4 | comparison TSV within tolerances (8.2) or documented deviations; `docs/validation_erp.md` |
+| M-E6a | group + stats + ERP CORE comparison (Phase 6), N170/P3/N2pc on 015..019 → **v0.3.0, repo public** | M-E4 | comparison TSV within tolerances (8.2: sign equal to ERP CORE's, subjects ERP CORE excluded reported but not checked) or documented deviations; `docs/validation_erp.md` |
 | M-E6b | optional 40-subject N170 | M-E6a | grand average & d_z vs published |
 | A2 | app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | MATLAB ingestion parity (BrainVision, BDF, SET) | v0.1.0 | §11 tolerances |

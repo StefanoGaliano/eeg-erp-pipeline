@@ -127,3 +127,17 @@ Two harness fixes were needed to run it: `eeglab nogui` adds only each plugin's 
 does not call `eegplugin_erplab`, so `matlab/erplab_crosscheck.m` adds ERPLAB's subfolders itself
 (keeping EEGLAB's `icadefs` first); and ERPLAB's epoching drops `urevent`, so rejected epochs are
 mapped back to events through `EEG.EVENTLIST.eventinfo(k).bepoch`.
+
+## M-E6a ERP CORE published values (2026-11-01)
+
+`eegunify fetch erpcore-values` (`tests/golden/erpcore_reference/`). Included subjects per
+component (from `<component>_Subject_Summary.xlsx`; the measurement files hold exactly these):
+
+| Component | Included | BIDS-archive subjects (015-019) excluded by ERP CORE |
+|---|---|---|
+| N170 | 37 / 40 | sub-016 (TC: fewer than 50 % of face trials left after artifact rejection) |
+| P3 | 34 / 40 | none |
+| N2pc | 35 / 40 | none |
+
+ERP CORE's N170 face − car mean amplitude for sub-019 is positive, so the comparison checks that
+our sign equals theirs instead of "all negative" (BLUEPRINT_PHASES section 0 and 8.2).
