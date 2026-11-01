@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 (2026-11-01)
+
+**The ERP stages in the app** (docs/BLUEPRINT_PHASES.md, Phase A2): five pages that edit the
+dataset config and show each stage's outputs; a config built through them runs exactly like a
+hand-written one.
 
 - **App, ERP pages (A2):** Preprocess (filter, bad channels, reference; 60 s PSD preview),
   ICA review (decision table, manual exclude/keep written per subject to `overrides`,
