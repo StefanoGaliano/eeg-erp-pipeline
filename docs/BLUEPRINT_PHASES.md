@@ -488,6 +488,30 @@ What 5 subjects can and cannot show:
   SME distributions. Optional M-E6b fetches the full 40-subject N170 EEG (OQ1) to reproduce the
   grand-average and d_z; marked `realdata_full` and run manually.
 
+### 8.2a `erpcore-exact` recipe (decided 2026-11-01)
+
+The default ERP CORE recipe (`erpcore_n170.yaml`) is automatic: picard + ICLabel, one rejection
+rule set for everyone. `erpcore-exact` instead reproduces ERP CORE's **own per-subject choices**,
+all taken from their files on OSF (never typed in), so a remaining difference is down to the
+implementation, not to different decisions. It is a recipe (`eegunify.erp.recipes`), applied
+over the dataset config with per-subject `overrides`; the default recipe stays the default.
+
+| ERP CORE step (N170 scripts 1-7) | Their file | eegunify feature |
+|---|---|---|
+| average reference over all 33 sites, EOG electrodes and P9/P10 included; EOG electrodes re-referenced too | `Rereference_Add_Uncorrected_Bipolars_N170.txt` | `reference.scheme: channels` with EOG channels allowed in `channels`, `reference.apply_to_eog: true` |
+| uncorrected bipolar HEOG/VEOG (before ICA) | same file | `artifacts.eog_bipolar` (exists; derived in preproc) |
+| their ICA decomposition (runica on 31 channels) and their removed components | `<sub>/<sub>_N170_..._ica_weighted.set` (header only), `ICA_Components_N170.xlsx` | `artifacts.method: precomputed`, `artifacts.precomputed: {weights, exclude}` (EEGLAB 1-based component numbers) |
+| corrected bipolars after ICA | `Add_Corrected_Bipolars_N170.txt` | `artifacts.corrected_bipolar` (derived by the ica stage after cleaning) |
+| interpolation after ICA (spherical, EOG ignored) | `Interpolate_Channels_N170.xlsx` | `preproc.interpolate_after_ica: true`, bads per subject |
+| rejection: `pop_artextval` ±200 µV, `pop_artmwppth` on EEG (per-subject threshold/window), `pop_artmwppth` blinks on uncorrected VEOG, `pop_artstep` on uncorrected HEOG (stimulus period) and on corrected HEOG | `AR_Parameters_for_{SVT_CRAP,MW_CRAP,MW_Blinks,SL_HEOG_Stim_Pres,SL_HEOG}_N170.xlsx` | `epochs.reject.method: rules` with a list of `{test: extval|ptp|step, channels, window_ms, ...}`; ERPLAB semantics incl. `window2sample` (`round(t*fs) + round(|xmin|*fs)`, clipped, inclusive) and `>=`/`<=` for extval |
+| 20 Hz low-pass, 48 dB/oct, before peak measures only | README_N170, Script #7 | `erp.peak_lowpass_hz: 20`, `erp.peak_lowpass_order: 8` |
+
+`eegunify fetch erpcore-values` also writes `tests/golden/erpcore_reference/<component>_exact.json`
+(per-subject parameters from the files above) and fetches the ICA weight headers (~1.5 MB each,
+cache only, sha256 in the manifest). Acceptance: the M-E6a comparison run with `erpcore-exact`,
+reported next to the default recipe in `docs/validation_erp.md`; trial counts per bin are also
+compared with ERP CORE's `<sub>_AR_Percentages_N170.csv`.
+
 ### 8.3 Golden files
 `tests/golden/erpcore_n170_sub-015/erp/`: `measures.tsv` (our values, recipe-labelled),
 `epochs_log.tsv` counts per condition, `ica_components.tsv` excluded indices (picard with fixed

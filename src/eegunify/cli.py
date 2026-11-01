@@ -271,6 +271,7 @@ def fetch_erpcore_values_cmd(
     ),
 ) -> None:
     """ERP CORE published per-subject measurements (OSF) as tidy TSVs for the comparison."""
+    from eegunify.erpcore_exact import EXACT_FILES, build, fetch_exact, write_exact
     from eegunify.reference_values import (
         ERPCORE_VALUES,
         fetch_erpcore_values,
@@ -288,6 +289,9 @@ def fetch_erpcore_values_cmd(
         write_tidy(values, subjects, out, comp)
         n_in = int(subjects["included"].sum())
         console.print(f"[green]ok[/] {comp}: {n_in}/{len(subjects)} subjects included -> {out}")
+        if comp in EXACT_FILES:  # per-subject parameters for the erpcore-exact recipe
+            exact = write_exact(build(fetch_exact(dest, comp), comp), out)
+            console.print(f"[green]ok[/] {comp}: erpcore-exact parameters -> {exact}")
 
 
 @fetch_app.command("openneuro")

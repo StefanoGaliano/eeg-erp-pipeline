@@ -18,6 +18,8 @@ from __future__ import annotations
 import logging
 import math
 import re
+import time
+import urllib.error
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -130,7 +132,18 @@ def _download(url: str, target: Path) -> None:
             data: bytes = resp.read()
             return data
 
-    data = _retry(get, url)
+    # OSF's file server sometimes answers a burst of requests with 403 (seen 2026-11-01 on a
+    # public file that downloads fine a second later); _retry treats 4xx as permanent, so 403 is
+    # retried here, a few times with backoff.
+    for attempt in range(4):
+        try:
+            data = _retry(get, url)
+            break
+        except urllib.error.HTTPError as err:
+            if err.code != 403 or attempt == 3:
+                raise
+            log.warning("%s: HTTP 403, retrying in %ss", url, 2**attempt)
+            time.sleep(2**attempt)
     tmp = target.with_name(target.name + ".part")
     tmp.write_bytes(data)
     tmp.replace(target)
