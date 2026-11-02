@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.1 (2026-11-02)
 
 - **Bad channels:** `preproc.bad_channels.max_variance_ratio` (default 100) adds channels whose
   plain variance exceeds 100 x the median channel's to the automatic methods' bads (reason
