@@ -332,7 +332,7 @@ N135 keep the adult ISCEV windows (no infant limits in that paper).
 
 | Subject | Bad channels | Epochs kept | N75 ms | P100 ms | P100 µV | N135 ms | Notes |
 |---|---|---|---|---|---|---|---|
-| a | 32 % | 87/100 | 61 | 129 | 3.3 | 151 | |
+| a | 35 % | 93/100 | 60 | 128 | 2.8 | 160 | 32 %, 87/100, 61/129/151 ms, 3.3 µV before 0.7.1 (below) |
 | b | 17 % | 98/100 | 76 | 108 | 11.6 | 152 | clear N75/P100 |
 | c | 17 % | 94/115 | 76 | 106 | 23.5 | 160 | `MEASURE_NO_LOCAL_PEAK` warn |
 | d | 36 % | 79/102 | 88 | 148 | 6.6 | 139 | E75 itself interpolated (`PREPROC_ROI_INTERPOLATED`) |
@@ -342,6 +342,28 @@ With the adult window (90-130 ms) a and d were cut at the window edge (129, 130 
 paediatric one d's peak is at 148 ms, inside the 4-month small-check limits (111-170).
 `VEP_LATENCY_ATYPICAL` keeps the adult 115 ms flag and marks a and d. This checks the VEP chain
 on real data, not infant norms (five infants, unknown check size).
+
+Rerun with 0.9.0 (2026-11-02): b-e unchanged. In a, the gross-variance check added in 0.7.1
+(`bad_channels.max_variance_ratio`, on by default) flags E44 and E125-E127 (face/eye sites with
+large infant eye activity), so 4 more channels are interpolated and a's row changed as above.
+
+**The post-ICA check (`artifacts.post_bad_channels`, 2 x) does not transfer to these infants.**
+It runs only after ICA (this config uses wavelet thresholding), so the ratios were computed
+offline on the wavelet-cleaned data and compared with HAPPE's own bad channels
+(`tutorial_badChannels.xlsx` on the Zenodo record; HAPPE's 10-20 names mapped to E numbers with
+its `happe_netdata_lib.mat`; Cz/E129, the flat reference, left out), within the 41 channels
+HAPPE analysed (`tutorial_SampleParameters.mat`):
+
+| criterion | matches HAPPE | flagged, not HAPPE's | missed |
+|---|---|---|---|
+| RANSAC (this config) | 12 | 23 | 38 |
+| + 2 x after cleaning | 12 | 25 | 38 |
+| + 1.5 x after cleaning | 15 | 32 | 35 |
+
+HAPPE is a weak reference here (it ran its detection on those 42 channels only, and RANSAC
+matches 12 of its 50), but the 2 x check adds nothing: no match, two more flags. Over all 129
+channels it would flag 1-16 more per infant, mostly face and edge sites (E1, E8, E14, E17, E21,
+E119-E127), taking d from 36 % to about 49 % bad, past the 40 % limit. It stays opt-in.
 
 **With wavelet thresholding** (`artifacts.method: wavelet`, the config's setting; `erp/wavelet.py`,
 HAPPE's ERP approach with PyWavelets, `coif4`, level 11 at 1000 Hz, soft universal threshold):
@@ -447,6 +469,15 @@ stretches left out (ERP CORE's 600 µV for 003 as well as 400 µV) Fp1 fails the
    033 F7/F8, 022 Fp1/Fp2/F8, ...). The 2 x threshold was chosen on these same 40 subjects, so
    it is not a default until it is checked on another dataset. Regression test:
    `test_erpcore_n170_sub003_persistently_noisy_channel_interpolated`.
+
+   Out-of-sample check on ERP CORE P3 and N2pc, subjects 015-019 (the 5-subject BIDS archive;
+   2026-11-02): ERP CORE's bad channels removed from the configs (`pyprep_robust` instead),
+   ICA with `fit_exclude`, ratios on the cleaned data. ERP CORE interpolated no channel in any
+   of the 40 P3 recordings and 3 in N2pc (015 F7, 017 F8/C6). At 2 x the check flags nothing
+   in the 10 recordings (highest ratio 1.85, N2pc 015 F8): no false alarm, and it misses the
+   three N2pc channels (ratios 1.29-1.63). At 1.5 x it would add 5 channels in P3 and 3 in
+   N2pc (one of them ERP CORE's). `pyprep_robust` flags PO3 in 018 in both tasks; ERP CORE kept
+   it. The GABA infant data (VEP section) are the other out-of-sample check.
 
 Subject 029 failed the ica stage in v0.7.0 ("one PCA component captures 99.996 % of the
 variance"). Cause: Oz is normal most of the time (median amplitude 0.83 x the other channels)
