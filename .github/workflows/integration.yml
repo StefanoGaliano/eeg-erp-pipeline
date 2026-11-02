@@ -34,7 +34,7 @@ jobs:
           mkdir -p sourcedata
           ln -s "$EEGUNIFY_DATA/erpcore" sourcedata/erpcore
           uv run eegunify convert code/configs/erpcore_n170.yaml -s 015
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: erpcore-n170-qa
           path: derivatives/eegunify-qa/
@@ -60,7 +60,7 @@ jobs:
           --max-mb ${{ github.event.inputs.max_mb || '150' }}
       - name: Job summary
         run: cat derivatives/validation/summary.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: validation-summary
           path: |
