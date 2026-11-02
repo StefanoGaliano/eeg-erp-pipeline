@@ -193,6 +193,7 @@ def test_brainvision_header_with_stale_filenames(tmp_path: Path, truth: Truth) -
     assert len(rec.events.table) == len(truth.samples)
     assert any("missing; used 'new_name.eeg'" in n for n in rec.notes)
     assert (tmp_path / "new_name.vhdr").read_bytes() == before  # source untouched
+    rec.raw.copy().crop(tmax=1.0)  # QA crops: raw.filenames must not point at the temp copy
     assert {Path(f["path"]).name for f in rec.provenance["source_files"]} == {
         "new_name.vhdr",
         "new_name.eeg",

@@ -95,6 +95,8 @@ class EgiReader:
                 if fixed is not None:
                     notes.append(fixed[1])
                 raw = self._read(fixed[0] if fixed else path)
+            # The temporary copy is gone after this block; MNE checks raw.filenames on crop.
+            raw.filenames = [path]
         else:
             raw = self._read(path)
         files = sorted(p for p in path.rglob("*") if p.is_file()) if path.is_dir() else [path]

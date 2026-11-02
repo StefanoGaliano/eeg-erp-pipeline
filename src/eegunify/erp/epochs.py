@@ -248,8 +248,17 @@ def _codes_for(onsets: np.ndarray, codes: pd.DataFrame | None, sfreq: float) -> 
         j = int(np.argmin(np.abs(ref - t)))
         hit = abs(ref[j] - t) <= 1.0 / sfreq
         val = codes["value"].iloc[j] if hit else "n/a"
-        out.append(int(val) if hit and float(val).is_integer() else val)
+        out.append(_as_code(val) if hit else val)
     return out
+
+
+def _as_code(val: Any) -> Any:
+    """Integer codes as int; text codes (EGI ``vep+``, GABA infant VEP) unchanged."""
+    try:
+        f = float(val)
+    except (TypeError, ValueError):
+        return val
+    return int(f) if f.is_integer() else val
 
 
 @dataclass

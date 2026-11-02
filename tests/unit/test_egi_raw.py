@@ -8,7 +8,7 @@ import mne
 import numpy as np
 import pytest
 
-from eegunify.pipeline import read_recording
+from eegunify.pipeline import convert, read_recording
 from eegunify.readers.egi import EgiSegmentedError
 from tests.synthetic.generate import SFREQ, Truth, write_egi_raw
 
@@ -43,6 +43,25 @@ def test_gaba_resp_track_is_not_a_channel(tmp_path: Path, truth: Truth) -> None:
     assert "resp" not in rec.raw.ch_names
     assert set(rec.raw.get_channel_types()) == {"eeg"}
     assert "resp" in set(rec.events.table["value"].astype(str))
+
+
+def test_single_segment_converts_with_qa(tmp_path: Path, truth: Truth, make_project) -> None:  # type: ignore[no-untyped-def]
+    """GABA infant VEP: the temporary continuous copy is deleted after reading, and QA's crop
+    checked raw.filenames, so convert failed with FileNotFoundError."""
+    (tmp_path / "src").mkdir()
+    src = write_egi_raw(tmp_path / "src" / "rec", truth, segments=1)
+    root, cfg = make_project(
+        src,
+        "egi",
+        {
+            "events": {
+                "mapping": {"ev01": "stimulus/face", "ev02": "stimulus/car", "resp": "response"}
+            }
+        },
+    )
+    [res] = convert(cfg, project_root=root)
+    assert res.error is None, res.error
+    assert res.qa_status is not None
 
 
 def test_several_segments_refused(tmp_path: Path, truth: Truth) -> None:

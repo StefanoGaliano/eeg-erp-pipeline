@@ -337,3 +337,15 @@ def test_response_selector_matching_nothing_refused() -> None:
 def test_response_window_validated(window: tuple[float, float]) -> None:
     with pytest.raises(ValueError, match="window_ms"):
         ResponseRule(selector="response/correct", window_ms=window)
+
+
+def test_gaba_text_event_codes_in_log() -> None:
+    """GABA infant VEP (Zenodo 5172962): EGI codes are text (``vep+``); the per-epoch log
+    called float() on every code and the epochs stage failed."""
+    import pandas as pd
+
+    from eegunify.erp.epochs import _codes_for
+
+    codes = pd.DataFrame({"onset": [1.0, 2.0, 3.0], "value": ["vep+", "12", "n/a"]})
+    got = _codes_for(np.array([1.0, 2.0, 3.0, 9.0]), codes, 1000.0)
+    assert got == ["vep+", 12, "n/a", "n/a"]
