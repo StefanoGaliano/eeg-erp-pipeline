@@ -103,3 +103,53 @@ vep_n135@iscev:
   measures: [peak_amplitude, peak_latency]
   polarity: negative
   reference: Fz
+
+# Paediatric P100 windows: the 95 % reference limits (2.5th-97.5th percentile) of P100 peak
+# time in Thompson DA, Miko-Barath E, Hardy SE, Jando G, Shaw M, Hamilton R (2023), ISCEV
+# standard pattern reversal VEP development: paediatric reference limits from 649 healthy
+# subjects, Doc Ophthalmol 147:147-164, doi:10.1007/s10633-023-09952-9 (CC-BY-4.0), Table 5,
+# read on 2026-11-02. Large checks = 50'/60', small = 12'/15'. The windows are the limits of
+# one age band, so a normal peak falls inside. Infant N75/N135 are not tabulated there.
+vep_p100@iscev_4mo_large:
+  name: VEP P100 (infant, about 4 months, large checks)
+  citation: Thompson et al. 2023, Doc Ophthalmol 147:147-164, Table 5, age 17-19 weeks, large checks
+  epoch_set: stim
+  window_ms: [90, 131]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: positive
+  reference: Fz
+  notes: Age band 17-19 weeks (4 months = 17.4 weeks); P100 still shortens until 27 weeks.
+
+vep_p100@iscev_4mo_small:
+  name: VEP P100 (infant, about 4 months, small checks)
+  citation: Thompson et al. 2023, Doc Ophthalmol 147:147-164, Table 5, age 17-19 weeks, small checks
+  epoch_set: stim
+  window_ms: [111, 170]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: positive
+  reference: Fz
+  notes: Age band 17-19 weeks; small-check P100 shortens until 34 weeks.
+
+vep_p100@iscev_mature_large:
+  name: VEP P100 (after 27 weeks, large checks)
+  citation: Thompson et al. 2023, Doc Ophthalmol 147:147-164, Table 5, after the critical age (27 weeks), large checks
+  epoch_set: stim
+  window_ms: [87, 115]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: positive
+  reference: Fz
+  notes: Critical age = when the 97.5th percentile is within 1 % of its asymptote (27 weeks).
+
+vep_p100@iscev_mature_small:
+  name: VEP P100 (after 34 weeks, small checks)
+  citation: Thompson et al. 2023, Doc Ophthalmol 147:147-164, Table 5, after the critical age (34 weeks), small checks
+  epoch_set: stim
+  window_ms: [96, 131]
+  rois: {primary: [Oz]}
+  measures: [peak_amplitude, peak_latency]
+  polarity: positive
+  reference: Fz
+  notes: "Critical age for small checks: 34 weeks."

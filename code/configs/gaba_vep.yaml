@@ -76,8 +76,13 @@ conditions:
   reversal: [stimulus/reversal]
 components:
   preset: iscev
-  use: [vep_n75, vep_p100, vep_n135]
+  # P100 from the paediatric presets (Thompson et al. 2023, Doc Ophthalmol 147:147-164,
+  # Table 5). The files say neither the check size nor which recording is the 10-month-old,
+  # so the window spans the 95 % limits of both: 4 months (17-19 weeks) large 90-131 / small
+  # 111-170 ms, and after the critical age large 87-115 / small 96-131 ms -> 87-170 ms.
+  # N75/N135 have no infant limits there and stay on the adult ISCEV windows.
+  use: [vep_n75, vep_p100@iscev_4mo_small, vep_n135]
   overrides:
     vep_n75: {rois: {primary: [E75]}, reference: E11}
-    vep_p100: {rois: {primary: [E75]}, reference: E11}
+    vep_p100: {rois: {primary: [E75]}, reference: E11, window_ms: [87, 170]}
     vep_n135: {rois: {primary: [E75]}, reference: E11}
