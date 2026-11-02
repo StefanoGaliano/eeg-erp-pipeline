@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.6.0 (2026-11-02)
+
+**VEP presets on synthetic and real data** (docs/BLUEPRINT_PHASES.md section 12).
+
+- **Component-level reference:** a component's `reference` (ISCEV VEP: Fz; ERP CORE P3: P9/P10)
+  is applied when it differs from the data's: the erp stage measures that component on
+  re-referenced copies of the averages and epochs (SME too) and records it (`qa.json`
+  `component_references`, QA `ERP_REFERENCE_CHANGED`); `_ave.fif` keeps the dataset reference.
+  Opt out per component with `components.overrides: {<id>: {reference: null}}`, as the
+  `erpcore-exact` recipe does. ERP CORE results are unchanged.
+- **Synthetic pattern-reversal VEP** (`make_vep_recording`): the `vep_p100@iscev` latency is
+  recovered within 2 ms (one sample), N75/N135 within 4 ms, the amplitude matches the Oz-Fz
+  wave.
+- **Real data:** `code/configs/gaba_vep.yaml`, five infants of the GABA pattern-reversal VEP
+  (HAPPE+ER tutorial, Zenodo 5172962, CC-BY-4.0), EGI HydroCel 129; results and caveats (adult
+  ISCEV window, later infant P1) in docs/validation_erp.md.
+- **EGI `.raw`:** Net Station files holding a single segment are read as continuous; several
+  segments are refused. Synthetic EGI writer and tests.
+- **Config:** `preproc.bad_channels.max_fraction` and `epochs.reject.max_rejected_fraction`
+  set the fail limits of `PREPROC_BADS_FRACTION` and `EPOCHS_REJECTED_FRACTION` (defaults
+  unchanged: 25 %, 50 %).
+- **Fixes found on the GABA data:** trigger channels stay triggers (an EGI event track named
+  `resp` became a respiration channel; also in the MATLAB `convert.m`); the temporary EGI copy
+  left in `raw.filenames` broke QA; text event codes (`vep+`) broke the epochs log.
+
 ## 0.5.0 (2026-11-02)
 
 **Python ↔ MATLAB parity** (docs/BLUEPRINT_PHASES.md, Phase M): the same config runs natively in

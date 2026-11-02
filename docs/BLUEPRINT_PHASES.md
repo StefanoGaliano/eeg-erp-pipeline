@@ -690,7 +690,7 @@ classes or decoding code until motor restoration work starts.
 | A2 | **done 2026-11-01 (v0.4.0)**: app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | **done 2026-11-02**: MATLAB ingestion parity (BrainVision, BDF, SET), `matlab/+eegunify`, `tests/integration/test_matlab_parity.py` | v0.1.0 | §11 tolerances |
 | M2 | **done 2026-11-02 (v0.5.0)**: MATLAB ERP-lite N170 parity (`erp_lite` recipe, `matlab/+eegunify/erp_lite.m`, `tests/integration/test_matlab_erp_lite.py`) → **v0.5.0** | M-E5, M1 | §11 tolerances |
-| VEP | **done 2026-11-02**: component-level reference (`erp/references.py`), synthetic pattern-reversal VEP (`make_vep_recording`), `tests/unit/erp/test_vep.py`; real data: GABA infant VEP (Zenodo 5172962) | M-E4 | P100 latency recovered ±2 ms on synthetic |
+| VEP | **done 2026-11-02 (v0.6.0)**: component-level reference (`erp/references.py`), synthetic pattern-reversal VEP (`make_vep_recording`), `tests/unit/erp/test_vep.py`; real data: GABA infant VEP (Zenodo 5172962) | M-E4 | P100 latency recovered ±2 ms on synthetic |
 
 Build steps inside each milestone follow Phase 1 discipline: schema field + code + test + docs in
 one commit; `ruff`, `mypy --strict`, `pytest -m "not realdata"` green before moving on; realdata
