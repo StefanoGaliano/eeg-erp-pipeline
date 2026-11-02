@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2 (2026-11-02)
+
+- Fixed a stale realdata test (`test_sub015_ica_excludes_blinks`): it listed the ICA QA checks
+  from before 0.8.0 and failed on the `ICA_FIT_EXCLUDED` check that `erpcore_n170.yaml` adds
+  since then (integration run on v0.9.1). Test-only change.
+
 ## 0.9.1 (2026-11-02)
 
 Documentation only (docs/validation_erp.md).

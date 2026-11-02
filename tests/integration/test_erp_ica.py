@@ -62,5 +62,6 @@ def test_sub015_ica_excludes_blinks(project: Path) -> None:
         "ICA_EXCLUDED_COUNT": "pass",
         "ICA_BLINK_RESIDUAL": "pass",
         "ICA_BRAIN_REMOVED": "pass",
+        "ICA_FIT_EXCLUDED": "pass",  # artifacts.ica.fit_exclude is on in this config (0.8.0)
     }
     assert Runner(cfg, project).run(subjects=["015"])[1].status == "skipped"
