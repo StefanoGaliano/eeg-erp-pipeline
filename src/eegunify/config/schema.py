@@ -96,7 +96,9 @@ class RecordingsSection(_Strict):
     """Which files make up the dataset."""
 
     pattern: str
-    """Path of one subject's recording relative to ``source_root``, with ``{subject}``."""
+    """Path of one subject's recording relative to ``source_root``, with ``{subject}``, or
+    ``{subject_int}`` (a numeric label without leading zeros: ERP CORE's ``15/15_N170.set`` for
+    subject ``015``)."""
     subjects: list[str] = Field(min_length=1)
     """Subject labels (alphanumeric, without ``sub-``)."""
     session: str | None = None
@@ -107,9 +109,24 @@ class RecordingsSection(_Strict):
     @field_validator("pattern")
     @classmethod
     def _needs_subject(cls, v: str) -> str:
-        if "{subject}" not in v:
-            raise ValueError("pattern must contain the '{subject}' placeholder")
+        if "{subject}" not in v and "{subject_int}" not in v:
+            raise ValueError("pattern must contain the '{subject}' or '{subject_int}' placeholder")
         return v
+
+    @model_validator(mode="after")
+    def _int_labels(self) -> RecordingsSection:
+        if "{subject_int}" in self.pattern:
+            bad = [s for s in self.subjects if not s.isdigit()]
+            if bad:
+                raise ValueError(f"'{{subject_int}}' needs numeric subject labels; got {bad}")
+        return self
+
+    def path_for(self, subject: str) -> str:
+        """``pattern`` with the subject's placeholders filled in."""
+        fields = {"subject": subject}
+        if subject.isdigit():
+            fields["subject_int"] = str(int(subject))
+        return self.pattern.format(**fields)
 
     @field_validator("subjects")
     @classmethod

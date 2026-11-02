@@ -148,7 +148,9 @@ class GroupStage(Stage):
             write_tsv(table, f"task-{task}_erpcore-comparison.tsv")
             bad = failures(table)
             compared = table[
-                ~table["status"].isin(["excluded_by_erpcore", "not_available", "not_measured"])
+                ~table["status"].isin(
+                    ["excluded_by_erpcore", "not_available", "not_measured", "reported"]
+                )
             ]
             failing = [f"{r.subject} {r.wave} {r.measure} ({r.status})" for r in bad.itertuples()]
             checks.append(qa.reference_values_check(len(bad), len(compared), failing))

@@ -124,3 +124,52 @@ def test_retry_retries_403_and_429_but_not_other_4xx(monkeypatch: pytest.MonkeyP
         datasets._retry(flaky([404]), "f")
     with pytest.raises(urllib.error.HTTPError):  # gives up after the attempts
         datasets._retry(flaky([403] * 9), "f", attempts=3)
+
+
+def test_fetch_zenodo_checks_md5_and_skips_current(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """GABA infant VEP files (Zenodo 5172962): MD5 from the record, then the manifest."""
+    import hashlib
+    import json
+
+    blobs = {"a.raw": b"x" * 10, "notes.csv": b"y"}
+    record = {
+        "files": [
+            {
+                "key": k,
+                "size": len(v),
+                "checksum": "md5:" + hashlib.md5(v).hexdigest(),
+                "links": {"self": f"http://z/{k}"},
+            }
+            for k, v in blobs.items()
+        ]
+    }
+    calls: list[str] = []
+
+    class Resp(io.BytesIO):
+        def __enter__(self) -> Resp:
+            return self
+
+        def __exit__(self, *a: object) -> None:
+            return None
+
+    def fake_urlopen(req, timeout: float = 0) -> Resp:  # type: ignore[no-untyped-def]
+        url = req.full_url
+        calls.append(url)
+        if url.startswith("https://zenodo.org/api/records/"):
+            return Resp(json.dumps(record).encode())
+        return Resp(blobs[url.rsplit("/", 1)[1]])
+
+    monkeypatch.setattr(datasets.urllib.request, "urlopen", fake_urlopen)
+    [path] = datasets.fetch_zenodo("1", tmp_path, suffixes=[".raw"])
+    assert path.read_bytes() == blobs["a.raw"] and path.parent.name == "zenodo1"
+    n = len(calls)
+    datasets.fetch_zenodo("1", tmp_path, files=["a.raw"])
+    assert len(calls) == n + 1  # metadata only: the file is current
+    record["files"][0]["checksum"] = "md5:0"
+    path.unlink()
+    with pytest.raises(ConnectionError, match="MD5"):
+        datasets.fetch_zenodo("1", tmp_path, files=["a.raw"])
+    with pytest.raises(ValueError, match="no files"):
+        datasets.fetch_zenodo("1", tmp_path, files=["b.raw"])

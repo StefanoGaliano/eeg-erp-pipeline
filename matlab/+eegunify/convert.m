@@ -22,7 +22,11 @@ c = cfg.config;
 m = cfg.matlab;
 bidsRoot = char(p.Results.bids_root);
 if isempty(bidsRoot), bidsRoot = fullfile(root, c.dataset.bids_root); end
-src = fullfile(root, c.dataset.source_root, strrep(c.recordings.pattern, '{subject}', cfg.subject));
+rel = strrep(c.recordings.pattern, '{subject}', cfg.subject);
+if all(isstrprop(cfg.subject, 'digit'))  % {subject_int}: label without leading zeros
+    rel = strrep(rel, '{subject_int}', num2str(str2double(cfg.subject)));
+end
+src = fullfile(root, c.dataset.source_root, rel);
 
 r = eegunify.read_any(src, c.format.name, c.format.hints);
 std = m.standard_1005;

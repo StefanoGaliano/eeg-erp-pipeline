@@ -351,7 +351,7 @@ Which files make up the dataset.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `pattern` | string | **required** | Path of one subject's recording relative to ``source_root``, with ``{subject}``. |
+| `pattern` | string | **required** | Path of one subject's recording relative to ``source_root``, with ``{subject}``, or ``{subject_int}`` (a numeric label without leading zeros: ERP CORE's ``15/15_N170.set`` for subject ``015``). |
 | `subjects` | list[string] | **required** | Subject labels (alphanumeric, without ``sub-``). |
 | `session` | string \| null | `null` | BIDS session label for the output, if any. |
 | `run` | string \| null | `null` | BIDS run label for the output, if any. |

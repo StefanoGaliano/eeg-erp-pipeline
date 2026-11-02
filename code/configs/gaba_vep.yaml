@@ -3,8 +3,7 @@
 # infants, 128-channel EGI HydroCel net (129 channels, E129 = vertex reference VREF, flat),
 # 1000 Hz, 60 Hz mains, 56-99 s each. Net Station "segmented" .raw files holding one segment
 # (read as continuous, readers/egi.py).
-# Fetch: the five .raw files from https://zenodo.org/records/5172962 into
-# sourcedata/gaba_vep/ (MD5s on the record page).
+# Fetch: eegunify fetch zenodo 5172962 --suffix .raw   (into sourcedata/zenodo5172962, MD5-checked)
 #
 # Real-data check of the VEP pipeline, not infant norms: the ISCEV presets (adult, Oz vs Fz,
 # P100 90-130 ms) are used as they are; infant latencies are expected to be later and flagged by
@@ -17,7 +16,7 @@ schema_version: 1
 dataset:
   name: GABA infant pattern-reversal VEP (HAPPE+ER tutorial)
   bids_root: rawdata
-  source_root: sourcedata/gaba_vep
+  source_root: sourcedata/zenodo5172962
   task: vep
   authors: [Monachino AD, Lopez KL, Underwood E, Tao A, Nelson C, Berde C, Cornelissen L,
             Hensch T, Gabard-Durnam L]

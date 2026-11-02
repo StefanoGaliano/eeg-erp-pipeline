@@ -40,4 +40,4 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: uv sync --locked --extra dev
-      - run: uv run pytest -m "not realdata" --cov=eegunify --cov-report=term-missing
+      - run: uv run pytest -m "not realdata and not realdata_full" --cov=eegunify --cov-report=term-missing

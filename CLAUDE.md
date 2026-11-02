@@ -13,7 +13,7 @@ canonical BIDS-EEG form (BrainVision files, float32, µV) that every later stage
 Environment: conda env `eegunify` (`conda env create -f environment.yml`). CI uses `uv sync --locked --extra dev`.
 If `conda activate` isn't available in the shell, call the binaries directly: `~/miniconda3/envs/eegunify/bin/<tool>`.
 
-- All tests: `pytest -m "not realdata"`
+- All tests: `pytest -m "not realdata and not realdata_full"` (the default addopts)
 - One test: `pytest tests/unit/test_roundtrip.py::test_convert_to_bids -k bdf`
 - Coverage: `pytest --cov=eegunify`
 - Lint/format/types: `ruff check . && ruff format --check . && mypy` (mypy is strict; config in pyproject)
@@ -23,6 +23,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - `eegunify config dump <yaml> --json --resolved [-s 015] [--out f.json]`: full config + resolved components + `config_hash` (Phase M reads it with `jsondecode`; `config/dump.py`; its `matlab` block holds mappings as lists of pairs, because jsondecode mangles keys like `"1-40"`, plus the 10-05/alias/BioSemi tables)
 - Phase M (MATLAB): `matlab/+eegunify/` (`convert(dump.json, 'root', R, 'bids_root', OUT)`, `read_any`, `normalize_names`, `infer_type`, `extract_events`, `canonical_validate`, `write_bids`). `erp_lite(vhdr, dump.json, outDir)` (M2; config with the `erp_lite` recipe; ERPLAB core shared with M-E5 in `erplab_erp.m`, path setup in `erplab_path.m`). Parity: `pytest -m realdata tests/integration/test_matlab_parity.py tests/integration/test_matlab_erp_lite.py` (ERP CORE `.set` + synthetic BrainVision/BDF; needs `EEGUNIFY_MATLAB_SETUP`). Keep MATLAB steps in the same order as `pipeline.read_recording`; MATLAB `round` is half-away, Python's half-even (`round_half_even` in `extract_events.m`)
 - Real data: `pytest -m realdata` (ERP CORE golden + cross-check; data cached in `EEGUNIFY_DATA` or `~/.cache/eegunify`); refresh golden files with `--update-golden` after reviewing the diff
+- ERP CORE N170, all 40 subjects (M-E6b): `eegunify fetch erpcore-full -c N170` (3.9 GB, OSF pfde9), config `erpcore_n170_full.yaml`
+  (`recordings.pattern` with `{subject_int}`), `pytest -m realdata_full` (skips unless all 40 are fetched)
 - Fetch: `eegunify fetch erpcore -s 015`, `eegunify fetch openneuro ds005841 -s 001`
 - ERP CORE published per-subject values: `eegunify fetch erpcore-values [-c N170] --dest ~/.cache/eegunify/erpcore`
   (`reference_values.py`) rewrites `src/eegunify/erp/reference/<comp>{,_subjects}.tsv`; a realdata test checks them against OSF

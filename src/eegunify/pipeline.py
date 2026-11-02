@@ -247,7 +247,7 @@ class ConvertResult:
 
 
 def source_path(cfg: Config, subject: str, project_root: Path) -> Path:
-    return project_root / cfg.dataset.source_root / cfg.recordings.pattern.format(subject=subject)
+    return project_root / cfg.dataset.source_root / cfg.recordings.path_for(subject)
 
 
 def _run_qa(rec: Recording, cfg: Config, project_root: Path) -> tuple[str, Path]:

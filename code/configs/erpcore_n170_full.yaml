@@ -1,0 +1,101 @@
+# ERP CORE N170, all 40 subjects (M-E6b; Kappenman et al., 2021, NeuroImage 225:117465;
+# CC-BY-4.0). Same recipe as erpcore_n170.yaml, on the raw recordings of the component's OSF
+# project (pfde9) instead of the 5-subject BIDS archive (sub-015's raw file there is identical,
+# checked 2026-11-02). Bad channels: automatic (pyprep RANSAC), not ERP CORE's choices.
+# Fetch (about 3.9 GB): eegunify fetch erpcore-full -c N170 --dest sourcedata/erpcore
+# Face perception: faces, cars, scrambled faces, scrambled cars (80 trials each); the N170 is
+# the face-vs-car difference at lateral occipito-temporal sites (P7/PO7, P8/PO8).
+schema_version: 1
+dataset:
+  name: ERP CORE N170
+  bids_root: rawdata
+  source_root: sourcedata/erpcore/erpcore_full/N170
+  task: N170
+  authors: [Kappenman ES, Farrens JL, Zhang W, Stewart AX, Luck SJ]
+  license: CC-BY-4.0
+recordings:
+  pattern: "{subject_int}/{subject_int}_N170.set"   # OSF layout: 15/15_N170.set for 015
+  subjects: ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010",
+             "011", "012", "013", "014", "015", "016", "017", "018", "019", "020",
+             "021", "022", "023", "024", "025", "026", "027", "028", "029", "030",
+             "031", "032", "033", "034", "035", "036", "037", "038", "039", "040"]
+  session: N170
+reference:
+  online: CMS/DRL (reference-free)   # BioSemi ActiveTwo
+  scheme: average                    # offline, ERP phases: average of the EEG channels (N170)
+events:
+  # Codes from ERP CORE's task-N170_events.json.
+  mapping:
+    "1-40": stimulus/face
+    "41-80": stimulus/car
+    "101-140": stimulus/scrambled_face
+    "141-180": stimulus/scrambled_car
+    "201": response/correct
+    "202": response/error
+  unmapped: error
+  expected_counts:
+    stimulus/face: 80
+    stimulus/car: 80
+    stimulus/scrambled_face: 80
+    stimulus/scrambled_car: 80
+  count_tolerance: 0.0
+  # Stimuli appeared on the LCD monitor 26 ms after their trigger; ERP CORE shifts stimulus
+  # (not response) codes by +26 ms (ERPLAB "Shifting Event Codes" tutorial, Luck lab).
+  onset_shift_ms:
+    "stimulus/*": 26
+
+# --- ERP phases (docs/BLUEPRINT_PHASES.md) -------------------------------------------------------
+# Recipe = ERP CORE's own, from Kappenman et al. 2021 (NeuroImage 225:117465), Methods
+# (checked against PMC7909723 on 2026-10-31): downsampled to 256 Hz; non-causal Butterworth
+# high-pass, half-amplitude cutoff 0.1 Hz, 12 dB/oct; no low-pass on the data that get measured
+# (20 Hz only for peak measures and plots); noisy channels spherically interpolated; N170
+# referenced to the average of all sites (the other components use P9/P10).
+preproc:
+  line_noise: {method: none}          # ERP CORE applies no notch
+  resample_hz: 256
+  highpass_hz: 0.1
+  lowpass_hz: null
+  filter: {method: iir, iir_order: 2, phase: zero}   # = ERPLAB pop_basicfilter order 2
+  bad_channels: {method: pyprep_ransac}   # automatic for all 40 (no channels.tsv in the raw data)
+  interpolate: true
+artifacts:
+  method: ica                         # picard (extended infomax) + ICLabel, EOG vote second
+  # ERP CORE has no VEOG/HEOG channels, only the three EOG electrodes: derive bipolar ones so the
+  # EOG vote and QA ICA_BLINK_RESIDUAL work. VEOG uses Fp2 as the upper site, which leaves Fp1
+  # independent for the residual check (VEOG vs Fp1).
+  eog_bipolar: {VEOG: [Fp2, VEOG_lower], HEOG: [HEOG_left, HEOG_right]}
+epochs:
+  sets:
+    stim:
+      lock: "stimulus/*"
+      tmin_ms: -200
+      tmax_ms: 800
+      baseline_ms: [-200, 0]
+      # ERP CORE averages correct trials only: BDF_N170.txt (OSF pfde9, file cvszm) has bins
+      # ".{1-40}{t<200-1000>201}" etc., i.e. a correct response (201) 200-1000 ms after the
+      # (shifted) stimulus; README_N170.txt, Script #5 step 3.
+      response: {selector: "response/correct", window_ms: [200, 1000]}
+  # Blueprint defaults (ERPLAB semantics). ERP CORE tuned thresholds per subject; their values
+  # come from their files in M-E6a, not from memory.
+  reject: {method: thresholds, ptp_uv: 100, ptp_window_ms: 200, ptp_step_ms: 100, step_heog_uv: 32}
+conditions:
+  face: ["stimulus/face"]
+  car: ["stimulus/car"]
+  scrambled: ["stimulus/scrambled_face", "stimulus/scrambled_car"]
+contrasts:
+  face_minus_car: {plus: face, minus: car}
+components:
+  preset: erpcore
+  use: [n170]
+group:
+  tests: [paired_t, wilcoxon]
+  # Face - car is expected negative at PO8 (one-tailed); with 5 subjects 32 sign flips exist, so
+  # the smallest possible p is 1/32: reported, labelled underpowered (BLUEPRINT 6.7).
+  cluster:
+    enabled: true
+    contrast: face_minus_car
+    tmin_ms: 0
+    tmax_ms: 400
+    n_permutations: 5000
+    tail: -1
+  reference_values: erpcore             # compare with ERP CORE's published per-subject values

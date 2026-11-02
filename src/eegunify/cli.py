@@ -259,6 +259,51 @@ def fetch_erpcore_cmd(
         console.print(f"[green]ok[/] {p}")
 
 
+@fetch_app.command("erpcore-full")
+def fetch_erpcore_full_cmd(
+    component: Annotated[str, typer.Option("--component", "-c", help="N170.")] = "N170",
+    subject: Annotated[
+        list[str] | None,
+        typer.Option("--subject", "-s", help="1-40 (e.g. 015); repeatable; default all 40."),
+    ] = None,
+    dest: Annotated[Path, typer.Option(help="Download folder.")] = Path("sourcedata/erpcore"),
+) -> None:
+    """ERP CORE raw recordings of all 40 subjects from the component's OSF project (M-E6b;
+    about 98 MB per subject for N170)."""
+    from eegunify.datasets import fetch_erpcore_full
+
+    try:
+        paths = fetch_erpcore_full(dest, component, subject)
+    except ValueError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    console.print(f"[green]ok[/] {len(paths)} recordings in {paths[0].parent.parent}")
+
+
+@fetch_app.command("zenodo")
+def fetch_zenodo_cmd(
+    record: Annotated[str, typer.Argument(help="Record id, e.g. 5172962 (GABA infant VEP).")],
+    file: Annotated[
+        list[str] | None, typer.Option("--file", "-f", help="File name; repeatable.")
+    ] = None,
+    suffix: Annotated[
+        list[str] | None, typer.Option(help="Only files ending with this (e.g. .raw).")
+    ] = None,
+    dest: Annotated[Path, typer.Option(help="Download folder.")] = Path("sourcedata"),
+) -> None:
+    """Files of a public Zenodo record, checked against its MD5s (GABA VEP: 5172962 --suffix
+    .raw, into sourcedata/zenodo5172962)."""
+    from eegunify.datasets import fetch_zenodo
+
+    try:
+        paths = fetch_zenodo(record, dest, file, suffix or ())
+    except ValueError as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    for p in paths:
+        console.print(f"[green]ok[/] {p}")
+
+
 @fetch_app.command("erpcore-values")
 def fetch_erpcore_values_cmd(
     component: Annotated[

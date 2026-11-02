@@ -155,3 +155,18 @@ def test_sign_only_checked_away_from_zero() -> None:
     ours = _ours({"015": -1.0, "016": 0.0, "017": -2.9, "018": -0.6, "019": 0.05})
     t = comparison_table("N170", ours, _published(theirs), SUMMARY, SUBJECTS)
     assert _diff_rows(t).loc["019", "status"] == "sign_mismatch"
+
+
+def test_d_z_reported_for_difference_waves_only() -> None:
+    """M-E6b: effect size over the compared subjects on both sides; reported, never failing."""
+    ours = _ours({"015": -1.2, "016": -3.0, "017": -2.5, "018": -0.9, "019": 1.8})
+    t = comparison_table("N170", ours, _published(THEIRS), SUMMARY, SUBJECTS)
+    dz = t[t["subject"] == "d_z"]
+    assert list(dz["wave"]) == ["face_minus_car"] and list(dz["measure"]) == ["mean_amplitude"]
+    row = dz.iloc[0]
+    mine = pd.Series([-1.2, -2.5, -0.9, 1.8])  # 016 excluded by ERP CORE
+    theirs = pd.Series(list(THEIRS.values()))
+    assert row["ours"] == pytest.approx(mine.mean() / mine.std(ddof=1))
+    assert row["theirs"] == pytest.approx(theirs.mean() / theirs.std(ddof=1))
+    assert row["status"] == "reported" and row["note"] == "mean / SD over 4 compared subjects"
+    assert failures(t).empty

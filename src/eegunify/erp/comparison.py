@@ -13,7 +13,12 @@ Rules (decided 2026-11-01, BLUEPRINT_PHASES section 0):
 * a published NaN (e.g. no negative area for a 50 % area latency) is ``not_available``;
 * a measure our component definition does not take is ``not_measured`` (never a failure).
 
-``comparison_table`` returns one row per (subject, wave, measure) plus ``subject = mean`` rows.
+* for difference-wave mean amplitudes, ``subject = d_z`` reports the effect size (mean / SD
+  over the same compared subjects, ddof 1) on both sides; no tolerance is defined for it
+  (status ``reported``, never a failure), so it is read next to the published one (M-E6b).
+
+``comparison_table`` returns one row per (subject, wave, measure) plus ``subject = mean`` (and
+``d_z``) rows.
 """
 
 from __future__ import annotations
@@ -192,7 +197,32 @@ def comparison_table(
                     "note": f"mean over {len(compared)} compared subjects",
                 }
             )
+            if p.measure == "mean_amplitude" and " minus " in p.theirs_wave and len(compared) >= 3:
+                dz_ours = _d_z([o for o, _ in compared])
+                dz_theirs = _d_z([t for _, t in compared])
+                rows.append(
+                    {
+                        "component": component,
+                        "subject": "d_z",
+                        "wave": p.ours_wave,
+                        "measure": p.measure,
+                        "unit": "d_z",
+                        "ours": dz_ours,
+                        "theirs": dz_theirs,
+                        "diff": dz_ours - dz_theirs,
+                        "tolerance": math.nan,
+                        "status": "reported",
+                        "note": f"mean / SD over {len(compared)} compared subjects",
+                    }
+                )
     return pd.DataFrame(rows, columns=COLUMNS)
+
+
+def _d_z(values: list[float]) -> float:
+    n = len(values)
+    mean = sum(values) / n
+    sd = math.sqrt(sum((v - mean) ** 2 for v in values) / (n - 1))
+    return mean / sd if sd > 0 else math.nan
 
 
 def failures(table: pd.DataFrame) -> pd.DataFrame:

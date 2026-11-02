@@ -100,3 +100,20 @@ def test_every_config_field_is_documented() -> None:
         if not field.description
     ]
     assert not missing, missing
+
+
+def test_subject_int_placeholder() -> None:
+    """ERP CORE's per-component OSF projects name files 15/15_N170.set for subject 015."""
+    from eegunify.config.loader import ConfigError, parse_config
+
+    base = {"dataset": {"name": "x", "source_root": "s", "task": "N170"}}
+    cfg = parse_config(
+        base
+        | {"recordings": {"pattern": "{subject_int}/{subject_int}_N170.set", "subjects": ["015"]}}
+    )
+    assert cfg.recordings.path_for("015") == "15/15_N170.set"
+    assert cfg.recordings.path_for("100") == "100/100_N170.set"
+    with pytest.raises(ConfigError, match="numeric subject labels"):
+        parse_config(base | {"recordings": {"pattern": "{subject_int}.set", "subjects": ["a"]}})
+    with pytest.raises(ConfigError, match="placeholder"):
+        parse_config(base | {"recordings": {"pattern": "rec.set", "subjects": ["01"]}})

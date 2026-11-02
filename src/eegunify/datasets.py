@@ -9,12 +9,20 @@ Two sources:
 * **OpenNeuro** snapshots: one subject's EEG files, listed through the OpenNeuro GraphQL API.
   Snapshot URLs carry an S3 ``versionId``, so a pinned snapshot tag always gives the same bytes.
 
+* **ERP CORE per-component OSF projects** (``fetch_erpcore_full``): every subject (1-40) of a
+  component, raw ``<n>_<comp>.set/.fdt`` only (about 98 MB per subject for N170), listed
+  through the OSF API at fetch time. Used by M-E6b (docs/BLUEPRINT_PHASES.md, OQ1).
+
+* **Zenodo** records (``fetch_zenodo``): chosen files of a record, checked against the MD5 the
+  record lists (GABA infant VEP: record 5172962).
+
 Every download is recorded with its sha256 in ``<dest>/eegunify_manifest.json``; files already
 present with the recorded hash are not downloaded again. The downloaded data are never edited.
 """
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import io
 import json
@@ -213,6 +221,155 @@ def fetch_erpcore(
             manifest.record(dest, member, f"osf:3zk6n@v2:{member}")
     log.info("ERP CORE: %d HTTP range requests", remote.requests)
     return entry_files
+
+
+#: OSF projects of the ERP CORE components (the per-component "All Data and Scripts" folders).
+ERPCORE_FULL_NODES = {"N170": "pfde9"}
+OSF_API = "https://api.osf.io/v2"
+
+
+def _osf_list(url: str) -> list[dict[str, Any]]:
+    """Every entry of an OSF API listing (follows pagination)."""
+    out: list[dict[str, Any]] = []
+    next_url: str | None = url
+
+    def get(u: str) -> dict[str, Any]:
+        req = urllib.request.Request(u, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data: dict[str, Any] = json.load(resp)
+            return data
+
+    while next_url:
+        page = _retry(functools.partial(get, next_url), next_url)
+        out += page["data"]
+        next_url = page["links"].get("next")
+    return out
+
+
+def _osf_children(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    return _osf_list(entry["relationships"]["files"]["links"]["related"]["href"])
+
+
+def _stream(url: str, target: Path, size: int) -> None:
+    """Download ``url`` to ``target`` in blocks (via ``.part``), checking the byte count."""
+    tmp = target.with_name(target.name + ".part")
+
+    def get() -> None:
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=300) as resp, tmp.open("wb") as out:
+            while block := resp.read(1 << 22):
+                out.write(block)
+        got = tmp.stat().st_size
+        if got != size:
+            raise ConnectionError(f"{target.name}: got {got} bytes, OSF lists {size}")
+
+    _retry(get, url)
+    tmp.replace(target)
+
+
+def fetch_erpcore_full(
+    dest: Path, component: str = "N170", subjects: Iterable[str] | None = None
+) -> list[Path]:
+    """Raw recordings of ERP CORE subjects from the component's OSF project.
+
+    Files land in ``dest/erpcore_full/<component>/<n>/<n>_<component>.set`` (and ``.fdt``),
+    named as on OSF (the ``.set`` names its ``.fdt``); configs reach them with
+    ``recordings.pattern: "{subject_int}/{subject_int}_<component>.set"``. ``subjects`` are
+    labels such as ``015`` (default: all 40). Returns the ``.set`` paths.
+    """
+    if component not in ERPCORE_FULL_NODES:
+        raise ValueError(
+            f"no full-data project known for {component!r}: {list(ERPCORE_FULL_NODES)}"
+        )
+    wanted = [f"{int(s):03d}" for s in (subjects or [str(i) for i in range(1, 41)])]
+    bad = [s for s in wanted if not 1 <= int(s) <= 40]
+    if bad:
+        raise ValueError(f"ERP CORE subjects are 1-40; got {bad}")
+    node = ERPCORE_FULL_NODES[component]
+    root = dest / "erpcore_full" / component
+    manifest = Manifest.load(dest)
+    names = {s: f"{int(s)}/{int(s)}_{component}" for s in wanted}
+    rels = {
+        s: [f"erpcore_full/{component}/{names[s]}{ext}" for ext in (".set", ".fdt")] for s in wanted
+    }
+    todo = [s for s in wanted if not all(manifest.is_current(dest, r) for r in rels[s])]
+    if todo:
+        listing = _osf_list(f"{OSF_API}/nodes/{node}/files/osfstorage/")
+        top = next(
+            e for e in listing if e["attributes"]["name"] == f"{component} All Data and Scripts"
+        )
+        folders = {e["attributes"]["name"]: e for e in _osf_children(top)}
+        for s in todo:
+            n = str(int(s))
+            files = {e["attributes"]["name"]: e for e in _osf_children(folders[n])}
+            for rel in rels[s]:
+                name = rel.rsplit("/", 1)[1]
+                entry = files[name]
+                target = dest / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                log.info("fetching %s (%d MB)", rel, entry["attributes"]["size"] // 2**20)
+                _stream(entry["links"]["download"], target, int(entry["attributes"]["size"]))
+                manifest.record(dest, rel, f"osf:{node}/{entry['id']}")
+    return [root / f"{names[s]}.set" for s in wanted]
+
+
+ZENODO_API = "https://zenodo.org/api/records/{record}"
+
+
+def _md5(path: Path) -> str:
+    h = hashlib.md5()  # Zenodo publishes MD5 checksums; the manifest keeps sha256
+    with path.open("rb") as fh:
+        while block := fh.read(1 << 20):
+            h.update(block)
+    return h.hexdigest()
+
+
+def fetch_zenodo(
+    record: str, dest: Path, files: Iterable[str] | None = None, suffixes: Iterable[str] = ()
+) -> list[Path]:
+    """Download files of a public Zenodo record into ``dest/zenodo<record>/``.
+
+    ``files`` names them exactly; otherwise every file whose name ends with one of ``suffixes``
+    (all files when both are empty). Each file is checked against the record's MD5 and recorded
+    in the manifest; files already present with the recorded hash are skipped.
+    """
+    req = urllib.request.Request(
+        ZENODO_API.format(record=record), headers={"User-Agent": USER_AGENT}
+    )
+
+    def get() -> dict[str, Any]:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data: dict[str, Any] = json.load(resp)
+            return data
+
+    meta = _retry(get, f"zenodo record {record}")
+    entries = {f["key"]: f for f in meta["files"]}
+    wanted = (
+        list(files)
+        if files
+        else [k for k in sorted(entries) if not tuple(suffixes) or k.endswith(tuple(suffixes))]
+    )
+    unknown = sorted(set(wanted) - set(entries))
+    if unknown:
+        raise ValueError(f"zenodo record {record} has no files {unknown}; it has {sorted(entries)}")
+    manifest = Manifest.load(dest)
+    out = []
+    for name in wanted:
+        rel = f"zenodo{record}/{name}"
+        target = dest / rel
+        out.append(target)
+        if manifest.is_current(dest, rel):
+            continue
+        entry = entries[name]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        log.info("fetching %s (%d MB)", rel, entry["size"] // 2**20)
+        _stream(entry["links"]["self"], target, int(entry["size"]))
+        algo, _, expected = entry["checksum"].partition(":")
+        if algo == "md5" and _md5(target) != expected:
+            target.unlink()
+            raise ConnectionError(f"{rel}: MD5 differs from the Zenodo record")
+        manifest.record(dest, rel, f"zenodo:{record}/{name}")
+    return out
 
 
 def _erpcore_complete(manifest: Manifest, dest: Path, component: str, subjects: list[str]) -> bool:
