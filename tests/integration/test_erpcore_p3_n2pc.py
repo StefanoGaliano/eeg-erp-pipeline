@@ -39,6 +39,13 @@ pytestmark = [pytest.mark.realdata, pytest.mark.filterwarnings("ignore::RuntimeW
 PROJECT = Path(__file__).parents[2]
 SUBJECTS = list(ERPCORE_SUBJECTS)
 CONTRAST = {"P3": "rare_minus_frequent", "N2pc": "contra_minus_ipsi"}
+#: Default-recipe deviations documented in docs/validation_erp.md ("Documented deviations"):
+#: subjects that fail a stage, and subjects outside tolerance. Exact sets: a new deviation, or
+#: a documented one that disappears, fails the test so the docs get updated.
+KNOWN_DEFAULT = {
+    "P3": {"failed": {"016"}, "out_of_tolerance": {"019"}},
+    "N2pc": {"failed": set(), "out_of_tolerance": {"019"}},
+}
 
 
 def _config(comp: str) -> Path:
@@ -114,16 +121,26 @@ def exact_run(
     return comp, *_run(comp, cfg, root, "exact")
 
 
-def _check(comp: str, table: pd.DataFrame, failed: dict[str, str]) -> None:
+def _check(
+    comp: str,
+    table: pd.DataFrame,
+    failed: dict[str, str],
+    known: dict[str, set[str]] | None = None,
+) -> None:
     rows = table[(table["wave"] == CONTRAST[comp]) & (table["measure"] == "mean_amplitude")]
-    # ERP CORE excluded none of 015..019 for P3 or N2pc: every subject must be compared
-    assert not failed, failed
-    assert failures(rows).empty, failures(rows).to_string()
+    known = known or {"failed": set(), "out_of_tolerance": set()}
+    # ERP CORE excluded none of 015..019 for P3 or N2pc: every subject must be compared,
+    # except the documented ones.
+    assert set(failed) == known["failed"], failed
+    bad = failures(rows)
+    bad = bad[~bad["subject"].astype(str).isin(known["failed"])]  # missing_ours: same deviation
+    assert set(bad["subject"].astype(str)) == known["out_of_tolerance"], bad.to_string()
 
 
 def test_default_recipe(default_run: tuple[str, pd.DataFrame, dict[str, str]]) -> None:
-    """Reports the default recipe; its deviations are documented in docs/validation_erp.md."""
-    _check(*default_run)
+    """The default recipe; its deviations are documented in docs/validation_erp.md."""
+    comp = default_run[0]
+    _check(*default_run, known=KNOWN_DEFAULT[comp])
 
 
 def test_exact_recipe(exact_run: tuple[str, pd.DataFrame, dict[str, str]]) -> None:

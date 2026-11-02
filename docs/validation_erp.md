@@ -246,8 +246,8 @@ Contrast mean amplitude, ours - ERP CORE (µV; tolerance ±0.5 per subject, ±0.
 | 016 | excluded by us | −0.08 | +0.06 | −0.11 |
 | 017 | +0.28 | −0.04 | −0.22 | +0.10 |
 | 018 | +0.35 | +0.04 | +0.03 | +0.05 |
-| 019 | **−0.62** | −0.05 | **−1.34** | +0.15, **sign differs** (ours +0.002, theirs −0.151) |
-| mean | +0.004 (of 4) | −0.02 | −0.29 | +0.02 |
+| 019 | **−0.55** | −0.05 | **−1.34** | +0.15, **sign differs** (ours +0.002, theirs −0.151) |
+| mean | +0.02 (of 4) | −0.02 | −0.29 | +0.02 |
 
 50 % area latency: within one sample (3.9 ms) everywhere except P3 exact sub-015 (−11.7 ms).
 P3 exact parent waves (rare, frequent) are all within ±0.25 µV of ERP CORE's, unlike N170's
@@ -255,14 +255,16 @@ P3 exact parent waves (rare, frequent) are all within ±0.25 µV of ERP CORE's, 
 
 ### Documented deviations
 
-These are known and accepted; the realdata tests report them (they fail on them) rather than
-encode exceptions.
+These are known and accepted. The realdata tests list them exactly (`KNOWN_DEFAULT` in
+`tests/integration/test_erpcore_p3_n2pc.py`, since 2026-11-02): a new deviation, or a listed
+one that disappears, fails the test.
 
 - **P3, default recipe, sub-016 excluded.** One 100 µV peak-to-peak threshold for everyone
   rejects 57 % of its epochs and leaves 13 rare trials (< 30): `EPOCHS_MIN_TRIALS` fails and
   the subject leaves the group. ERP CORE kept it with its own threshold of 160 µV
   (`AR_Parameters_for_MW_CRAP_P3.xlsx`); with `erpcore-exact` it is kept and within 0.08 µV.
-- **P3, default recipe, sub-019: −0.62 µV** (outside ±0.5). Within 0.05 µV with
+- **P3, default recipe, sub-019: −0.55 µV** (outside ±0.5; −0.62 before EOG channels were
+  filtered, 2026-11-02; mean of 4 was +0.004). Within 0.05 µV with
   `erpcore-exact`, so it comes from ERP CORE's per-subject choices (ICA components, thresholds).
 - **N2pc, default recipe, sub-019: −1.34 µV.** ERP CORE's N2pc for this subject is almost
   absent (−0.15 µV); ours with the automatic recipe is −1.50 µV. Within 0.15 µV with
@@ -303,7 +305,10 @@ ERPLAB's `window2sample` and eegunify's nearest-sample window can pick windows o
 EOG kept their DC offset (HEOG about 13.7 mV in `desc-preproc`) while ERPLAB filters every
 channel. `_filter_all` now filters EOG, EMG and ECG too (preproc `schema_version` 3; synthetic
 regression test `test_erpcore_n170_eog_channels_are_filtered`), and the M2 comparison includes
-the EOG channels. Effect on the ICA recipes, checked on N170 sub-015 and P3 sub-016: the same
-ICA components excluded (EOG z-scores move by < 0.1) and identical rejected epochs. The HEOG
+the EOG channels. Effect on the ICA recipes: on N170 sub-015 and P3 sub-016 the same ICA
+components are excluded (EOG z-scores move by < 0.1) and the rejected epochs are identical;
+the only comparison value that moved is P3 sub-019, default recipe, from −0.62 to −0.55 µV
+(closer to ERP CORE), group mean from +0.004 to +0.02 µV. N2pc sub-019 is unchanged
+(−1.34); every other comparison stays within tolerance. The HEOG
 step rule compares half-window means, so a DC offset cancels; a 0.1 Hz drift is negligible
 over 200 ms.

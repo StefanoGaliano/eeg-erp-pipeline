@@ -54,7 +54,10 @@ def test_sub015_epochs(project: Path) -> None:
     expected = {k: v for k, v in cfg.events.expected_counts.items() if k.startswith("stimulus/")}
     assert log.groupby("trial_type").size().to_dict() == expected
     assert log["code"].between(1, 180).all()  # rawdata codes, matched by onset
-    assert (~log["kept"]).mean() < 0.10
+    # Artifact rejections only: trials without a correct response (NO_RESPONSE, logged since
+    # M-E6a) are excluded by design, not rejected (41 of 320 for this subject).
+    candidates = log[log["reason"].fillna("") != "NO_RESPONSE"]
+    assert (~candidates["kept"]).mean() < 0.10
     epochs = mne.read_epochs(out("stim", "epo", ".fif"), verbose=False)
     assert len(epochs) == log["kept"].sum()
     assert epochs.info["sfreq"] == 256
