@@ -54,7 +54,8 @@ Artifact correction (Phase 3).
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `method` | `ica` \| `precomputed` \| `none` | `"ica"` | ``ica`` fits ICA (picard + ICLabel); ``precomputed`` applies an EEGLAB decomposition (``precomputed``) in the data's own reference; ``none`` epochs the preprocessed data. |
+| `method` | `ica` \| `precomputed` \| `wavelet` \| `none` | `"ica"` | ``ica`` fits ICA (picard + ICLabel); ``precomputed`` applies an EEGLAB decomposition (``precomputed``) in the data's own reference; ``wavelet`` subtracts wavelet-thresholded artifacts (``wavelet``; for short or noisy recordings, e.g. infants); ``none`` epochs the preprocessed data. |
+| `wavelet` | WaveletSpec | see section | Settings for ``method: wavelet``. |
 | `ica` | IcaSpec | see section | ICA settings. |
 | `precomputed` | PrecomputedIcaSpec \| null | `null` | Decomposition and components for ``method: precomputed`` (usually per subject). |
 | `corrected_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG channels derived after ICA cleaning, ``{HEOG: [HEOG_left, HEOG_right]}`` (ERP CORE's corrected bipolars; ``eog_bipolar`` gives the uncorrected ones). |
@@ -420,6 +421,17 @@ Amplitude units and the plausibility check.
 |---|---|---|---|
 | `declared` | `auto` \| `V` \| `mV` \| `uV` | `"auto"` | ``auto`` trusts the header. Otherwise the unit the values are really in when the header is wrong; data are rescaled and the factor logged. ``eegunify inspect`` suggests it. |
 | `expected_eeg_range_uV` | list[…] | `[0.5, 500.0]` | Plausible median robust SD of EEG channels, in µV (unit check and QA). |
+
+## `WaveletSpec`
+
+Wavelet thresholding (HAPPE's ERP mode, Gabard-Durnam et al. 2018; Monachino et al. 2022): what a level-dependent threshold keeps of each EEG channel is large-amplitude artifact and is subtracted.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `wavelet` | string | `"coif4"` | PyWavelets wavelet name (HAPPE ERP: ``coif4``). |
+| `level` | integer \| null | `null` | Decomposition level; ``null``: HAPPE's rule (11 above 500 Hz, 10 above 250 Hz, else 9), capped by what the recording length allows. |
+| `threshold` | `universal` \| `bayesshrink` | `"universal"` | Per-level threshold, noise from the level's median absolute deviation: ``universal`` (sigma * sqrt(2 ln n): only rare large deflections are subtracted; closest to HAPPE's own pre/post correlation on its tutorial files) or ``bayesshrink`` (adapts to the level's signal; removes blinks more fully but also much of high-amplitude infant EEG). |
+| `threshold_rule` | `soft` \| `hard` | `"soft"` | Coefficient shrinkage (HAPPE ERP default: soft). |
 
 # Component library entries
 

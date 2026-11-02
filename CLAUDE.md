@@ -60,6 +60,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Synthetic ERP data: `tests/synthetic/erp.py` (`make_erp_recording`); the `erp_project` fixture copies a converted project.
   The background is spatially smooth on purpose: with independent noise per channel pyprep flags almost every channel.
 - Real-data ERP results are recorded in `docs/validation_erp.md`.
+- `artifacts.method: wavelet` (`erp/wavelet.py`, HAPPE-style, PyWavelets) runs in the ica stage slot and writes `desc-clean`;
+  default threshold `universal` (BayesShrink stripped the infant VEP). Not a port of HAPPE (GPL-3).
 - Stages: preproc -> ica -> epochs -> erp -> group (`erp/stages/`, subclass `Stage`, `@register_stage`). Outputs go to
   `derivatives/eegunify-<stage>/` (BIDSPath via `erp/paths.py`), cached by `stage_key` (`erp/hashing.py`). The runner
   (`erp/runner.py`) writes the provenance holding the key, so stages only write outputs (via `atomic_path`).

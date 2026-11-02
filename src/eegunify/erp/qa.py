@@ -20,6 +20,8 @@ ICA_EXCLUDED_COUNT           ica     warn if 0 excluded while an EOG channel is 
 ICA_BLINK_RESIDUAL           ica     warn if |VEOG-Fp1 correlation| after cleaning is > 0.3
                                      (1 Hz high-passed copy)
 ICA_BRAIN_REMOVED            ica     warn if an excluded component has ICLabel brain prob > 0.5
+WAVELET_VARIANCE_KEPT        ica     info (pass): variance left after wavelet thresholding (% of
+                                     the EEG variance before; HAPPE's data-QC measure)
 EPOCHS_REJECTED_FRACTION     epochs  warn > 25 %, fail > 50 % of all epochs rejected (the fail
                                      limit is ``epochs.reject.max_rejected_fraction``)
 EPOCHS_MIN_TRIALS            epochs  fail if a condition used by a component (or, with no
@@ -222,6 +224,15 @@ def ica_checks(raw: mne.io.BaseRaw, decision: Decision) -> list[QACheck]:
         )
     )
     return checks
+
+
+def wavelet_check(variance_kept_pct: float) -> QACheck:
+    return QACheck(
+        "WAVELET_VARIANCE_KEPT",
+        "pass",
+        f"wavelet thresholding kept {variance_kept_pct:.1f} % of the EEG variance",
+        variance_kept_pct,
+    )
 
 
 # --- epochs ----------------------------------------------------------------------------------

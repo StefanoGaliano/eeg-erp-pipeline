@@ -319,7 +319,8 @@ over 200 ms.
 tutorial files (Zenodo 5172962, CC-BY-4.0; `eegunify fetch zenodo 5172962 --suffix .raw`), EGI
 HydroCel 129 channels at 1000 Hz. Measured at E75 (Oz) against E11 (Fz, HAPPE's HydroCel table)
 on re-referenced copies of average-referenced data (`ERP_REFERENCE_CHANGED`). Notch 60/120/180
-Hz, FIR 0.3-35 Hz, pyprep RANSAC bads (limit raised to 40 %), interpolation, no ICA, epochs
+Hz, FIR 0.3-35 Hz, pyprep RANSAC bads (limit raised to 40 %), interpolation, wavelet
+thresholding (below; the table is without it, `artifacts.method: none`), epochs
 -100..450 ms, one `pop_artextval` rule (-200..200 µV) on HAPPE's tutorial channels E70, E83,
 E71, E75, E76.
 
@@ -341,6 +342,24 @@ With the adult window (90-130 ms) a and d were cut at the window edge (129, 130 
 paediatric one d's peak is at 148 ms, inside the 4-month small-check limits (111-170).
 `VEP_LATENCY_ATYPICAL` keeps the adult 115 ms flag and marks a and d. This checks the VEP chain
 on real data, not infant norms (five infants, unknown check size).
+
+**With wavelet thresholding** (`artifacts.method: wavelet`, the config's setting; `erp/wavelet.py`,
+HAPPE's ERP approach with PyWavelets, `coif4`, level 11 at 1000 Hz, soft universal threshold):
+
+| Subject | Variance kept | Pre/post r (HAPPE's QC) | Epochs kept | P100 ms | P100 µV |
+|---|---|---|---|---|---|
+| a | 26 % | 0.64 (0.79) | 90/100 | 129 | 3.0 |
+| b | 43 % | 0.70 (0.91) | 98/100 | 109 | 11.4 |
+| c | 40 % | 0.75 (0.69) | 103/115 | 107 | 23.3 |
+| d | 26 % | 0.67 (0.67) | 85/102 | 131 | 7.8 |
+| e | 48 % | 0.77 (0.79) | 94/100 | 107 | 14.5 |
+
+More epochs survive the -200..200 µV rule; P100 latencies and amplitudes stay close to the
+uncorrected ones except d (148 -> 131 ms; E75 interpolated, the noisiest recording). The
+BayesShrink threshold (`artifacts.wavelet.threshold: bayesshrink`) was tried first: it kept
+only 2-15 % of the variance (pre/post r 0.42-0.57) and shrank the VEP (c 23.5 -> 5.4 µV), so
+the universal threshold is the default. HAPPE uses MATLAB's empirical-Bayes `wdenoise`, which
+has no Python equivalent; the numbers are close to HAPPE's in spirit, not identical.
 Found on this dataset and fixed: single-segment EGI `.raw` files, an EGI event track named
 `resp` typed as a respiration channel, the temporary-file path kept in `raw.filenames`, and text
 event codes (`vep+`) in the epochs log.

@@ -10,6 +10,8 @@ Outputs in ``derivatives/eegunify-ica/sub-*/[ses-*/]eeg/``:
   written when QA fails.
 - ``*_desc-ica_qa.json``: the stage QA (IDs in ``erp/qa.py``) and the steps applied.
 
+``artifacts.method: wavelet`` writes ``desc-clean`` from wavelet thresholding instead
+(``erp/wavelet.py``; no ICA files, QA ``WAVELET_VARIANCE_KEPT``).
 ``artifacts.method: none`` disables the stage; the epochs stage then reads ``desc-preproc``.
 """
 
@@ -38,6 +40,7 @@ from eegunify.erp.stages.base import (
     atomic_path,
     register_stage,
 )
+from eegunify.erp.wavelet import wavelet_clean
 
 
 def preproc_file(inputs: StageInputs) -> Path:
@@ -51,10 +54,12 @@ def preproc_file(inputs: StageInputs) -> Path:
 @register_stage
 class IcaStage(Stage):
     name = "ica"
-    schema_version = 3  # 3: precomputed ICA, corrected bipolars, interpolation after ICA
+    schema_version = (
+        4  # 3: precomputed ICA, corrected bipolars, interpolation after ICA; 4: wavelet
+    )
 
     def enabled(self, cfg: Config) -> bool:
-        return cfg.artifacts.method in ("ica", "precomputed")
+        return cfg.artifacts.method in ("ica", "precomputed", "wavelet")
 
     def hash_config(self, cfg: Config, project_root: Path) -> Any:
         # The reference is re-applied after ICA, so it is part of this stage's output too.
@@ -72,6 +77,8 @@ class IcaStage(Stage):
         assert ctx.subject is not None
         cfg = ctx.config
         raw = mne.io.read_raw_fif(preproc_file(inputs), preload=True, verbose=False)
+        if cfg.artifacts.method == "wavelet":
+            return self._wavelet(ctx, raw)
         if cfg.artifacts.method == "precomputed":
             assert cfg.artifacts.precomputed is not None
             spec = cfg.artifacts.precomputed
@@ -118,3 +125,18 @@ class IcaStage(Stage):
         failing = [c.message for c in checks if c.level == "fail"]
         extra = {"excluded": res.decision.excluded, "n_components": len(res.decision.table)}
         return StageResult(status, outputs, checks, message="; ".join(failing), extra=extra)
+
+    def _wavelet(self, ctx: StageContext, raw: mne.io.BaseRaw) -> StageResult:
+        cfg = ctx.config
+        steps = wavelet_clean(raw, cfg.artifacts.wavelet)
+        if cfg.artifacts.corrected_bipolar:
+            steps["corrected_bipolar"] = add_bipolar_eog(raw, cfg.artifacts.corrected_bipolar)
+        if cfg.preproc.interpolate_after_ica:
+            steps["interpolated_after_ica"] = interpolate(raw, list(raw.info["bads"]), True)
+        checks = [qa.wavelet_check(steps["wavelet"]["variance_kept_pct"])]
+        fif = ctx.output(description="clean", suffix="eeg", extension=".fif")
+        with atomic_path(fif) as tmp:
+            raw.save(tmp, fmt="single", overwrite=True, verbose=False)
+        qa_path = ctx.output(description="ica", suffix="qa", extension=".json")
+        qa.write_qa_json(qa_path, self.name, checks, {"subject": ctx.subject, "steps": steps})
+        return StageResult("ok", [fif, qa_path], checks, extra=steps["wavelet"])

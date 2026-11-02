@@ -35,11 +35,13 @@ from eegunify.config.erp_sections import (
     RejectRule,
     RejectSpec,
     ResponseRule,
+    WaveletSpec,
 )
 
 # The ERP models not referenced below are only re-exported (see the comment above).
 __all__ = ["AsrSpec", "BadChannelsSpec", "ClusterSpec", "EogCorrelationSpec", "EpochSet"]
 __all__ += ["FilterSpec", "IcLabelSpec", "IcaSpec", "LineNoiseSpec", "RejectSpec", "ResponseRule"]
+__all__ += ["WaveletSpec"]
 __all__ += ["PrecomputedIcaSpec", "RejectRule"]
 
 FormatName = Literal[

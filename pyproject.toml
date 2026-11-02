@@ -41,13 +41,20 @@ dependencies = [
 [project.optional-dependencies]
 app = ["streamlit>=1.40"]
 # ERP phases (docs/BLUEPRINT_PHASES.md section 17); more packages arrive with later stages.
-erp = ["pyprep>=0.10", "mne-icalabel>=0.7", "python-picard>=0.8", "onnxruntime>=1.18"]
+erp = [
+    "pyprep>=0.10",
+    "mne-icalabel>=0.7",
+    "python-picard>=0.8",
+    "onnxruntime>=1.18",
+    "pywavelets>=1.6",
+]
 dev = [
     "streamlit>=1.40",
     "pyprep>=0.10",
     "mne-icalabel>=0.7",
     "python-picard>=0.8",
     "onnxruntime>=1.18",
+    "pywavelets>=1.6",
     "pytest>=8",
     "pytest-cov>=5",
     "pytest-xdist>=3.5",
@@ -84,7 +91,7 @@ python_version = "3.12"  # numpy stubs use 3.12 syntax; runtime still supports 3
 files = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*", "pyprep.*", "meegkit.*", "mne_icalabel.*", "picard.*", "autoreject.*"]
+module = ["streamlit.*", "mne.*", "mne_bids.*", "pybv.*", "edfio.*", "eeglabio.*", "pyxdf.*", "antio.*", "curryreader.*", "mffpy.*", "pooch.*", "scipy.*", "pyprep.*", "meegkit.*", "mne_icalabel.*", "picard.*", "autoreject.*", "pywt.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

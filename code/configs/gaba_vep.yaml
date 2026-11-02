@@ -55,7 +55,10 @@ preproc:
   bad_channels: {method: pyprep_ransac, max_fraction: 0.4}
   interpolate: true
 artifacts:
-  method: none                        # about a minute of 129-channel data: too short for ICA
+  # About a minute of 129-channel data is too short for ICA. Wavelet thresholding as in HAPPE's
+  # ERP mode (erp/wavelet.py; universal threshold): pre/post r 0.64-0.77 on these files, HAPPE's
+  # own QC 0.67-0.91. Results without it (method: none) are in docs/validation_erp.md.
+  method: wavelet
 epochs:
   sets:
     stim:
