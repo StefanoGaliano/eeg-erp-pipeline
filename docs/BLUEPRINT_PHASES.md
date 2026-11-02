@@ -648,8 +648,9 @@ portfolio message ("I can do both ecosystems and prove they agree") is fully mad
   sites, EOG electrodes included, which is not the good-EEG average). Synthetic acceptance
   over 8 seeds x 2 check sizes: P100 latency within 2 ms (one sample at 500 Hz), N75 2 ms,
   N135 4 ms, P100 amplitude 0.86 µV of the Oz-Fz truth. No public pattern-reversal dataset is
-  in docs/validation_datasets.md (ds003505 VEPCON is faces and motion), so VEP is synthetic
-  only (stated in the README).
+  in docs/validation_datasets.md (ds003505 VEPCON is faces and motion). Real data since
+  2026-11-02: the GABA infant pattern-reversal VEP (Zenodo 5172962, HAPPE+ER tutorial,
+  `code/configs/gaba_vep.yaml`), infants, so a pipeline check rather than adult norms.
 - Occipital ROIs in 5.4; QA `ROI_MISSING` already guards channel availability.
 - N2pc requires lateralised contrasts (5.3) and HEOG rejection (step function) because eye
   movements toward the target fake an N2pc; `EPOCHS_REJECTED_FRACTION` report splits by HEOG.
@@ -689,7 +690,7 @@ classes or decoding code until motor restoration work starts.
 | A2 | **done 2026-11-01 (v0.4.0)**: app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | **done 2026-11-02**: MATLAB ingestion parity (BrainVision, BDF, SET), `matlab/+eegunify`, `tests/integration/test_matlab_parity.py` | v0.1.0 | §11 tolerances |
 | M2 | **done 2026-11-02 (v0.5.0)**: MATLAB ERP-lite N170 parity (`erp_lite` recipe, `matlab/+eegunify/erp_lite.m`, `tests/integration/test_matlab_erp_lite.py`) → **v0.5.0** | M-E5, M1 | §11 tolerances |
-| VEP | **done 2026-11-02**: component-level reference (`erp/references.py`), synthetic pattern-reversal VEP (`make_vep_recording`), `tests/unit/erp/test_vep.py`; no public pattern-reversal dataset in the catalog, so synthetic only | M-E4 | P100 latency recovered ±2 ms on synthetic |
+| VEP | **done 2026-11-02**: component-level reference (`erp/references.py`), synthetic pattern-reversal VEP (`make_vep_recording`), `tests/unit/erp/test_vep.py`; real data: GABA infant VEP (Zenodo 5172962) | M-E4 | P100 latency recovered ±2 ms on synthetic |
 
 Build steps inside each milestone follow Phase 1 discipline: schema field + code + test + docs in
 one commit; `ruff`, `mypy --strict`, `pytest -m "not realdata"` green before moving on; realdata

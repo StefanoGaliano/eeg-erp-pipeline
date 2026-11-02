@@ -1,0 +1,84 @@
+# GABA study infant pattern-reversal VEP (HAPPE+ER tutorial files; Zenodo 5172962,
+# doi:10.5281/zenodo.5172962, CC-BY-4.0; creators as on the record). Four 4-month-old and one 10-month-old
+# infants, 128-channel EGI HydroCel net (129 channels, E129 = vertex reference VREF, flat),
+# 1000 Hz, 60 Hz mains, 56-99 s each. Net Station "segmented" .raw files holding one segment
+# (read as continuous, readers/egi.py).
+# Fetch: the five .raw files from https://zenodo.org/records/5172962 into
+# sourcedata/gaba_vep/ (MD5s on the record page).
+#
+# Real-data check of the VEP pipeline, not infant norms: the ISCEV presets (adult, Oz vs Fz,
+# P100 90-130 ms) are used as they are; infant latencies are expected to be later and flagged by
+# VEP_LATENCY_ATYPICAL. Electrodes: Oz = E75 (nearest HydroCel-129 site to Oz in MNE's
+# templates, 20 mm; next 35 mm); Fz = E11 (HAPPE's GSN HydroCel 128 10-20 table,
+# files/acquisition_layout_information/happe_netdata_lib.mat; E5/E12 are nearer in MNE's
+# templates, whose alignment is approximate). Channels keep their E names so the GSN montage
+# applies; the components point at them through overrides.
+schema_version: 1
+dataset:
+  name: GABA infant pattern-reversal VEP (HAPPE+ER tutorial)
+  bids_root: rawdata
+  source_root: sourcedata/gaba_vep
+  task: vep
+  authors: [Monachino AD, Lopez KL, Underwood E, Tao A, Nelson C, Berde C, Cornelissen L,
+            Hensch T, Gabard-Durnam L]
+  license: CC-BY-4.0
+recordings:
+  pattern: "{subject}.raw"
+  subjects: [a, b, c, d, e]
+format:
+  name: egi
+reference:
+  online: Cz (E129, VREF)
+  scheme: average                     # the ISCEV components re-reference to E11 (Fz) themselves
+channels:
+  rename: {E129: Cz}                  # VREF; the GSN-HydroCel-129 montage calls it Cz
+montage:
+  source: standard
+  standard_name: GSN-HydroCel-129
+events:
+  # Event tracks: vep+ = pattern reversal (HAPPE "Task Onset Tags: vep+"); TRSP, bgin, resp,
+  # VEPs/VEPe (block start/end) are Net Station housekeeping, kept as their codes.
+  mapping:
+    "vep+": stimulus/reversal
+  unmapped: keep_as_code
+  # HAPPE tutorial settings (Tutorial.docx on the record): "Task Offset: 19 milliseconds".
+  onset_shift_ms:
+    "stimulus/*": 19
+
+# --- ERP phases ------------------------------------------------------------------------------
+preproc:
+  line_noise: {method: notch, freqs: [60, 120, 180]}
+  highpass_hz: 0.3                    # HAPPE tutorial: 0.3-35 Hz
+  lowpass_hz: 35
+  filter: {method: fir, phase: zero}
+  # pyprep RANSAC flags 12-36 % of the 129 channels in these infants (HAPPE kept 67-83 % of its
+  # 42 selected channels); a 40 % limit keeps every subject, the fraction stays in QA.
+  bad_channels: {method: pyprep_ransac, max_fraction: 0.4}
+  interpolate: true
+artifacts:
+  method: none                        # about a minute of 129-channel data: too short for ICA
+epochs:
+  sets:
+    stim:
+      lock: stimulus/reversal
+      tmin_ms: -100                   # HAPPE tutorial: -100..450 ms, baseline -100..0
+      tmax_ms: 450
+      baseline_ms: [-100, 0]
+  # Rejection on the occipital channels the VEP is measured on: HAPPE's tutorial channels
+  # (O1, O2, E71, E75, E76; O1 = E70, O2 = E83 in HAPPE's HydroCel table) and its amplitude
+  # criterion (-200..200 µV), as one ERPLAB pop_artextval rule. Testing all >100 channels of
+  # uncorrected infant data rejected 58-98 % of the epochs.
+  reject:
+    method: rules
+    rules:
+      - {test: extval, channels: [E70, E83, E71, E75, E76], min_uv: -200, max_uv: 200}
+    min_trials_per_condition: 20
+conditions:
+  reversal: [stimulus/reversal]
+components:
+  preset: iscev
+  use: [vep_n75, vep_p100, vep_n135]
+  overrides:
+    vep_n75: {rois: {primary: [E75]}, reference: E11}
+    vep_p100: {rois: {primary: [E75]}, reference: E11}
+    vep_n135: {rois: {primary: [E75]}, reference: E11}

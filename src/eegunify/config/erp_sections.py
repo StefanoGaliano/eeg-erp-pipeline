@@ -70,6 +70,9 @@ class BadChannelsSpec(_Strict):
     1 Hz high-passed copy (pyprep needs electrode positions)."""
     random_state: int = 97
     """Seed for pyprep RANSAC; part of the cache key."""
+    max_fraction: float = Field(default=0.25, gt=0, le=1)
+    """Bad EEG fraction above which ``PREPROC_BADS_FRACTION`` fails and the subject stops at
+    preproc (warning above 10 %). Raise it only with a reason (noisy infant high-density data)."""
     extra: list[str] = Field(default_factory=list)
     """More bad channels for the ERP stages only (rawdata is not changed), usually per subject
     in ``overrides`` (e.g. the channels ERP CORE interpolated)."""
@@ -312,6 +315,9 @@ class RejectSpec(_Strict):
     """Step-function window step."""
     flat_uv: float | None = Field(default=None, gt=0)
     """Reject epochs whose peak-to-peak on any EEG channel is below this."""
+    max_rejected_fraction: float = Field(default=0.5, gt=0, le=1)
+    """Rejected-epoch fraction above which ``EPOCHS_REJECTED_FRACTION`` fails (warning above
+    25 %). ``min_trials_per_condition`` still applies."""
     min_trials_per_condition: int = Field(default=30, ge=1)
     """Fewer kept trials fails ``EPOCHS_MIN_TRIALS`` and excludes the subject from group."""
     random_state: int = 97

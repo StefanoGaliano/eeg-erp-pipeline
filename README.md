@@ -197,7 +197,8 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   ERP-lite N170 chain (M2) natively in MATLAB, matching Python (table above).
 - **VEP presets (done):** ISCEV pattern-reversal P100/N75/N135 at Oz, measured against Fz
   whatever the dataset's reference (component-level reference). Validated on synthetic data
-  only (P100 latency within 2 ms): no public pattern-reversal dataset has been added yet.
+  (P100 latency within 2 ms) and run on five infants of the GABA pattern-reversal VEP
+  (Zenodo 5172962, `code/configs/gaba_vep.yaml`); results in docs/validation_erp.md.
 - **Next:** optionally the 40-subject N170 (M-E6b).
 
 ## Repository layout

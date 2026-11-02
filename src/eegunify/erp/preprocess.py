@@ -337,7 +337,7 @@ def preprocess(
     steps["filter"] = apply_filter(raw, pre)
     bads = detect_bads(raw, pre.bad_channels)
     n_eeg = len(mne.pick_types(raw.info, eeg=True, exclude=[]))
-    checks = [qa.bads_fraction_check(sorted(bads), n_eeg)]
+    checks = [qa.bads_fraction_check(sorted(bads), n_eeg, pre.bad_channels.max_fraction)]
     result = PreprocResult(raw, bads, [], steps, checks)
     if pre.line_noise.method != "none" or line_freq:
         checks.insert(0, qa.line_noise_check(raw, line_freq))

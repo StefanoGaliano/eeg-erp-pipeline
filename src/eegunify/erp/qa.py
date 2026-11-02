@@ -9,7 +9,8 @@ the group stage.
 ID                           Stage   Rule
 ===========================  ======  ============================================================
 PREPROC_LINE_NOISE_RESIDUAL  preproc warn if the line peak is > 10 dB above its neighbours
-PREPROC_BADS_FRACTION        preproc warn > 10 %, fail > 25 % of EEG channels bad
+PREPROC_BADS_FRACTION        preproc warn > 10 %, fail > 25 % of EEG channels bad (the fail
+                                     limit is ``preproc.bad_channels.max_fraction``)
 PREPROC_ROI_INTERPOLATED     preproc warn if a primary ROI channel of a used component was
                                      interpolated
 REREF_REQUIRED               preproc fail: reference-free recording with ``scheme: none``
@@ -19,7 +20,8 @@ ICA_EXCLUDED_COUNT           ica     warn if 0 excluded while an EOG channel is 
 ICA_BLINK_RESIDUAL           ica     warn if |VEOG-Fp1 correlation| after cleaning is > 0.3
                                      (1 Hz high-passed copy)
 ICA_BRAIN_REMOVED            ica     warn if an excluded component has ICLabel brain prob > 0.5
-EPOCHS_REJECTED_FRACTION     epochs  warn > 25 %, fail > 50 % of all epochs rejected
+EPOCHS_REJECTED_FRACTION     epochs  warn > 25 %, fail > 50 % of all epochs rejected (the fail
+                                     limit is ``epochs.reject.max_rejected_fraction``)
 EPOCHS_MIN_TRIALS            epochs  fail if a condition used by a component (or, with no
                                      components, any condition present in a set) has fewer
                                      kept epochs than ``min_trials_per_condition``
@@ -118,16 +120,18 @@ def line_noise_check(raw: mne.io.BaseRaw, line_freq: float | None) -> QACheck:
     )
 
 
-def bads_fraction_check(bads: Sequence[str], n_eeg: int) -> QACheck:
+def bads_fraction_check(bads: Sequence[str], n_eeg: int, fail_above: float = BADS_FAIL) -> QACheck:
+    """``fail_above``: ``preproc.bad_channels.max_fraction``."""
     frac = len(bads) / n_eeg if n_eeg else 0.0
-    level: Level = "fail" if frac > BADS_FAIL else "warn" if frac > BADS_WARN else "pass"
+    warn_above = min(BADS_WARN, fail_above)
+    level: Level = "fail" if frac > fail_above else "warn" if frac > warn_above else "pass"
     names = ", ".join(bads) if bads else "none"
     return QACheck(
         "PREPROC_BADS_FRACTION",
         level,
         f"{len(bads)}/{n_eeg} EEG channels bad ({100 * frac:.0f} %): {names}",
         round(frac, 4),
-        [BADS_WARN, BADS_FAIL],
+        [warn_above, fail_above],
     )
 
 
@@ -223,16 +227,20 @@ def ica_checks(raw: mne.io.BaseRaw, decision: Decision) -> list[QACheck]:
 # --- epochs ----------------------------------------------------------------------------------
 
 
-def rejected_fraction_check(n_rejected: int, n_total: int, by_set: dict[str, str]) -> QACheck:
+def rejected_fraction_check(
+    n_rejected: int, n_total: int, by_set: dict[str, str], fail_above: float = REJECTED_FAIL
+) -> QACheck:
+    """``fail_above``: ``epochs.reject.max_rejected_fraction``."""
     frac = n_rejected / n_total if n_total else 0.0
-    level: Level = "fail" if frac > REJECTED_FAIL else "warn" if frac > REJECTED_WARN else "pass"
+    warn_above = min(REJECTED_WARN, fail_above)
+    level: Level = "fail" if frac > fail_above else "warn" if frac > warn_above else "pass"
     detail = "; ".join(f"{k}: {v}" for k, v in sorted(by_set.items()))
     return QACheck(
         "EPOCHS_REJECTED_FRACTION",
         level,
         f"{n_rejected}/{n_total} epochs rejected ({100 * frac:.0f} %) [{detail}]",
         round(frac, 4),
-        [REJECTED_WARN, REJECTED_FAIL],
+        [warn_above, fail_above],
     )
 
 

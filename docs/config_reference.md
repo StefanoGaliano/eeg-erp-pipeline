@@ -77,6 +77,7 @@ How bad channels are found before interpolation.
 |---|---|---|---|
 | `method` | `config_only` \| `pyprep_ransac` \| `pyprep_full` \| `lof` | `"config_only"` | ``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a 1 Hz high-passed copy (pyprep needs electrode positions). |
 | `random_state` | integer | `97` | Seed for pyprep RANSAC; part of the cache key. |
+| `max_fraction` | number | `0.25` | Bad EEG fraction above which ``PREPROC_BADS_FRACTION`` fails and the subject stops at preproc (warning above 10 %). Raise it only with a reason (noisy infant high-density data). |
 | `extra` | list[string] | `[]` | More bad channels for the ERP stages only (rawdata is not changed), usually per subject in ``overrides`` (e.g. the channels ERP CORE interpolated). |
 
 ## `BehaviorSection`
@@ -398,6 +399,7 @@ Epoch rejection.
 | `step_window_ms` | number | `200.0` | Step-function window: second-half mean minus first-half mean within it. |
 | `step_step_ms` | number | `50.0` | Step-function window step. |
 | `flat_uv` | number \| null | `null` | Reject epochs whose peak-to-peak on any EEG channel is below this. |
+| `max_rejected_fraction` | number | `0.5` | Rejected-epoch fraction above which ``EPOCHS_REJECTED_FRACTION`` fails (warning above 25 %). ``min_trials_per_condition`` still applies. |
 | `min_trials_per_condition` | integer | `30` | Fewer kept trials fails ``EPOCHS_MIN_TRIALS`` and excludes the subject from group. |
 | `random_state` | integer | `97` | Seed for autoreject; part of the cache key. |
 

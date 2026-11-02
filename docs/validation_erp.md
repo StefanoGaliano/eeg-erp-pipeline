@@ -312,3 +312,28 @@ the only comparison value that moved is P3 sub-019, default recipe, from −0.62
 (−1.34); every other comparison stays within tolerance. The HEOG
 step rule compares half-window means, so a DC offset cancels; a 0.1 Hz drift is negligible
 over 200 ms.
+
+## VEP on real data: GABA infant pattern-reversal VEP (2026-11-02)
+
+`code/configs/gaba_vep.yaml`: five infants (four 4-month-old, one 10-month-old) from the HAPPE+ER
+tutorial files (Zenodo 5172962, CC-BY-4.0), EGI HydroCel 129 channels at 1000 Hz. ISCEV presets
+unchanged (adult window P100 90-130 ms), measured at E75 (Oz) against E11 (Fz, HAPPE's HydroCel
+table) on re-referenced copies of average-referenced data (`ERP_REFERENCE_CHANGED`). Notch 60/120/180
+Hz, FIR 0.3-35 Hz, pyprep RANSAC bads (limit raised to 40 %), interpolation, no ICA, epochs
+-100..450 ms, one `pop_artextval` rule (-200..200 µV) on HAPPE's tutorial channels E70, E83,
+E71, E75, E76.
+
+| Subject | Bad channels | Epochs kept | N75 ms | P100 ms | P100 µV | N135 ms | Notes |
+|---|---|---|---|---|---|---|---|
+| a | 32 % | 87/100 | 61 | 129 | 3.3 | 151 | positive peak at about 132 ms, outside the window: 129 is the window edge |
+| b | 17 % | 98/100 | 76 | 108 | 11.6 | 152 | clear N75/P100 |
+| c | 17 % | 94/115 | 76 | 106 | 23.5 | 160 | `MEASURE_NO_LOCAL_PEAK` warn |
+| d | 36 % | 79/102 | 88 | 130 | 6.5 | 139 | E75 itself interpolated (`PREPROC_ROI_INTERPOLATED`); P100 at the window edge |
+| e | 12 % | 93/100 | 69 | 107 | 15.9 | 153 | |
+
+This checks the VEP chain on real data (reader, Fz component reference, ROI rejection), not
+infant norms: the adult ISCEV window cuts the later infant positivity in a and d
+(`VEP_LATENCY_ATYPICAL` flags both). Infant-specific windows would need a published source.
+Found on this dataset and fixed: single-segment EGI `.raw` files, an EGI event track named
+`resp` typed as a respiration channel, the temporary-file path kept in `raw.filenames`, and text
+event codes (`vep+`) in the epochs log.

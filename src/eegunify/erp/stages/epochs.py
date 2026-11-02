@@ -125,7 +125,9 @@ class EpochsStage(Stage):
             sub = res.epochs[ids] if ids and counts[key] else None
             offsets[key] = baseline_offset_uv(sub, window) if sub is not None else float("nan")
         checks = [
-            qa.rejected_fraction_check(n_rej, n_total, by_set),
+            qa.rejected_fraction_check(
+                n_rej, n_total, by_set, cfg.epochs.reject.max_rejected_fraction
+            ),
             qa.min_trials_check(counts, cfg.epochs.reject.min_trials_per_condition),
             qa.baseline_drift_check(offsets),
         ]
