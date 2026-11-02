@@ -225,6 +225,10 @@ def detect_bads(raw: mne.io.BaseRaw, spec: BadChannelsSpec) -> dict[str, str]:
         nc = NoisyChannels(copy, do_detrend=False, random_state=spec.random_state)
         if spec.method == "pyprep_ransac":
             nc.find_bad_by_ransac()
+        elif spec.method == "pyprep_robust":
+            nc.find_bad_by_nan_flat()
+            nc.find_bad_by_deviation()
+            nc.find_bad_by_hfnoise()
         else:
             nc.find_all_bads(ransac=True)
     for kind, chans in nc.get_bads(as_dict=True).items():

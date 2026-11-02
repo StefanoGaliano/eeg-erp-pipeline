@@ -13,7 +13,12 @@ import pytest
 from pydantic import ValidationError
 
 from eegunify.channels.montage import _standard
-from eegunify.config.erp_sections import ICLABEL_CLASSES, ArtifactsSection, IcaSpec
+from eegunify.config.erp_sections import (
+    ICLABEL_CLASSES,
+    ArtifactsSection,
+    IcaFitExcludeSpec,
+    IcaSpec,
+)
 from eegunify.config.loader import parse_config
 from eegunify.config.schema import Config, ReferenceSection
 from eegunify.erp import paths, qa
@@ -21,8 +26,10 @@ from eegunify.erp.ica import (
     IcaError,
     add_bipolar_eog,
     apply_ica,
+    break_spans,
     decide,
     fit_copy,
+    ptp_spans,
     run_ica,
 )
 from eegunify.erp.preprocess import PreprocError
@@ -235,3 +242,65 @@ def test_bipolar_eog_derived_in_preproc_without_ica(blink_project: Make) -> None
     )
     raw = mne.io.read_raw_fif(pre, verbose=False)
     assert raw.get_channel_types(picks=["HEOGb"]) == ["eog"]
+
+
+# --- data left out of the fit (ERP CORE Script #2) ---------------------------------------------
+
+
+def _with_events(truth: ErpTruth, data_uV: np.ndarray | None = None) -> mne.io.RawArray:
+    raw = _raw(truth, data_uV)
+    on = truth.samples / truth.sfreq
+    raw.set_annotations(mne.Annotations(on, 0.0, [f"stimulus/{c}" for c in truth.conditions]))
+    return raw
+
+
+def test_break_and_ptp_spans() -> None:
+    sf = 100.0
+    raw = mne.io.RawArray(np.zeros((2, 6000)), mne.create_info(2, sf, "eeg"), verbose=False)
+    ev = [5.0, 6.0, 7.0, 20.0, 21.0, 50.0]  # gaps 7->20 and 21->50 are breaks
+    raw.set_annotations(mne.Annotations([*ev, 30.0], 0.0, ["stimulus/a"] * 6 + ["response/x"]))
+    spec = IcaFitExcludeSpec(ptp_uv=None)
+    assert break_spans(raw, spec) == [(0.0, 3.0), (52.0, raw.times[-1]), (9.0, 18.0), (23.0, 48.0)]
+    assert break_spans(raw, spec.model_copy(update={"break_selector": None})) == []
+    raw._data[1, 1000:1010] = 1e-3  # 1000 µV for 0.1 s at 10 s
+    spans = ptp_spans(raw, IcaFitExcludeSpec(break_selector=None))
+    assert len(spans) == 1 and spans[0][0] <= 10.0 and spans[0][1] >= 10.1
+    assert spans[0][1] - spans[0][0] <= 1.1  # window 0.5 s on each side at most
+    with pytest.raises(IcaError, match="matches no event"):
+        break_spans(raw, IcaFitExcludeSpec(break_selector="nothing"))
+
+
+def test_erpcore_n170_sub035_burst_in_break_left_out_of_fit(blink_truth: ErpTruth) -> None:
+    """sub-035: a ~35 mV whole-head burst in a break took 93 % of the PCA variance, ICA kept 2
+    components and the blinks stayed. Here: the events of 20-40 s are removed (a break) and a
+    30 mV burst with a broad random topography is put at 25-35 s."""
+    t = blink_truth
+    keep = (t.samples < 20 * t.sfreq) | (t.samples > 40 * t.sfreq)
+    truth = ErpTruth(
+        **{
+            **t.__dict__,
+            "samples": t.samples[keep],
+            "conditions": [c for c, k in zip(t.conditions, keep, strict=True) if k],
+        }
+    )
+    data = t.data_uV.copy()
+    rng = np.random.default_rng(35)
+    a, b = int(25 * t.sfreq), int(35 * t.sfreq)
+    n_eeg = t.types.count("eeg")
+    slow = np.cumsum(rng.standard_normal(b - a))
+    slow -= slow.mean()
+    data[:n_eeg, a:b] += 30000 * rng.standard_normal((n_eeg, 1)) * slow / np.abs(slow).max()
+    spec = ArtifactsSection(ica=IcaSpec(fit_exclude=IcaFitExcludeSpec()))
+    raw = _with_events(truth, data)
+    raw.set_eeg_reference("average", projection=False, verbose=False)
+    res = run_ica(raw, spec, AVG)
+    fx = res.steps["fit_exclude"]
+    assert fx["breaks_s"] > 10 and 0 < fx["excluded_fraction"] < 0.5
+    assert qa.fit_excluded_check(fx).level == "pass"
+    assert t.blink_uV is not None
+    before, after = _part(t, t.blink_uV, res)
+    assert (after**2).sum() / (before**2).sum() < 0.10
+    raw = _with_events(truth, data)
+    raw.set_eeg_reference("average", projection=False, verbose=False)
+    with pytest.raises(RuntimeError, match="One PCA component"):  # without it: no usable fit
+        run_ica(raw, ArtifactsSection(), AVG)

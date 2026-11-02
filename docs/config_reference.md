@@ -76,7 +76,7 @@ How bad channels are found before interpolation.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `method` | `config_only` \| `pyprep_ransac` \| `pyprep_full` \| `lof` | `"config_only"` | ``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a 1 Hz high-passed copy (pyprep needs electrode positions). |
+| `method` | `config_only` \| `pyprep_ransac` \| `pyprep_robust` \| `pyprep_full` \| `lof` | `"config_only"` | ``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a 1 Hz high-passed copy (pyprep needs electrode positions). ``pyprep_robust`` runs pyprep's NaN/flat, deviation and high-frequency-noise tests only (no RANSAC, correlation or PSD): on the 40 ERP CORE N170 subjects it matched more of ERP CORE's hand-picked bad channels than RANSAC and flagged fewer others (docs/validation_erp.md). |
 | `random_state` | integer | `97` | Seed for pyprep RANSAC; part of the cache key. |
 | `max_variance_ratio` | number \| null | `100.0` | With an automatic method, also flag a channel whose plain (non-robust) variance on the 1 Hz high-passed copy exceeds this multiple of the median channel's. Catches intermittent huge artifacts that RANSAC and pyprep's robust tests miss because the channel looks normal most of the time (ERP CORE N170 sub-029: Oz, about 10^6 x the median). ``null`` disables it. |
 | `max_fraction` | number | `0.25` | Bad EEG fraction above which ``PREPROC_BADS_FRACTION`` fails and the subject stops at preproc (warning above 10 %). Raise it only with a reason (noisy infant high-density data). |
@@ -287,6 +287,19 @@ Automatic component exclusion by ICLabel class.
 | `exclude_classes` | list[string] | `["eye blink"]` | ICLabel classes to remove, spelled as mne-icalabel spells them (``eye blink``, ...). |
 | `threshold` | number | `0.8` | Minimum class probability for exclusion. |
 
+## `IcaFitExcludeSpec`
+
+Data left out of the ICA fit only (ERP CORE N170 Script #2, ``Script2_ICA_Prep.m``): the solution is still applied to the whole recording.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `break_selector` | string \| null | `"stimulus/*"` | Events that mark the trial blocks; a gap of ``break_gap_ms`` or more between two of them (and the stretches before the first and after the last) is a break. ``null`` keeps breaks (ERP CORE: its stimulus codes, ``pop_erplabDeleteTimeSegments``). |
+| `break_gap_ms` | number | `2000.0` | Shortest gap between block events counted as a break (ERP CORE: 2000 ms). |
+| `break_buffer_ms` | number | `2000.0` | Data kept after the last event before a break and before the first one after it (ERP CORE: 2000 ms on both sides). |
+| `ptp_uv` | number \| null | `400.0` | Moving-window peak-to-peak threshold on the EEG channels; windows above it on any channel are left out (ERPLAB ``pop_continuousartdet``; ERP CORE's usual value 400 µV, set per subject in ``ICA_Prep_Values_N170.xlsx``). ``null`` turns it off. |
+| `ptp_window_ms` | number | `500.0` | Window length of the peak-to-peak test (ERP CORE: mostly 500 ms). |
+| `ptp_step_ms` | number | `50.0` | Step between windows (ERP CORE: 50 ms). |
+
 ## `IcaSpec`
 
 ICA fit, classification and manual choices.
@@ -302,6 +315,7 @@ ICA fit, classification and manual choices.
 | `eog_correlation` | EogCorrelationSpec | see section | EOG-correlation rule. |
 | `exclude` | list[integer] | `[]` | Component indices to remove by hand (usually per subject, in ``overrides``). |
 | `include` | list[integer] | `[]` | Component indices to keep whatever the automatic rules say. |
+| `fit_exclude` | IcaFitExcludeSpec \| null | `null` | Breaks and gross-artifact stretches left out of the fit (``null``: fit on everything). One huge burst otherwise takes most of the PCA variance and ICA keeps too few components to isolate blinks (ERP CORE N170 sub-035). |
 
 ## `LineNoiseSpec`
 

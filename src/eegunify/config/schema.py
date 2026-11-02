@@ -27,6 +27,7 @@ from eegunify.config.erp_sections import (
     ErpSection,
     FilterSpec,
     GroupSection,
+    IcaFitExcludeSpec,
     IcaSpec,
     IcLabelSpec,
     LineNoiseSpec,
@@ -42,7 +43,7 @@ from eegunify.config.erp_sections import (
 __all__ = ["AsrSpec", "BadChannelsSpec", "ClusterSpec", "EogCorrelationSpec", "EpochSet"]
 __all__ += ["FilterSpec", "IcLabelSpec", "IcaSpec", "LineNoiseSpec", "RejectSpec", "ResponseRule"]
 __all__ += ["WaveletSpec"]
-__all__ += ["PrecomputedIcaSpec", "RejectRule"]
+__all__ += ["IcaFitExcludeSpec", "PrecomputedIcaSpec", "RejectRule"]
 
 FormatName = Literal[
     "auto",

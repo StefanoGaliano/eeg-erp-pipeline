@@ -136,7 +136,7 @@ def _diff_rows(table: pd.DataFrame) -> pd.DataFrame:
 
 def test_every_subject_is_listed(default_run: tuple[pd.DataFrame, pd.DataFrame]) -> None:
     diff = _diff_rows(default_run[0])
-    assert list(diff["subject"]) == [*SUBJECTS, "mean"]
+    assert list(diff["subject"]) == [*SUBJECTS, "mean", "d_z"]
     assert diff.set_index("subject").loc["016", "status"] == "excluded_by_erpcore"
 
 

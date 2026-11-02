@@ -375,19 +375,55 @@ excluded (001, 005, 016) are reported, not compared.
 
 | | default recipe | erpcore-exact |
 |---|---|---|
-| subjects reaching the group stage | 32 | 39 |
-| compared subjects (kept by both) | 32 | 37 |
-| face − car mean, ours vs ERP CORE | −3.32 vs −3.46 µV | −3.31 vs −3.37 µV |
-| d_z, ours vs ERP CORE | −1.21 vs −1.29 | −1.22 vs −1.24 |
-| subjects within ±0.5 µV | 16/32 | 34/37 |
-| paired t, p (our group stage) | t(31) = −6.87, p = 1.1e-7 | t(38) = −7.85, p = 1.8e-9 |
-| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.2 / −4.3 ms | −2.2 / −4.1 ms |
+| subjects reaching the group stage | 36 | 39 |
+| compared subjects (kept by both) | 35 | 37 |
+| face − car mean, ours vs ERP CORE | −3.45 vs −3.49 µV | −3.31 vs −3.37 µV |
+| d_z, ours vs ERP CORE | −1.29 vs −1.32 | −1.22 vs −1.24 |
+| subjects within ±0.5 µV | 20/35 | 34/37 |
+| paired t, p (our group stage) | t(35) = −7.72, p = 4.6e-9 | t(38) = −7.85, p = 1.8e-9 |
+| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.2 / −4.1 ms | −2.2 / −4.1 ms |
 
-Default recipe, subjects failing a stage: 001, 005, 010, 023, 030, 033, 035 (epoch rejection:
-too many rejected epochs or fewer than 30 kept per condition), 016 (2 face epochs left; ERP CORE
-excluded it too). These
-are the cost of automatic choices; ERP CORE chose bad channels and rejection thresholds by hand
-per subject. With their choices (`erpcore-exact`) only 016 drops out.
+Default recipe (after 0.7.1), subjects failing a stage: 001, 003, 033 (epoch rejection: too
+many rejected epochs or fewer than 30 kept per condition) and 016 (2 face epochs left). ERP CORE
+excluded 001 and 016 too; 005, which ERP CORE excluded, now passes and is reported, not
+compared. 003 and 033 fail on channels ERP CORE interpolated by hand that no automatic test
+flags (003: Fp1; 033: F7, F8, FC4). With ERP CORE's choices (`erpcore-exact`) only 016 drops out.
+
+In 0.7.1 the default recipe lost eight subjects (001, 005, 010, 016, 023, 030, 033, 035). The
+per-epoch logs gave three causes, each fixed after 0.7.1 by following ERP CORE's own files:
+
+1. **ICA fitted on the breaks.** Sub-035 has a ~35 mV whole-head burst in a 66 s break between
+   blocks; it took 93 % of the PCA variance, ICA kept 2 components, no blink component was
+   found (VEOG-Fp1 r = 0.72 after cleaning) and the blinks failed the peak-to-peak test.
+   ERP CORE's `Script2_ICA_Prep.m` fits ICA without the breaks (>= 2 s between stimulus codes,
+   2 s buffers) and without stretches over a peak-to-peak threshold (`ICA_Prep_Values_N170.xlsx`:
+   mostly 400 µV, 500 ms windows, 50 ms step). Now `artifacts.ica.fit_exclude` (on in both N170
+   configs): the solution is still applied to the whole recording; QA `ICA_FIT_EXCLUDED`.
+   Regression test: `test_erpcore_n170_sub035_burst_in_break_left_out_of_fit`.
+2. **HEOG step rule stricter than ERP CORE's.** The blueprint default ran a 32 µV step test on
+   the HEOG over the whole epoch (187 rejections in 010, 152 in 023; ERP CORE rejected 30 and 39
+   epochs in all). ERP CORE uses 32 µV on the uncorrected HEOG in −50..350 ms only, plus 64 µV
+   on the ICA-corrected HEOG over the epoch. The default recipe has no corrected HEOG (ICA does
+   not clean the EOG channels), and the 64 µV rule on the uncorrected HEOG still rejected 127
+   epochs of 010, so the N170 configs use the first rule only (`epochs.reject.method: rules`).
+3. **Bad channels.** Against ERP CORE's 27 hand-picked bad channels (40 subjects), pyprep's
+   tests on our data:
+
+   | pyprep test | matches ERP CORE | flagged, not ERP CORE's | missed |
+   |---|---|---|---|
+   | RANSAC (0.7.x default) | 0 | 8 | 27 |
+   | deviation | 5 | 0 | 22 |
+   | high-frequency noise | 5 | 4 | 22 |
+   | correlation | 6 | 59 | 21 |
+   | full PREP | 15 | 75 | 12 |
+
+   RANSAC's extra flags were mostly P9/P10/PO3, next to the N170 sites. The full config now uses
+   `bad_channels.method: pyprep_robust` (NaN/flat + deviation + HF noise, plus the gross-variance
+   check). It catches 030's Fp1/Fp2 and 033's C5/C6; 003's Fp1 and 001's F4 pass every test.
+
+Recovered after 0.7.1: 005, 010, 023, 030, 035. Lost: 003, which passed in 0.7.1 only because
+ICA, fitted on everything, happened to absorb its bad Fp1; with the break and peak-to-peak
+stretches left out (ERP CORE's 600 µV for 003 as well as 400 µV) Fp1 fails the peak-to-peak test.
 
 Subject 029 failed the ica stage in v0.7.0 ("one PCA component captures 99.996 % of the
 variance"). Cause: Oz is normal most of the time (median amplitude 0.83 x the other channels)
@@ -397,8 +433,8 @@ only when it is bad in more than 40 % of its windows, and pyprep's deviation tes
 Its plain variance on the 1 Hz high-passed copy is about 10^6 x the median channel's (next:
 Fp2, 11 x, blinks). Fix: `preproc.bad_channels.max_variance_ratio` (default 100) adds any
 channel above that ratio to the automatic methods' bads (reason `gross variance`); on the 40
-subjects it flags only 029's Oz, which ERP CORE also interpolated. 029 now gives −3.35 µV vs
-ERP CORE's −2.93 (−0.41, within tolerance). Regression test:
+subjects it flags only 029's Oz, which ERP CORE also interpolated. 029 then gave −3.35 µV vs
+ERP CORE's −2.93 (−0.41, within tolerance; −3.31 with the recipe after 0.7.1). Regression test:
 `test_erpcore_n170_sub029_gross_variance_channel_flagged`.
 
 `erpcore-exact` deviations above 0.5 µV: 004 (+0.52), 008 (+0.92), 029 (−0.59). The parent waves

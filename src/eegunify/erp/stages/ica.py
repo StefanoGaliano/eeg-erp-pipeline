@@ -102,6 +102,8 @@ class IcaStage(Stage):
             bads = list(raw.info["bads"])
             res.steps["interpolated_after_ica"] = interpolate(raw, bads, True)
         checks = qa.ica_checks(res.raw, res.decision)
+        if "fit_exclude" in res.steps:
+            checks.append(qa.fit_excluded_check(res.steps["fit_exclude"]))
         failed = qa.worst(checks) == "fail"
         outputs = []
         if res.ica is not None:

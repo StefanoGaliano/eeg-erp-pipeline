@@ -65,9 +65,14 @@ class FilterSpec(_Strict):
 class BadChannelsSpec(_Strict):
     """How bad channels are found before interpolation."""
 
-    method: Literal["config_only", "pyprep_ransac", "pyprep_full", "lof"] = "config_only"
+    method: Literal["config_only", "pyprep_ransac", "pyprep_robust", "pyprep_full", "lof"] = (
+        "config_only"
+    )
     """``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a
-    1 Hz high-passed copy (pyprep needs electrode positions)."""
+    1 Hz high-passed copy (pyprep needs electrode positions). ``pyprep_robust`` runs pyprep's
+    NaN/flat, deviation and high-frequency-noise tests only (no RANSAC, correlation or PSD):
+    on the 40 ERP CORE N170 subjects it matched more of ERP CORE's hand-picked bad channels
+    than RANSAC and flagged fewer others (docs/validation_erp.md)."""
     random_state: int = 97
     """Seed for pyprep RANSAC; part of the cache key."""
     max_variance_ratio: float | None = Field(default=100.0, gt=1)
@@ -141,6 +146,29 @@ class EogCorrelationSpec(_Strict):
     """z-score above which a component counts as ocular."""
 
 
+class IcaFitExcludeSpec(_Strict):
+    """Data left out of the ICA fit only (ERP CORE N170 Script #2, ``Script2_ICA_Prep.m``):
+    the solution is still applied to the whole recording."""
+
+    break_selector: str | None = "stimulus/*"
+    """Events that mark the trial blocks; a gap of ``break_gap_ms`` or more between two of
+    them (and the stretches before the first and after the last) is a break. ``null`` keeps
+    breaks (ERP CORE: its stimulus codes, ``pop_erplabDeleteTimeSegments``)."""
+    break_gap_ms: float = Field(default=2000.0, gt=0)
+    """Shortest gap between block events counted as a break (ERP CORE: 2000 ms)."""
+    break_buffer_ms: float = Field(default=2000.0, ge=0)
+    """Data kept after the last event before a break and before the first one after it
+    (ERP CORE: 2000 ms on both sides)."""
+    ptp_uv: float | None = Field(default=400.0, gt=0)
+    """Moving-window peak-to-peak threshold on the EEG channels; windows above it on any
+    channel are left out (ERPLAB ``pop_continuousartdet``; ERP CORE's usual value 400 µV,
+    set per subject in ``ICA_Prep_Values_N170.xlsx``). ``null`` turns it off."""
+    ptp_window_ms: float = Field(default=500.0, gt=0)
+    """Window length of the peak-to-peak test (ERP CORE: mostly 500 ms)."""
+    ptp_step_ms: float = Field(default=50.0, gt=0)
+    """Step between windows (ERP CORE: 50 ms)."""
+
+
 class IcaSpec(_Strict):
     """ICA fit, classification and manual choices."""
 
@@ -162,6 +190,10 @@ class IcaSpec(_Strict):
     """Component indices to remove by hand (usually per subject, in ``overrides``)."""
     include: list[int] = Field(default_factory=list)
     """Component indices to keep whatever the automatic rules say."""
+    fit_exclude: IcaFitExcludeSpec | None = None
+    """Breaks and gross-artifact stretches left out of the fit (``null``: fit on everything).
+    One huge burst otherwise takes most of the PCA variance and ICA keeps too few components
+    to isolate blinks (ERP CORE N170 sub-035)."""
 
 
 class AsrSpec(_Strict):

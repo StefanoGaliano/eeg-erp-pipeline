@@ -61,6 +61,12 @@ artifacts:
   # EOG vote and QA ICA_BLINK_RESIDUAL work. VEOG uses Fp2 as the upper site, which leaves Fp1
   # independent for the residual check (VEOG vs Fp1).
   eog_bipolar: {VEOG: [Fp2, VEOG_lower], HEOG: [HEOG_left, HEOG_right]}
+  ica:
+    # ERP CORE fits ICA without the breaks between blocks (>= 2 s between stimulus codes,
+    # 2 s buffers) and without stretches over 400 µV peak-to-peak (500 ms windows, 50 ms
+    # step): Script2_ICA_Prep.m and ICA_Prep_Values_N170.xlsx (OSF pfde9). A burst in a break
+    # otherwise took 93 % of the PCA variance in sub-035 and ICA kept 2 components.
+    fit_exclude: {}
 epochs:
   sets:
     stim:
@@ -74,7 +80,18 @@ epochs:
       response: {selector: "response/correct", window_ms: [200, 1000]}
   # Blueprint defaults (ERPLAB semantics). ERP CORE tuned thresholds per subject; their values
   # come from their files in M-E6a, not from memory.
-  reject: {method: thresholds, ptp_uv: 100, ptp_window_ms: 200, ptp_step_ms: 100, step_heog_uv: 32}
+  # EEG: the blueprint default (100 µV peak-to-peak, 200 ms windows, 100 ms step).
+  # HEOG: ERP CORE's step-function rule on the uncorrected HEOG during the stimulus
+  # (AR_Parameters_for_SL_HEOG_Stim_Pres_N170.xlsx, 38 of 40 subjects): 32 µV in -50..350 ms.
+  # Their second rule (64 µV over the whole epoch) runs on the ICA-corrected HEOG, which this
+  # recipe does not have (ICA does not clean the EOG channels); on the uncorrected HEOG it
+  # rejected 127 epochs of sub-010, so it is left out.
+  reject:
+    method: rules
+    rules:
+      - {test: ptp, channels: [Fp1, F3, F7, FC3, C3, C5, P3, P7, P9, PO7, PO3, O1, Oz, Pz, CPz, Fp2, Fz, F4, F8, FC4, FCz, Cz, C4, C6, P4, P8, P10, PO8, PO4, O2],
+         threshold_uv: 100, win_ms: 200, step_ms: 100}
+      - {test: step, channels: [HEOG], threshold_uv: 32, window_ms: [-50, 350], win_ms: 100, step_ms: 10}
 conditions:
   face: ["stimulus/face"]
   car: ["stimulus/car"]

@@ -152,12 +152,12 @@ def test_zapline_without_meegkit_refuses(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("method", ["pyprep_full", "pyprep_ransac"])
+@pytest.mark.parametrize("method", ["pyprep_full", "pyprep_robust", "pyprep_ransac"])
 def test_pyprep_finds_dead_and_noisy_channel(erp_truth: ErpTruth, method: str) -> None:
     raw = _raw(erp_truth)
     remove_line_noise(raw, LineNoiseSpec(method="notch"), 50.0)
     bads = detect_bads(raw, BadChannelsSpec(method=method))  # type: ignore[arg-type]
-    if method == "pyprep_full":
+    if method in ("pyprep_full", "pyprep_robust"):
         assert set(bads) == {erp_truth.dead, erp_truth.noisy}
     else:  # RANSAC alone: the noisy channel is predicted badly from its neighbours
         assert erp_truth.noisy in bads

@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+**ERP CORE N170: 36 of 40 subjects with the default recipe** (32 in 0.7.1). Causes of the
+epoch-rejection failures and the comparison with ERP CORE's bad channels in
+docs/validation_erp.md (M-E6b).
+
+- **ICA fit exclusion:** `artifacts.ica.fit_exclude` leaves breaks (>= 2 s between block events,
+  2 s buffers) and stretches over 400 µV peak-to-peak out of the ICA fit, as ERP CORE's
+  `Script2_ICA_Prep.m` does; the solution is applied to the whole recording. New QA
+  `ICA_FIT_EXCLUDED` (warn above half the recording). Fixes sub-035 (a burst in a break took
+  93 % of the PCA variance).
+- **Bad channels:** `bad_channels.method: pyprep_robust` (pyprep NaN/flat, deviation and
+  high-frequency noise; no RANSAC). Used by `erpcore_n170_full.yaml`.
+- **N170 configs:** fit exclusion on; HEOG step rule as ERP CORE's (32 µV, −50..350 ms) instead
+  of 32 µV over the whole epoch.
+- Default recipe: −3.45 vs −3.49 µV, d_z −1.29 vs −1.32, 20/35 subjects within ±0.5 µV,
+  t(35) = −7.72, p = 4.6e-9.
+- Fixed a stale realdata test (`test_every_subject_is_listed`, missing the `d_z` row since 0.7.0).
+
 ## 0.7.1 (2026-11-02)
 
 - **Bad channels:** `preproc.bad_channels.max_variance_ratio` (default 100) adds channels whose

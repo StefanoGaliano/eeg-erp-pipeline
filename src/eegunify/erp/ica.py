@@ -19,6 +19,7 @@ Pure helpers on ``mne.io.Raw``, used by the ica stage, the app and the tests:
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -26,8 +27,14 @@ import mne
 import numpy as np
 import pandas as pd
 
-from eegunify.config.erp_sections import ICLABEL_CLASSES, ArtifactsSection, IcaSpec
+from eegunify.config.erp_sections import (
+    ICLABEL_CLASSES,
+    ArtifactsSection,
+    IcaFitExcludeSpec,
+    IcaSpec,
+)
 from eegunify.config.schema import ReferenceSection
+from eegunify.erp.events import matches
 from eegunify.erp.preprocess import add_bipolar_eog, rereference
 
 __all__ = ["add_bipolar_eog"]  # moved to preprocess (derived in preproc since 0.3.0)
@@ -53,6 +60,87 @@ def run_asr(raw: mne.io.BaseRaw, cutoff: float) -> dict[str, Any]:
     asr.fit(x)
     raw._data[picks] = asr.transform(x)
     return {"cutoff": cutoff, "channels": len(picks)}
+
+
+FIT_EXCLUDE_LABEL = "BAD_ica_fit"
+
+
+def _merge(spans: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    out: list[tuple[float, float]] = []
+    for a, b in sorted(spans):
+        if out and a <= out[-1][1]:
+            out[-1] = (out[-1][0], max(out[-1][1], b))
+        else:
+            out.append((a, b))
+    return out
+
+
+def break_spans(raw: mne.io.BaseRaw, spec: IcaFitExcludeSpec) -> list[tuple[float, float]]:
+    """(start, end) seconds of the breaks: gaps >= ``break_gap_ms`` between block events,
+    shrunk by ``break_buffer_ms`` on each side, plus the stretches before the first and after
+    the last block event. Times are relative to the first sample."""
+    if spec.break_selector is None:
+        return []
+    t0 = raw.first_time
+    onsets = sorted(
+        float(a["onset"]) - t0
+        for a in raw.annotations
+        if matches(str(a["description"]), spec.break_selector)
+    )
+    if not onsets:
+        raise IcaError(
+            f"artifacts.ica.fit_exclude.break_selector {spec.break_selector!r} matches no event"
+        )
+    buf, gap = spec.break_buffer_ms / 1000, spec.break_gap_ms / 1000
+    end = raw.times[-1]
+    spans = [(0.0, onsets[0] - buf), (onsets[-1] + buf, end)]
+    spans += [(a + buf, b - buf) for a, b in itertools.pairwise(onsets) if b - a >= gap]
+    return [(a, b) for a, b in spans if b > a]
+
+
+def ptp_spans(raw: mne.io.BaseRaw, spec: IcaFitExcludeSpec) -> list[tuple[float, float]]:
+    """(start, end) seconds of the moving windows whose peak-to-peak exceeds ``ptp_uv`` on any
+    good EEG channel, merged."""
+    if spec.ptp_uv is None:
+        return []
+    x = raw.get_data(picks="eeg", exclude="bads")
+    sf = raw.info["sfreq"]
+    win = max(1, round(spec.ptp_window_ms / 1000 * sf))
+    step = max(1, round(spec.ptp_step_ms / 1000 * sf))
+    n = x.shape[1]
+    starts = np.arange(0, max(1, n - win + 1), step)
+    thr = spec.ptp_uv * 1e-6
+    spans = [
+        (s / sf, min(s + win, n) / sf)
+        for s in starts
+        if np.ptp(x[:, s : s + win], axis=1).max() > thr
+    ]
+    return _merge(spans)
+
+
+def fit_exclusion(
+    raw: mne.io.BaseRaw, spec: IcaFitExcludeSpec | None
+) -> tuple[mne.Annotations | None, dict[str, Any]]:
+    """``BAD_ica_fit`` annotations for the fit copy and a summary for the provenance."""
+    if spec is None:
+        return None, {}
+    brk, ptp = break_spans(raw, spec), ptp_spans(raw, spec)
+    spans = _merge(brk + ptp)
+    total = float(raw.times[-1])
+    excluded = sum(b - a for a, b in spans)
+    ann = mne.Annotations(
+        [raw.first_time + a for a, _ in spans],
+        [b - a for a, b in spans],
+        [FIT_EXCLUDE_LABEL] * len(spans),
+        orig_time=raw.annotations.orig_time,
+    )
+    summary = {
+        "breaks_s": round(sum(b - a for a, b in brk), 2),
+        "ptp_s": round(sum(b - a for a, b in ptp), 2),
+        "excluded_s": round(excluded, 2),
+        "excluded_fraction": round(excluded / total, 4) if total else 0.0,
+    }
+    return ann, summary
 
 
 def fit_copy(raw: mne.io.BaseRaw, spec: IcaSpec) -> mne.io.BaseRaw:
@@ -218,7 +306,11 @@ def run_ica(raw: mne.io.BaseRaw, art: ArtifactsSection, reference: ReferenceSect
     steps: dict[str, Any] = {}
     if art.asr is not None:
         steps["asr"] = run_asr(raw, art.asr.cutoff)
+    fit_ann, fit_excl = fit_exclusion(raw, spec.fit_exclude)
     fit_raw = fit_copy(raw, spec)
+    if fit_ann is not None:
+        fit_raw.set_annotations(fit_raw.annotations + fit_ann)
+        steps["fit_exclude"] = fit_excl
     ica = fit_ica(fit_raw, spec)
     probs = iclabel_probabilities(fit_raw, ica)
     eog_ch, eog_z = eog_scores(fit_raw, ica, spec.eog_correlation.channels)
