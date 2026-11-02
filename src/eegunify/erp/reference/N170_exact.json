@@ -162,6 +162,2235 @@
   ]
  },
  "subjects": {
+  "001": {
+   "interpolate": [
+    "FP2",
+    "F4",
+    "F8"
+   ],
+   "ica_weights": "1_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    2,
+    7
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 155,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 250,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 191,
+     "rejected": 49
+    },
+    "Faces - Correct": {
+     "accepted": 52,
+     "rejected": 9
+    },
+    "Cars - Correct": {
+     "accepted": 38,
+     "rejected": 15
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 49,
+     "rejected": 16
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 52,
+     "rejected": 9
+    }
+   }
+  },
+  "002": {
+   "interpolate": [],
+   "ica_weights": "2_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    3,
+    4
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 293,
+     "rejected": 21
+    },
+    "Faces - Correct": {
+     "accepted": 74,
+     "rejected": 5
+    },
+    "Cars - Correct": {
+     "accepted": 74,
+     "rejected": 5
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 71,
+     "rejected": 6
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 74,
+     "rejected": 5
+    }
+   }
+  },
+  "003": {
+   "interpolate": [
+    "FP1",
+    "P8"
+   ],
+   "ica_weights": "3_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    4
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 130,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 289,
+     "rejected": 12
+    },
+    "Faces - Correct": {
+     "accepted": 74,
+     "rejected": 4
+    },
+    "Cars - Correct": {
+     "accepted": 72,
+     "rejected": 3
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 73,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 70,
+     "rejected": 3
+    }
+   }
+  },
+  "004": {
+   "interpolate": [],
+   "ica_weights": "4_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 273,
+     "rejected": 19
+    },
+    "Faces - Correct": {
+     "accepted": 73,
+     "rejected": 5
+    },
+    "Cars - Correct": {
+     "accepted": 68,
+     "rejected": 3
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 62,
+     "rejected": 7
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 70,
+     "rejected": 4
+    }
+   }
+  },
+  "005": {
+   "interpolate": [
+    "FP2"
+   ],
+   "ica_weights": "5_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 220,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 212,
+     "rejected": 106
+    },
+    "Faces - Correct": {
+     "accepted": 64,
+     "rejected": 16
+    },
+    "Cars - Correct": {
+     "accepted": 48,
+     "rejected": 31
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 50,
+     "rejected": 29
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 50,
+     "rejected": 30
+    }
+   }
+  },
+  "006": {
+   "interpolate": [],
+   "ica_weights": "6_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 231,
+     "rejected": 7
+    },
+    "Faces - Correct": {
+     "accepted": 59,
+     "rejected": 1
+    },
+    "Cars - Correct": {
+     "accepted": 57,
+     "rejected": 2
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 56,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 59,
+     "rejected": 2
+    }
+   }
+  },
+  "007": {
+   "interpolate": [],
+   "ica_weights": "7_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    3
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 307,
+     "rejected": 0
+    },
+    "Faces - Correct": {
+     "accepted": 80,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 76,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 75,
+     "rejected": 0
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 76,
+     "rejected": 0
+    }
+   }
+  },
+  "008": {
+   "interpolate": [],
+   "ica_weights": "8_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    6
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 301,
+     "rejected": 3
+    },
+    "Faces - Correct": {
+     "accepted": 79,
+     "rejected": 1
+    },
+    "Cars - Correct": {
+     "accepted": 69,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 76,
+     "rejected": 0
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 77,
+     "rejected": 2
+    }
+   }
+  },
+  "009": {
+   "interpolate": [],
+   "ica_weights": "9_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    6,
+    8
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 305,
+     "rejected": 9
+    },
+    "Faces - Correct": {
+     "accepted": 75,
+     "rejected": 3
+    },
+    "Cars - Correct": {
+     "accepted": 76,
+     "rejected": 2
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 74,
+     "rejected": 4
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 80,
+     "rejected": 0
+    }
+   }
+  },
+  "010": {
+   "interpolate": [],
+   "ica_weights": "10_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 219,
+     "rejected": 30
+    },
+    "Faces - Correct": {
+     "accepted": 57,
+     "rejected": 8
+    },
+    "Cars - Correct": {
+     "accepted": 59,
+     "rejected": 10
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 54,
+     "rejected": 7
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 49,
+     "rejected": 5
+    }
+   }
+  },
+  "011": {
+   "interpolate": [
+    "P7"
+   ],
+   "ica_weights": "11_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    6
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 301,
+     "rejected": 2
+    },
+    "Faces - Correct": {
+     "accepted": 70,
+     "rejected": 2
+    },
+    "Cars - Correct": {
+     "accepted": 75,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 79,
+     "rejected": 0
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 77,
+     "rejected": 0
+    }
+   }
+  },
+  "012": {
+   "interpolate": [
+    "Oz",
+    "PO4"
+   ],
+   "ica_weights": "12_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    2
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 253,
+     "rejected": 6
+    },
+    "Faces - Correct": {
+     "accepted": 66,
+     "rejected": 2
+    },
+    "Cars - Correct": {
+     "accepted": 66,
+     "rejected": 1
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 58,
+     "rejected": 0
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 63,
+     "rejected": 3
+    }
+   }
+  },
+  "013": {
+   "interpolate": [],
+   "ica_weights": "13_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 294,
+     "rejected": 4
+    },
+    "Faces - Correct": {
+     "accepted": 75,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 73,
+     "rejected": 1
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 74,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 72,
+     "rejected": 1
+    }
+   }
+  },
+  "014": {
+   "interpolate": [],
+   "ica_weights": "14_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    7,
+    23
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 24,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 311,
+     "rejected": 5
+    },
+    "Faces - Correct": {
+     "accepted": 79,
+     "rejected": 1
+    },
+    "Cars - Correct": {
+     "accepted": 76,
+     "rejected": 1
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 76,
+     "rejected": 3
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 80,
+     "rejected": 0
+    }
+   }
+  },
   "015": {
    "interpolate": [
     "F8"
@@ -955,6 +3184,3344 @@
     "Scrambled Cars - Correct": {
      "accepted": 74,
      "rejected": 2
+    }
+   }
+  },
+  "020": {
+   "interpolate": [],
+   "ica_weights": "20_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    5
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 125,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 290,
+     "rejected": 10
+    },
+    "Faces - Correct": {
+     "accepted": 71,
+     "rejected": 2
+    },
+    "Cars - Correct": {
+     "accepted": 74,
+     "rejected": 2
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 76,
+     "rejected": 1
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 69,
+     "rejected": 5
+    }
+   }
+  },
+  "021": {
+   "interpolate": [],
+   "ica_weights": "21_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    11,
+    16
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 90,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 293,
+     "rejected": 2
+    },
+    "Faces - Correct": {
+     "accepted": 79,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 75,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 65,
+     "rejected": 1
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 74,
+     "rejected": 1
+    }
+   }
+  },
+  "022": {
+   "interpolate": [],
+   "ica_weights": "22_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 283,
+     "rejected": 4
+    },
+    "Faces - Correct": {
+     "accepted": 73,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 73,
+     "rejected": 1
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 63,
+     "rejected": 1
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 74,
+     "rejected": 2
+    }
+   }
+  },
+  "023": {
+   "interpolate": [],
+   "ica_weights": "23_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    7
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 268,
+     "rejected": 39
+    },
+    "Faces - Correct": {
+     "accepted": 66,
+     "rejected": 13
+    },
+    "Cars - Correct": {
+     "accepted": 69,
+     "rejected": 7
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 70,
+     "rejected": 6
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 63,
+     "rejected": 13
+    }
+   }
+  },
+  "024": {
+   "interpolate": [],
+   "ica_weights": "24_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 277,
+     "rejected": 25
+    },
+    "Faces - Correct": {
+     "accepted": 72,
+     "rejected": 7
+    },
+    "Cars - Correct": {
+     "accepted": 62,
+     "rejected": 7
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 71,
+     "rejected": 6
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 72,
+     "rejected": 5
+    }
+   }
+  },
+  "025": {
+   "interpolate": [],
+   "ica_weights": "25_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    4,
+    13
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 294,
+     "rejected": 18
+    },
+    "Faces - Correct": {
+     "accepted": 71,
+     "rejected": 5
+    },
+    "Cars - Correct": {
+     "accepted": 75,
+     "rejected": 3
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 75,
+     "rejected": 4
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 73,
+     "rejected": 6
+    }
+   }
+  },
+  "026": {
+   "interpolate": [],
+   "ica_weights": "26_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 302,
+     "rejected": 7
+    },
+    "Faces - Correct": {
+     "accepted": 77,
+     "rejected": 1
+    },
+    "Cars - Correct": {
+     "accepted": 77,
+     "rejected": 1
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 72,
+     "rejected": 3
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 76,
+     "rejected": 2
+    }
+   }
+  },
+  "027": {
+   "interpolate": [
+    "F7"
+   ],
+   "ica_weights": "27_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    6
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 226,
+     "rejected": 15
+    },
+    "Faces - Correct": {
+     "accepted": 61,
+     "rejected": 5
+    },
+    "Cars - Correct": {
+     "accepted": 59,
+     "rejected": 5
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 51,
+     "rejected": 3
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 55,
+     "rejected": 2
+    }
+   }
+  },
+  "028": {
+   "interpolate": [],
+   "ica_weights": "28_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    2,
+    5
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 24,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 248,
+     "rejected": 40
+    },
+    "Faces - Correct": {
+     "accepted": 61,
+     "rejected": 12
+    },
+    "Cars - Correct": {
+     "accepted": 59,
+     "rejected": 11
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 62,
+     "rejected": 7
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 66,
+     "rejected": 10
+    }
+   }
+  },
+  "029": {
+   "interpolate": [
+    "Oz",
+    "FP2"
+   ],
+   "ica_weights": "29_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    9
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 115,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 215,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 239,
+     "rejected": 57
+    },
+    "Faces - Correct": {
+     "accepted": 62,
+     "rejected": 16
+    },
+    "Cars - Correct": {
+     "accepted": 59,
+     "rejected": 12
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 57,
+     "rejected": 16
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 61,
+     "rejected": 13
+    }
+   }
+  },
+  "030": {
+   "interpolate": [
+    "FP1",
+    "FP2"
+   ],
+   "ica_weights": "30_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    5
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 135,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 242,
+     "rejected": 35
+    },
+    "Faces - Correct": {
+     "accepted": 70,
+     "rejected": 5
+    },
+    "Cars - Correct": {
+     "accepted": 61,
+     "rejected": 12
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 57,
+     "rejected": 9
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 54,
+     "rejected": 9
+    }
+   }
+  },
+  "031": {
+   "interpolate": [
+    "F3",
+    "C4"
+   ],
+   "ica_weights": "31_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 280,
+     "rejected": 11
+    },
+    "Faces - Correct": {
+     "accepted": 73,
+     "rejected": 3
+    },
+    "Cars - Correct": {
+     "accepted": 69,
+     "rejected": 3
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 72,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 66,
+     "rejected": 3
+    }
+   }
+  },
+  "032": {
+   "interpolate": [],
+   "ica_weights": "32_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 297,
+     "rejected": 2
+    },
+    "Faces - Correct": {
+     "accepted": 78,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 76,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 73,
+     "rejected": 1
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 70,
+     "rejected": 1
+    }
+   }
+  },
+  "033": {
+   "interpolate": [
+    "F7",
+    "C5",
+    "F8",
+    "FC4",
+    "C6"
+   ],
+   "ica_weights": "33_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 175,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 295,
+     "rejected": 19
+    },
+    "Faces - Correct": {
+     "accepted": 71,
+     "rejected": 7
+    },
+    "Cars - Correct": {
+     "accepted": 76,
+     "rejected": 3
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 73,
+     "rejected": 5
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 75,
+     "rejected": 4
+    }
+   }
+  },
+  "034": {
+   "interpolate": [],
+   "ica_weights": "34_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    2
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 125,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 296,
+     "rejected": 0
+    },
+    "Faces - Correct": {
+     "accepted": 72,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 74,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 74,
+     "rejected": 0
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 76,
+     "rejected": 0
+    }
+   }
+  },
+  "035": {
+   "interpolate": [],
+   "ica_weights": "35_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 251,
+     "rejected": 3
+    },
+    "Faces - Correct": {
+     "accepted": 68,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 51,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 65,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 67,
+     "rejected": 1
+    }
+   }
+  },
+  "036": {
+   "interpolate": [
+    "PO3"
+   ],
+   "ica_weights": "36_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    6
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 296,
+     "rejected": 0
+    },
+    "Faces - Correct": {
+     "accepted": 76,
+     "rejected": 0
+    },
+    "Cars - Correct": {
+     "accepted": 77,
+     "rejected": 0
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 72,
+     "rejected": 0
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 71,
+     "rejected": 0
+    }
+   }
+  },
+  "037": {
+   "interpolate": [],
+   "ica_weights": "37_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 283,
+     "rejected": 21
+    },
+    "Faces - Correct": {
+     "accepted": 73,
+     "rejected": 4
+    },
+    "Cars - Correct": {
+     "accepted": 70,
+     "rejected": 6
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 66,
+     "rejected": 7
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 74,
+     "rejected": 4
+    }
+   }
+  },
+  "038": {
+   "interpolate": [],
+   "ica_weights": "38_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    4,
+    6
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 100,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 1000,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 288,
+     "rejected": 5
+    },
+    "Faces - Correct": {
+     "accepted": 77,
+     "rejected": 2
+    },
+    "Cars - Correct": {
+     "accepted": 68,
+     "rejected": 1
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 72,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 71,
+     "rejected": 0
+    }
+   }
+  },
+  "039": {
+   "interpolate": [
+    "FP2",
+    "F8"
+   ],
+   "ica_weights": "39_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 286,
+     "rejected": 28
+    },
+    "Faces - Correct": {
+     "accepted": 72,
+     "rejected": 7
+    },
+    "Cars - Correct": {
+     "accepted": 71,
+     "rejected": 6
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 73,
+     "rejected": 6
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 70,
+     "rejected": 9
+    }
+   }
+  },
+  "040": {
+   "interpolate": [],
+   "ica_weights": "40_N170_ica_weighted.set",
+   "ica_exclude_eeglab": [
+    1,
+    3,
+    7
+   ],
+   "reject": [
+    {
+     "test": "extval",
+     "erplab": "pop_artextval",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2",
+      "HEOG_left",
+      "HEOG_right",
+      "VEOG_lower"
+     ],
+     "min_uv": -200,
+     "max_uv": 200,
+     "window_ms": [
+      -200,
+      800
+     ]
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "FP1",
+      "F3",
+      "F7",
+      "FC3",
+      "C3",
+      "C5",
+      "P3",
+      "P7",
+      "PO7",
+      "PO3",
+      "O1",
+      "Oz",
+      "Pz",
+      "CPz",
+      "FP2",
+      "Fz",
+      "F4",
+      "F8",
+      "FC4",
+      "FCz",
+      "Cz",
+      "C4",
+      "C6",
+      "P4",
+      "P8",
+      "PO8",
+      "PO4",
+      "O2"
+     ],
+     "threshold_uv": 110,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 500,
+     "step_ms": 100
+    },
+    {
+     "test": "ptp",
+     "erplab": "pop_artmwppth",
+     "channels": [
+      "VEOG_uncorr"
+     ],
+     "threshold_uv": 150,
+     "window_ms": [
+      -25,
+      325
+     ],
+     "win_ms": 175,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG_uncorr"
+     ],
+     "threshold_uv": 32,
+     "window_ms": [
+      -50,
+      350
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    },
+    {
+     "test": "step",
+     "erplab": "pop_artstep",
+     "channels": [
+      "HEOG"
+     ],
+     "threshold_uv": 64,
+     "window_ms": [
+      -200,
+      800
+     ],
+     "win_ms": 100,
+     "step_ms": 10
+    }
+   ],
+   "ar_percentages": {
+    "Total": {
+     "accepted": 271,
+     "rejected": 23
+    },
+    "Faces - Correct": {
+     "accepted": 70,
+     "rejected": 6
+    },
+    "Cars - Correct": {
+     "accepted": 65,
+     "rejected": 7
+    },
+    "Scrambled Faces - Correct": {
+     "accepted": 68,
+     "rejected": 2
+    },
+    "Scrambled Cars - Correct": {
+     "accepted": 68,
+     "rejected": 8
     }
    }
   }

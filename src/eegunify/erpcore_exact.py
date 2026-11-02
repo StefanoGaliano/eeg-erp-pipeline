@@ -38,7 +38,8 @@ SCRIPT6_DEFAULT_CHANNELS = {"svt": 31, "mw": 28}
 
 @dataclass(frozen=True)
 class ExactFiles:
-    """OSF ids of one component's parameter files (listed from the OSF API on 2026-11-01)."""
+    """OSF ids of one component's parameter files (listed from the OSF API on 2026-11-01; N170's
+    per-subject files for all 40 subjects on 2026-11-02, M-E6b)."""
 
     node: str
     bipolars: str  # Add_Corrected_Bipolars_<c>.txt (channel list of the epoched data)
@@ -67,18 +68,88 @@ EXACT_FILES: dict[str, ExactFiles] = {
         sl_heog_stim="92fkr",
         sl_heog="d35zu",
         ica_weights={
+            "001": "5jfah",
+            "002": "qt2ra",
+            "003": "5f1631350870f2013209acd6",
+            "004": "5f163ccd0596f6011d7a0727",
+            "005": "5f163f076ef4400137bcf1b0",
+            "006": "5f1640296ef4400136bcdbbd",
+            "007": "5f1641480870f2012709f622",
+            "008": "5f16428c6ef4400136bce1df",
+            "009": "ycn9j",
+            "010": "rf8ym",
+            "011": "5f1620b76ef4400130bd1375",
+            "012": "5f1621740596f6012179e10b",
+            "013": "5f16223f0596f601227a070b",
+            "014": "5f1622fd0870f2011709b98a",
             "015": "5f1623c50870f2012709cc3a",
             "016": "5f1624790596f6011d79e293",
             "017": "5f1625450596f601227a0bba",
             "018": "wzfyd",
             "019": "5f1626c06ef4400130bd18db",
+            "020": "5f16283f0596f6011d79e65d",
+            "021": "5f1628fc6ef4400136bcaccb",
+            "022": "5f1629cd0870f2011709be9d",
+            "023": "5f162a976ef4400136bcae9d",
+            "024": "5f162b636ef4400136bcafbc",
+            "025": "5f162c3b0870f20133099087",
+            "026": "5f162d216ef4400137bcbf1a",
+            "027": "5f162e1b6ef4400136bcb48b",
+            "028": "5f162f1b0596f6011d79eedf",
+            "029": "5f1630300596f6011d79f0af",
+            "030": "5f16323c0870f2011709c80f",
+            "031": "5f16334b0596f6012179fa84",
+            "032": "5f1634490870f2013309a115",
+            "033": "5f1635566ef4400136bcc2eb",
+            "034": "5f1636596ef4400136bcc51c",
+            "035": "5f1637650870f2013209bf65",
+            "036": "5f1638816ef440012fbd035a",
+            "037": "5f1639790870f2011709d24f",
+            "038": "5f163a8f6ef4400137bce4e6",
+            "039": "5f163ba40596f6011d7a04f6",
+            "040": "r8dzx",
         },
         ar_percentages={
+            "001": "deutq",
+            "002": "zbfw5",
+            "003": "pk6b9",
+            "004": "8fjwv",
+            "005": "5f163e2b0596f601217a110b",
+            "006": "5f163f346ef4400137bcf24e",
+            "007": "5f16404f0596f6012c798ce8",
+            "008": "hc7fa",
+            "009": "evdgc",
+            "010": "pa8nx",
+            "011": "qrz4g",
+            "012": "xq7e4",
+            "013": "n4j8v",
+            "014": "zxr7u",
             "015": "f9nmw",
             "016": "5f1623e30870f2011709ba4f",
             "017": "5f1624940596f6012179e490",
             "018": "5f1625606ef4400137bcb1a0",
             "019": "5f1626200870f201330988ce",
+            "020": "ra3t4",
+            "021": "54hrk",
+            "022": "5f1629160596f6011979da35",
+            "023": "5f1629e86ef4400136bcadd4",
+            "024": "5f162ab80596f601227a140f",
+            "025": "vbz94",
+            "026": "5f162c5b0870f20132099e9a",
+            "027": "5f162d456ef4400137bcbfa0",
+            "028": "5f162e3e0870f2013209a390",
+            "029": "7vsyh",
+            "030": "5f16315a0870f20133099b2a",
+            "031": "5f1632680870f2012709dccc",
+            "032": "5f1633710870f2013209b370",
+            "033": "nbew6",
+            "034": "5f16357a6ef4400130bd2ce6",
+            "035": "5f16367e0870f2013209bc72",
+            "036": "5f1637890870f2013309a8fc",
+            "037": "4y9d5",
+            "038": "wksn3",
+            "039": "5f163ab50596f601217a096d",
+            "040": "pa6hs",
         },
     ),
     "P3": ExactFiles(
@@ -263,7 +334,11 @@ def subject_parameters(folder: Path, component: str, subject: str) -> dict[str, 
     interpolate: list[str] = []
     if nums and nums.lower() != "none":
         interpolate = _channels(nums, 0, chans)
-        if named and [n.lower() for n in named] != [i.lower() for i in interpolate]:
+        # Script6 interpolates by number; the name cell is a comment and may be incomplete
+        # (N170 subject 39: numbers "15 18" = FP2 and F8, names "*FP2"). A name that is not
+        # among the numbered channels is a real contradiction.
+        stray = {n.lower() for n in named} - {i.lower() for i in interpolate}
+        if stray:
             raise ValueError(f"{subject}: interpolation numbers {nums} != names {named}")
     ica = [int(float(x)) for x in row(f"ICA_Components_{c}.xlsx") if x.strip()]
 

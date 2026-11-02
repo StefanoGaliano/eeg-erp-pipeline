@@ -138,7 +138,7 @@ def test_committed_exact_json_is_consistent() -> None:
     data = json.loads((GOLDEN / "N170_exact.json").read_text(encoding="utf-8"))
     chans = set(data["epoch_channels"])
     assert data["reference"]["recorded_channels"] == list(range(1, 34))
-    assert sorted(data["subjects"]) == ["015", "016", "017", "018", "019"]
+    assert sorted(data["subjects"]) == [f"{i:03d}" for i in range(1, 41)]  # all 40 (M-E6b)
     for sub, p in data["subjects"].items():
         assert set(p["interpolate"]) <= chans, sub
         assert all(r["test"] in {"extval", "ptp", "step"} for r in p["reject"]), sub
@@ -195,3 +195,14 @@ def test_reference_channels_avgchan_and_mean(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="one reference expression"):
         ex.reference_channels(p)
+
+
+def test_n170_subject_39_name_cell_incomplete(tmp_path: Path) -> None:
+    """N170 subject 39: numbers '15 18' (FP2, F8) but the name cell says only '*FP2'. ERP CORE
+    interpolates by number, so both channels are interpolated."""
+    folder = _folder(tmp_path)
+    _xlsx(
+        folder / "Interpolate_Channels_N170.xlsx",
+        [["SUBID", "Bad", "Name"], ["15", "2 3", "*F8"]],
+    )
+    assert ex.subject_parameters(folder, "N170", "015")["interpolate"] == ["F8", "PO8"]
