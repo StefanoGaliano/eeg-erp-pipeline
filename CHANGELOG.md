@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 (2026-11-02)
 
 **ERP CORE N170: 36 of 40 subjects with the default recipe** (32 in 0.7.1). Causes of the
 epoch-rejection failures and the comparison with ERP CORE's bad channels in
