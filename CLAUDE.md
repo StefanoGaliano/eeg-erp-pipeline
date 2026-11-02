@@ -20,7 +20,8 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - Try on a file: `eegunify inspect <file>`; convert a dataset: `eegunify convert <config.yaml> [-s 001] [--overwrite] [--root .]`
 - QA only, no BIDS write: `eegunify qa <config.yaml>`; skip QA on convert with `--no-qa`
 - `eegunify config init <file> --out code/configs/x.yaml` (draft), `eegunify config validate <yaml>`, `eegunify config schema`
-- `eegunify config dump <yaml> --json --resolved [-s 015] [--out f.json]`: full config + resolved components + `config_hash` (Phase M reads it with `jsondecode`; `config/dump.py`)
+- `eegunify config dump <yaml> --json --resolved [-s 015] [--out f.json]`: full config + resolved components + `config_hash` (Phase M reads it with `jsondecode`; `config/dump.py`; its `matlab` block holds mappings as lists of pairs, because jsondecode mangles keys like `"1-40"`, plus the 10-05/alias/BioSemi tables)
+- Phase M (MATLAB): `matlab/+eegunify/` (`convert(dump.json, 'root', R, 'bids_root', OUT)`, `read_any`, `normalize_names`, `infer_type`, `extract_events`, `canonical_validate`, `write_bids`). Parity: `pytest -m realdata tests/integration/test_matlab_parity.py` (ERP CORE `.set` + synthetic BrainVision/BDF; needs `EEGUNIFY_MATLAB_SETUP`). Keep MATLAB steps in the same order as `pipeline.read_recording`; MATLAB `round` is half-away, Python's half-even (`round_half_even` in `extract_events.m`)
 - Real data: `pytest -m realdata` (ERP CORE golden + cross-check; data cached in `EEGUNIFY_DATA` or `~/.cache/eegunify`); refresh golden files with `--update-golden` after reviewing the diff
 - Fetch: `eegunify fetch erpcore -s 015`, `eegunify fetch openneuro ds005841 -s 001`
 - ERP CORE published per-subject values: `eegunify fetch erpcore-values [-c N170] --dest ~/.cache/eegunify/erpcore`

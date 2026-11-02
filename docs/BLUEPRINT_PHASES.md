@@ -614,6 +614,11 @@ portfolio message ("I can do both ecosystems and prove they agree") is fully mad
   identical; continuous data |Δ| < 1e-3 µV (float32); after filtering |Δ| < 0.1 µV; rejected
   epoch sets identical; condition ERP RMS Δ < 0.05 µV; mean amplitude |Δ| < 0.05 µV.
 - **Subject:** sub-015 (not sub-001: only 015..019 are in the archive).
+- **M1 as built (2026-11-02):** BrainVision and BDF are read with FieldTrip (BDF Status decoded
+  in `extract_events.m` with MNE `find_events` semantics instead of `pop_biosig`, so masking
+  and onsets match exactly); `.set` with `pop_loadset`. The writer is hand-written (BrainVision
+  float32, resolution 1 µV; onsets written as sample/sfreq like MNE-BIDS). No electrodes.tsv
+  and no canonical rule 6 in MATLAB. The dump's `matlab` block carries the naming tables.
 - **bva-io absence:** default to FieldTrip reading everywhere in M; test both paths if bva-io is
   later installed (parametrised MATLAB test, skipped when the plugin is missing).
 
@@ -664,7 +669,7 @@ classes or decoding code until motor restoration work starts.
 | M-E6a | **done 2026-11-01 (v0.3.0)**: group + stats + ERP CORE comparison (Phase 6), N170/P3/N2pc on 015..019 → **v0.3.0, repo public** | M-E4 | comparison TSV within tolerances (8.2: sign equal to ERP CORE's, subjects ERP CORE excluded reported but not checked) or documented deviations; `docs/validation_erp.md` |
 | M-E6b | optional 40-subject N170 | M-E6a | grand average & d_z vs published |
 | A2 | **done 2026-11-01 (v0.4.0)**: app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
-| M1 | MATLAB ingestion parity (BrainVision, BDF, SET) | v0.1.0 | §11 tolerances |
+| M1 | **done 2026-11-02**: MATLAB ingestion parity (BrainVision, BDF, SET), `matlab/+eegunify`, `tests/integration/test_matlab_parity.py` | v0.1.0 | §11 tolerances |
 | M2 | MATLAB ERP-lite N170 parity → **v0.5.0** | M-E5, M1 | §11 tolerances |
 | VEP | VEP presets + synthetic VEP + public dataset if found | M-E4 | P100 latency recovered ±2 ms on synthetic |
 
