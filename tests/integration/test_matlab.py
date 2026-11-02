@@ -35,7 +35,8 @@ def test_load_canonical_runtests(converted: Path) -> None:  # noqa: F811
         f"cd('{setup.parent}'); evalc('{setup.stem}'); "
         f"addpath('{PROJECT / 'matlab'}'); setenv('EEGUNIFY_TEST_VHDR', '{vhdr}'); "
         f"r = runtests('{PROJECT / 'matlab' / 'tests'}'); "
-        "disp(table(r)); assert(all([r.Passed]), 'MATLAB tests failed');"
+        # Assumption-filtered tests (e.g. bva-io missing) are Incomplete, not Failed.
+        "disp(table(r)); assert(~any([r.Failed]), 'MATLAB tests failed');"
     )
     proc = subprocess.run(
         [_matlab(), "-batch", script],

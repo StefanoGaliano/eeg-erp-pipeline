@@ -624,8 +624,11 @@ portfolio message ("I can do both ecosystems and prove they agree") is fully mad
   implementations differ by design); `erp_lite.m` refuses those steps instead of
   approximating them. The ERPLAB core is shared with M-E5 (`+eegunify/erplab_erp.m`).
   Results in docs/validation_erp.md.
-- **bva-io absence:** default to FieldTrip reading everywhere in M; test both paths if bva-io is
-  later installed (parametrised MATLAB test, skipped when the plugin is missing).
+- **bva-io:** FieldTrip stays the default reader; `eegunify.read_any(vhdr, 'brainvision',
+  struct('brainvision_reader', 'bvaio'))` reads through bva-io. `matlab/tests/
+  test_brainvision_readers.m` (2026-11-02) checks that both readers, and `load_canonical`'s
+  two paths, agree on the converted ERP CORE recording (same labels, rate and markers; data
+  within 1e-3 µV); skipped without the plugin.
 
 ---
 

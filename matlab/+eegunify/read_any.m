@@ -9,7 +9,10 @@ function rec = read_any(path, fmt, hints)
 %   status_mask, source_files, reader, manufacturer, default_reference.
 %
 %   Readers: EEGLAB .set with pop_loadset; BrainVision and BDF with FieldTrip
-%   ft_read_header/ft_read_data (BDF scaling cal*digital+offset, as in MNE). BrainVision
+%   ft_read_header/ft_read_data (BDF scaling cal*digital+offset, as in MNE). BrainVision can
+%   also go through EEGLAB's bva-io plugin (pop_loadbv) with hints.brainvision_reader =
+%   'bvaio' (default 'fieldtrip'); matlab/tests/test_brainvision_readers.m checks both agree.
+%   BrainVision
 %   markers are parsed from the .vmrk here so their description is exactly MNE's
 %   "<type>/<description>"; BDF events come from the Status channel (extract_events).
 if nargin < 2 || isempty(fmt) || strcmp(fmt, 'auto')
@@ -25,7 +28,9 @@ switch fmt
     case 'eeglab'
         rec = read_set(rec, path);
     case 'brainvision'
-        rec = read_brainvision(rec, path);
+        reader = 'fieldtrip';
+        if isfield(hints, 'brainvision_reader'), reader = hints.brainvision_reader; end
+        rec = read_brainvision(rec, path, reader);
     case 'bdf'
         rec = read_bdf(rec, path, hints);
     otherwise
@@ -76,14 +81,25 @@ else
 end
 end
 
-function rec = read_brainvision(rec, path)
-hdr = ft_read_header(path, 'headerformat', 'brainvision_vhdr');
-dat = ft_read_data(path, 'header', hdr, 'dataformat', 'brainvision_eeg');
-rec.data = double(dat) .* to_uv(hdr);
-rec.labels = hdr.label(:)';
+function rec = read_brainvision(rec, path, reader)
+if strcmp(reader, 'bvaio')
+    assert(exist('pop_loadbv', 'file') == 2, 'eegunify:read', ...
+        'bva-io (pop_loadbv) not on the path; install the EEGLAB plugin or use fieldtrip');
+    [folder, name, ext] = fileparts(path);
+    [~, EEG] = evalc('pop_loadbv(folder, [name ext])');  % bva-io prints progress
+    rec.data = double(EEG.data);  % pop_loadbv scales by the header resolution, in µV
+    rec.labels = {EEG.chanlocs.labels};
+    rec.srate = EEG.srate;
+    hdr = struct('Fs', EEG.srate);
+else
+    hdr = ft_read_header(path, 'headerformat', 'brainvision_vhdr');
+    dat = ft_read_data(path, 'header', hdr, 'dataformat', 'brainvision_eeg');
+    rec.data = double(dat) .* to_uv(hdr);
+    rec.labels = hdr.label(:)';
+    rec.srate = hdr.Fs;
+end
 rec.reader_types = repmat({'eeg'}, 1, numel(rec.labels));
-rec.srate = hdr.Fs;
-rec.reader = 'fieldtrip ft_read_data (brainvision)';
+rec.reader = [reader ' (brainvision)'];
 rec.manufacturer = 'Brain Products';
 [folder, ~] = fileparts(path);
 info = ini_values(path);
