@@ -56,7 +56,7 @@ def channels_table(raw: Any, bads: dict[str, str], interpolated: list[str]) -> p
 @register_stage
 class PreprocStage(Stage):
     name = "preproc"
-    schema_version = 2  # 2: bipolar EOG channels derived here (were in ica)
+    schema_version = 3  # 2: bipolar EOG derived here (were in ica); 3: EOG/EMG/ECG filtered
 
     def hash_config(self, cfg: Config, project_root: Path) -> Any:
         return {

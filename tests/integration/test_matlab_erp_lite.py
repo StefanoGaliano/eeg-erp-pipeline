@@ -6,15 +6,14 @@ session and from the same config dump: ``eegunify.convert`` (M1) and ``eegunify.
 (bipolar EOG, ERPLAB ``pop_basicfilter``, re-reference, ERPLAB epochs/rejection/averages/
 ``pop_geterpvalues``). Tolerances (section 11):
 
-- filtered, re-referenced continuous data: |diff| < 0.1 µV (good EEG channels; see EDGE_S);
+- filtered, re-referenced continuous data: |diff| < 0.1 µV (good EEG and EOG channels; see EDGE_S);
 - rejected epochs: identical sets; trials per condition identical;
-- condition and contrast ERPs: RMS diff < 0.05 µV per good EEG channel;
+- condition and contrast ERPs: RMS diff < 0.05 µV per good EEG and EOG channel;
 - N170 mean amplitude (110-150 ms, PO8) per wave: |diff| < 0.05 µV.
 
 Needs MATLAB with EEGLAB, ERPLAB and FieldTrip (``EEGUNIFY_MATLAB_SETUP``); skipped
-otherwise, as in CI. EOG channels are not compared: the Python preproc filters only MNE
-"data" channels and misc, so EOG keeps its DC offset there while ERPLAB filters every channel
-(found by this test, 2026-11-02; see docs/validation_erp.md). Run with ``-s`` to print the
+otherwise, as in CI. EOG channels are compared too: this test found that the Python preproc
+did not filter them (fixed 2026-11-02; docs/validation_erp.md). Run with ``-s`` to print the
 numbers recorded in docs/validation_erp.md.
 """
 
@@ -122,7 +121,7 @@ def m2(data_cache: Path, tmp_path_factory: pytest.TempPathFactory) -> dict[str, 
 def test_continuous_after_filter_and_reference(m2: dict[str, Any]) -> None:
     py = mne.io.read_raw_fif(m2["py_preproc"], preload=True, verbose="error")
     mat = mne.io.read_raw_eeglab(m2["mat_preproc"], preload=True, verbose="error")
-    good = [py.ch_names[i] for i in mne.pick_types(py.info, eeg=True, exclude="bads")]
+    good = [py.ch_names[i] for i in mne.pick_types(py.info, eeg=True, eog=True, exclude="bads")]
     assert set(good) <= set(mat.ch_names)
     edge = int(EDGE_S * py.info["sfreq"])
     a = py.get_data(picks=good)[:, edge:-edge] * 1e6
@@ -167,7 +166,7 @@ def test_erp_waveforms(m2: dict[str, Any]) -> None:
     worst = 0.0
     for b, wave in enumerate(m2["mat"]["waves"]):
         ev = evokeds[wave]
-        eeg = [ev.ch_names[i] for i in mne.pick_types(ev.info, eeg=True, exclude="bads")]
+        eeg = [ev.ch_names[i] for i in mne.pick_types(ev.info, eeg=True, eog=True, exclude="bads")]
         good = [c for c in eeg if c in labels]
         py_t = ev.times * 1000
         common = np.intersect1d(np.round(py_t, 6), np.round(times, 6))

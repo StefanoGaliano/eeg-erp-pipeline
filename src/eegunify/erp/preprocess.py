@@ -130,13 +130,15 @@ def remove_line_noise(
 
 
 def _filter_all(raw: mne.io.BaseRaw, l_freq: float | None, h_freq: float | None, **kw: Any) -> None:
-    """Filter data channels and ``misc`` channels alike (reference candidates such as BioSemi
-    EXG mastoids are ``misc``). MNE only updates ``info["highpass"/"lowpass"]`` when it picks
-    the data channels itself, hence two calls."""
+    """Filter every recorded voltage alike: MNE's "data" channels (EEG), then EOG, EMG, ECG
+    and ``misc`` (reference candidates such as BioSemi EXG mastoids are ``misc``), as ERPLAB
+    filters every channel. MNE's default picks skip EOG, which left HEOG/VEOG with their DC
+    offset (found by the M2 MATLAB parity test). MNE only updates ``info["highpass"/
+    "lowpass"]`` when it picks the data channels itself, hence two calls."""
     raw.filter(l_freq, h_freq, verbose=False, **kw)
-    misc = mne.pick_types(raw.info, misc=True)
-    if len(misc):
-        raw.filter(l_freq, h_freq, picks=misc, verbose=False, **kw)
+    other = mne.pick_types(raw.info, eog=True, emg=True, ecg=True, misc=True, exclude=[])
+    if len(other):
+        raw.filter(l_freq, h_freq, picks=other, verbose=False, **kw)
 
 
 def apply_filter(raw: mne.io.BaseRaw, pre: PreprocSection) -> dict[str, Any]:

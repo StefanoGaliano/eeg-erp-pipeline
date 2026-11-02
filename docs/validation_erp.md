@@ -289,17 +289,21 @@ ICA, resampling and interpolation; F8 stays bad and out of the average reference
 
 | Check | Tolerance | Result |
 |---|---|---|
-| Continuous EEG after filter + re-reference (29 good EEG channels, 10 s edges excluded) | < 0.1 µV | max 0.0149 µV |
+| Continuous data after filter + re-reference (29 good EEG + 5 EOG channels, 10 s edges excluded) | < 0.1 µV | max 0.0149 µV |
 | Rejected face/car epochs | identical | identical, 50 of 160 |
 | Trials per condition | identical | identical |
-| ERP RMS per good EEG channel (face, car, face - car) | < 0.05 µV | worst 0.00046 µV |
+| ERP RMS per good EEG and EOG channel (face, car, face - car) | < 0.05 µV | worst 0.00046 µV |
 | N170 mean amplitude, PO8 (face, car, face - car) | < 0.05 µV | Python 3.5986, 5.2089, -1.6103; MATLAB 3.5957, 5.2047, -1.6090 |
 
 The mean-amplitude difference (up to 0.004 µV) is larger than the waveform difference because
 ERPLAB's `window2sample` and eegunify's nearest-sample window can pick windows one sample apart.
 
-**Found by this test:** the Python preproc does not filter EOG channels (`_filter_all` filters
-MNE "data" channels and misc; EOG is neither). Recorded and derived EOG keep their DC offset
-(HEOG about 13.7 mV in `desc-preproc`), while ERPLAB filters every channel. EEG channels and
-everything measured on them are unaffected; the HEOG step rule and the ICA EOG vote see
-unfiltered EOG. EOG channels are left out of the M2 comparison until this is decided.
+**Found by this test (fixed 2026-11-02):** the Python preproc did not filter EOG channels
+(`_filter_all` filtered MNE "data" channels and misc; EOG is neither), so recorded and derived
+EOG kept their DC offset (HEOG about 13.7 mV in `desc-preproc`) while ERPLAB filters every
+channel. `_filter_all` now filters EOG, EMG and ECG too (preproc `schema_version` 3; synthetic
+regression test `test_erpcore_n170_eog_channels_are_filtered`), and the M2 comparison includes
+the EOG channels. Effect on the ICA recipes, checked on N170 sub-015 and P3 sub-016: the same
+ICA components excluded (EOG z-scores move by < 0.1) and identical rejected epochs. The HEOG
+step rule compares half-window means, so a DC offset cancels; a 0.1 Hz drift is negligible
+over 200 ms.

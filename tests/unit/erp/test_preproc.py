@@ -85,6 +85,24 @@ def test_lowpass_and_order_validation() -> None:
     ) == {"applied": False}
 
 
+def test_erpcore_n170_eog_channels_are_filtered() -> None:
+    """ERP CORE N170 sub-015 (M2 MATLAB parity): HEOG/VEOG kept a DC offset of several mV
+    after preproc because MNE's default filter picks skip EOG. Every voltage type, bad
+    channels included, must be filtered like the EEG (as ERPLAB does)."""
+    sfreq, n = 250.0, 250 * 120
+    t = np.arange(n) / sfreq
+    offset = 5e-3  # 5 mV DC, as on BioSemi electrodes
+    names = ["Cz", "Pz", "HEOG", "EMG1", "ECG", "EXG1"]
+    types = ["eeg", "eeg", "eog", "emg", "ecg", "misc"]
+    x = offset + 20e-6 * np.sin(2 * np.pi * 5 * t)
+    raw = mne.io.RawArray(np.tile(x, (len(names), 1)), mne.create_info(names, sfreq, types))
+    raw.info["bads"] = ["Pz"]
+    apply_filter(raw, PreprocSection(highpass_hz=0.1))
+    mid = raw.get_data()[:, n // 4 : 3 * n // 4]
+    np.testing.assert_allclose(np.abs(mid.mean(axis=1)), 0, atol=1e-6)  # DC gone everywhere
+    np.testing.assert_allclose(mid, np.broadcast_to(mid[0], mid.shape), atol=1e-9)  # identically
+
+
 def test_fir_and_causal_filters_run() -> None:
     for spec in ({"method": "fir"}, {"method": "iir", "phase": "minimum", "iir_order": 3}):
         pre = PreprocSection.model_validate({"filter": spec, "highpass_hz": 1.0})
