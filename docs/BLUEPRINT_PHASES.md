@@ -619,6 +619,11 @@ portfolio message ("I can do both ecosystems and prove they agree") is fully mad
   and onsets match exactly); `.set` with `pop_loadset`. The writer is hand-written (BrainVision
   float32, resolution 1 µV; onsets written as sample/sfreq like MNE-BIDS). No electrodes.tsv
   and no canonical rule 6 in MATLAB. The dump's `matlab` block carries the naming tables.
+- **M2 as built (2026-11-02):** recipe `erp_lite` = `erplab` without resampling and
+  interpolation (MNE FFT vs EEGLAB polyphase resampling and the two spherical-spline
+  implementations differ by design); `erp_lite.m` refuses those steps instead of
+  approximating them. The ERPLAB core is shared with M-E5 (`+eegunify/erplab_erp.m`).
+  Results in docs/validation_erp.md.
 - **bva-io absence:** default to FieldTrip reading everywhere in M; test both paths if bva-io is
   later installed (parametrised MATLAB test, skipped when the plugin is missing).
 
@@ -670,7 +675,7 @@ classes or decoding code until motor restoration work starts.
 | M-E6b | optional 40-subject N170 | M-E6a | grand average & d_z vs published |
 | A2 | **done 2026-11-01 (v0.4.0)**: app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | **done 2026-11-02**: MATLAB ingestion parity (BrainVision, BDF, SET), `matlab/+eegunify`, `tests/integration/test_matlab_parity.py` | v0.1.0 | §11 tolerances |
-| M2 | MATLAB ERP-lite N170 parity → **v0.5.0** | M-E5, M1 | §11 tolerances |
+| M2 | **done 2026-11-02**: MATLAB ERP-lite N170 parity (`erp_lite` recipe, `matlab/+eegunify/erp_lite.m`, `tests/integration/test_matlab_erp_lite.py`) → **v0.5.0** | M-E5, M1 | §11 tolerances |
 | VEP | VEP presets + synthetic VEP + public dataset if found | M-E4 | P100 latency recovered ±2 ms on synthetic |
 
 Build steps inside each milestone follow Phase 1 discipline: schema field + code + test + docs in

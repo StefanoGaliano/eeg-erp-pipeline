@@ -144,6 +144,21 @@ the saved YAML contains.*
 For MATLAB users:
 - `eegunify export <config> --to eeglab` writes `.set` files.
 - `matlab/load_canonical.m` loads a canonical recording into EEGLAB or FieldTrip.
+- `matlab/+eegunify/` redoes ingestion and an ERP-lite chain natively in MATLAB (EEGLAB,
+  FieldTrip, ERPLAB) from the same config (`eegunify config dump --json --resolved`).
+
+### Python ↔ MATLAB parity (ERP CORE N170, sub-015)
+
+| Check | Tolerance | Result |
+|---|---|---|
+| Ingestion: `events.tsv`, `channels.tsv` (`.set`, BrainVision, BDF) | identical | identical |
+| Ingestion: channel data | < 0.001 µV | passes |
+| Filtered, re-referenced continuous EEG | < 0.1 µV | 0.015 µV |
+| Rejected epochs (moving-window ptp, HEOG step) | identical sets | identical (50 of 160) |
+| Condition ERPs, RMS per channel | < 0.05 µV | 0.0005 µV |
+| N170 mean amplitude 110-150 ms, PO8 (face, car, difference) | < 0.05 µV | ≤ 0.004 µV |
+
+The MATLAB tests need a MATLAB licence, so they run locally (`pytest -m realdata`), not in CI.
 
 ## What the canonical form guarantees
 
@@ -178,8 +193,9 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   the ERPLAB cross-check.
 - **App pages for the ERP stages (done, v0.4.0):** Preprocess, ICA review, Epochs, Components
   and Group in `eegunify app`.
-- **Next:** Phase M (MATLAB parity, v0.5.0); optionally the 40-subject N170 (M-E6b).
-- **Phase M:** the same ingestion natively in MATLAB, with outputs that match Python.
+- **Phase M (MATLAB parity):** ingestion for `.set`, BrainVision and BDF (M1) and the
+  ERP-lite N170 chain (M2) natively in MATLAB, matching Python (table above).
+- **Next:** release v0.5.0; optionally the 40-subject N170 (M-E6b).
 
 ## Repository layout
 
@@ -189,7 +205,7 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
 | `tests/` | unit, synthetic round-trip, real-data (`pytest -m realdata`) and MATLAB tests |
 | `code/configs/` | dataset configs (ERP CORE N170, P3, N2pc; validation catalog) |
 | `code/scripts/` | analysis scripts built on the canonical data |
-| `matlab/` | `load_canonical.m`, the ERPLAB cross-check, and their tests |
+| `matlab/` | `+eegunify` package (Phase M), `load_canonical.m`, the ERPLAB cross-check, and their tests |
 | `sourcedata/`, `rawdata/`, `derivatives/` | BIDS data folders (git-ignored) |
 
 ## License and citation

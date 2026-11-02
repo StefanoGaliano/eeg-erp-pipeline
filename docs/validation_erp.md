@@ -278,3 +278,28 @@ reproduce their published per-subject contrast amplitudes within ±0.5 µV for e
 subject (P3 within ±0.08 µV, N2pc within ±0.15 µV); the one sign disagreement, on a near-zero
 N2pc value, passes the refined sign rule. The automatic default recipe agrees within tolerance for 10 of the 13
 subject-component pairs it measures and excludes one subject ERP CORE kept.
+
+## Phase M2 ERP-lite parity, N170 sub-015 (2026-11-02)
+
+`tests/integration/test_matlab_erp_lite.py`, recipe `erp_lite` (the dataset recipe without
+ICA, resampling and interpolation; F8 stays bad and out of the average reference). Python:
+`eegunify convert` + ERP stages. MATLAB: `eegunify.convert` (M1) + `eegunify.erp_lite`
+(ERPLAB 13.10 `pop_basicfilter`, binlister, `pop_epochbin`, `pop_artmwppth`, `pop_artstep`,
+`pop_averager`, `pop_geterpvalues`), from the same config dump (`config_hash` checked).
+
+| Check | Tolerance | Result |
+|---|---|---|
+| Continuous EEG after filter + re-reference (29 good EEG channels, 10 s edges excluded) | < 0.1 µV | max 0.0149 µV |
+| Rejected face/car epochs | identical | identical, 50 of 160 |
+| Trials per condition | identical | identical |
+| ERP RMS per good EEG channel (face, car, face - car) | < 0.05 µV | worst 0.00046 µV |
+| N170 mean amplitude, PO8 (face, car, face - car) | < 0.05 µV | Python 3.5986, 5.2089, -1.6103; MATLAB 3.5957, 5.2047, -1.6090 |
+
+The mean-amplitude difference (up to 0.004 µV) is larger than the waveform difference because
+ERPLAB's `window2sample` and eegunify's nearest-sample window can pick windows one sample apart.
+
+**Found by this test:** the Python preproc does not filter EOG channels (`_filter_all` filters
+MNE "data" channels and misc; EOG is neither). Recorded and derived EOG keep their DC offset
+(HEOG about 13.7 mV in `desc-preproc`), while ERPLAB filters every channel. EEG channels and
+everything measured on them are unaffected; the HEOG step rule and the ICA EOG vote see
+unfiltered EOG. EOG channels are left out of the M2 comparison until this is decided.

@@ -62,7 +62,20 @@ ERPLAB_CROSSCHECK: dict[str, Any] = {
     "artifacts": {"method": "none"},
     "epochs": {"reject": {"method": "thresholds", "flat_uv": None}},
 }
-RECIPES = {"preview": PREVIEW, "erplab": ERPLAB_CROSSCHECK}
+ERP_LITE: dict[str, Any] = {
+    # Phase M2 (BLUEPRINT_PHASES section 11): the erplab recipe without the two steps whose
+    # MNE and EEGLAB implementations differ by design (FFT vs polyphase resampling, MNE vs
+    # EEGLAB spherical splines), so the whole chain can be redone in MATLAB from the canonical
+    # files: bipolar EOG, IIR filter, re-reference (bads excluded from the average), epochs,
+    # ERPLAB-semantics rejection, averages, mean amplitudes.
+    **ERPLAB_CROSSCHECK,
+    "preproc": {"resample_hz": None, "interpolate": False},
+}
+
+RECIPES = {"preview": PREVIEW, "erplab": ERPLAB_CROSSCHECK, "erp_lite": ERP_LITE}
+#: Sections a recipe patches key by key instead of replacing (``reference`` and ``epochs``
+#: always are): erp_lite keeps the dataset's filter and only switches two preproc steps off.
+MERGED_SECTIONS = {"erp_lite": {"preproc"}}
 
 
 def apply_recipe(cfg: Config, name: str) -> Config:
@@ -72,7 +85,9 @@ def apply_recipe(cfg: Config, name: str) -> Config:
     for section, patch in RECIPES[name].items():
         if section == "artifacts":
             data[section] = {**data[section], **patch}  # keep eog_bipolar
-        elif isinstance(data.get(section), dict) and section in ("reference", "epochs"):
+        elif isinstance(data.get(section), dict) and (
+            section in ("reference", "epochs") or section in MERGED_SECTIONS.get(name, set())
+        ):
             data[section] = {**data[section], **patch}
             if section == "epochs":
                 data[section]["reject"] = {

@@ -202,6 +202,16 @@ def test_erplab_recipe_patch() -> None:
     assert cfg.artifacts.eog_bipolar == base.artifacts.eog_bipolar
 
 
+def test_erp_lite_recipe_patch() -> None:
+    """Phase M2: erplab without resampling and interpolation; the dataset's filter is kept."""
+    base = _cfg(preproc={"resample_hz": 256, "highpass_hz": 0.1, "interpolate": True})
+    cfg = apply_recipe(base, "erp_lite")
+    assert cfg.artifacts.method == "none"
+    assert cfg.preproc.resample_hz is None and not cfg.preproc.interpolate
+    assert cfg.preproc.highpass_hz == 0.1 and cfg.preproc.filter == base.preproc.filter
+    assert cfg.epochs.reject.ptp_uv == base.epochs.reject.ptp_uv
+
+
 def test_peak_lowpass_changes_peaks_only(erp_truth: ErpTruth) -> None:
     """erp.peak_lowpass_hz (ERP CORE: 20 Hz) filters the average for peak measures only."""
     data = _erp_only(erp_truth)
