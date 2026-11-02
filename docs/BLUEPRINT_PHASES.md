@@ -637,6 +637,19 @@ portfolio message ("I can do both ecosystems and prove they agree") is fully mad
   dataset's, the erp stage re-references a *copy* of the evoked (cheap, linear) and records it.
   Synthetic VEP generator for tests; a public pattern-reversal dataset is to be picked from
   `docs/validation_datasets.md` if one is present (otherwise synthetic only, stated in README).
+- **VEP as built (2026-11-02):** the ISCEV presets carry `reference: Fz`; `erp/references.py`
+  compares a component's reference with the data's (`reference.scheme`/`channels`, or
+  `reference.online` when `scheme: none`) and the erp stage measures that component on
+  re-referenced copies of the averages and epochs (SME too); `_ave.fif` keeps the dataset
+  reference. Recorded in the erp `qa.json` (`component_references`) and QA
+  `ERP_REFERENCE_CHANGED` (info). A bad or missing reference channel is an error; a component
+  can opt out with `components.overrides: {<id>: {reference: null}}`, which the
+  `erpcore-exact` recipe does (its reference is ERP CORE's exact one: for N170 all 33 recorded
+  sites, EOG electrodes included, which is not the good-EEG average). Synthetic acceptance
+  over 8 seeds x 2 check sizes: P100 latency within 2 ms (one sample at 500 Hz), N75 2 ms,
+  N135 4 ms, P100 amplitude 0.86 µV of the Oz-Fz truth. No public pattern-reversal dataset is
+  in docs/validation_datasets.md (ds003505 VEPCON is faces and motion), so VEP is synthetic
+  only (stated in the README).
 - Occipital ROIs in 5.4; QA `ROI_MISSING` already guards channel availability.
 - N2pc requires lateralised contrasts (5.3) and HEOG rejection (step function) because eye
   movements toward the target fake an N2pc; `EPOCHS_REJECTED_FRACTION` report splits by HEOG.
@@ -676,7 +689,7 @@ classes or decoding code until motor restoration work starts.
 | A2 | **done 2026-11-01 (v0.4.0)**: app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | **done 2026-11-02**: MATLAB ingestion parity (BrainVision, BDF, SET), `matlab/+eegunify`, `tests/integration/test_matlab_parity.py` | v0.1.0 | §11 tolerances |
 | M2 | **done 2026-11-02 (v0.5.0)**: MATLAB ERP-lite N170 parity (`erp_lite` recipe, `matlab/+eegunify/erp_lite.m`, `tests/integration/test_matlab_erp_lite.py`) → **v0.5.0** | M-E5, M1 | §11 tolerances |
-| VEP | VEP presets + synthetic VEP + public dataset if found | M-E4 | P100 latency recovered ±2 ms on synthetic |
+| VEP | **done 2026-11-02**: component-level reference (`erp/references.py`), synthetic pattern-reversal VEP (`make_vep_recording`), `tests/unit/erp/test_vep.py`; no public pattern-reversal dataset in the catalog, so synthetic only | M-E4 | P100 latency recovered ±2 ms on synthetic |
 
 Build steps inside each milestone follow Phase 1 discipline: schema field + code + test + docs in
 one commit; `ruff`, `mypy --strict`, `pytest -m "not realdata"` green before moving on; realdata

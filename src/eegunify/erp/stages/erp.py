@@ -19,7 +19,7 @@ import mne
 import pandas as pd
 
 from eegunify.config.schema import Config
-from eegunify.erp import qa
+from eegunify.erp import qa, references
 from eegunify.erp.averaging import (
     MEASURES_COLUMNS,
     add_contrasts,
@@ -57,7 +57,7 @@ def _resolution(cfg: Config, project_root: Path) -> Resolution:
 @register_stage
 class ErpStage(Stage):
     name = "erp"
-    schema_version = 1
+    schema_version = 2  # 2: component-level reference (BLUEPRINT_PHASES section 12)
 
     def enabled(self, cfg: Config) -> bool:
         return bool(cfg.epochs.sets)
@@ -82,6 +82,7 @@ class ErpStage(Stage):
         means: dict[str, tuple[float, str]] = {}
         no_local: dict[str, list[str]] = {}
         vep_ms: float | None = None
+        rerefs: dict[str, dict[str, str]] = {}
         for set_name, path in sorted(files.items()):
             epochs = mne.read_epochs(path, preload=True, verbose=False)
             evokeds = add_contrasts(average_conditions(epochs, cfg.conditions), cfg)
@@ -95,8 +96,20 @@ class ErpStage(Stage):
             for cid, rc in sorted(res.components.items()):
                 if rc.definition.epoch_set != set_name:
                     continue
+                # A component defined for another reference is measured on re-referenced
+                # copies (references.py); the written averages keep the dataset reference.
+                c_evokeds, c_epochs = evokeds, epochs
+                target = references.needed(rc.definition.reference, cfg)
+                if target is not None:
+                    c_evokeds = {n: references.apply(ev, target, cfg) for n, ev in evokeds.items()}
+                    c_epochs = references.apply(epochs, target, cfg)
+                    current = references.dataset_reference(cfg)
+                    rerefs[cid] = {
+                        "data": current.label if current else cfg.reference.scheme,
+                        "component": target.label,
+                    }
                 cm = measure_component(
-                    rc, evokeds, epochs, cfg, subject=ctx.subject, stage_key=ctx.stage_key
+                    rc, c_evokeds, c_epochs, cfg, subject=ctx.subject, stage_key=ctx.stage_key
                 )
                 rows += cm.rows
                 sme[cid] = cm.sme_uv
@@ -105,7 +118,7 @@ class ErpStage(Stage):
                 if cid == "vep_p100":
                     vep_ms = cm.peak_latency_ms
                 if cfg.erp.figures:
-                    outputs.append(self._figure(ctx, set_name, cid, rc, evokeds))
+                    outputs.append(self._figure(ctx, set_name, cid, rc, c_evokeds))
             tsv = ctx.output(description=set_name, suffix="measures", extension=".tsv")
             with atomic_path(tsv) as tmp:
                 pd.DataFrame(rows, columns=MEASURES_COLUMNS).to_csv(
@@ -116,6 +129,7 @@ class ErpStage(Stage):
             {rc.definition.epoch_set for rc in res.components.values()} - set(files)
         )
         checks = qa.erp_checks(sme, means, no_local, vep_ms)
+        checks.append(qa.reference_check(rerefs))
         qa_path = ctx.output(description="erp", suffix="qa", extension=".json")
         extra = {
             "subject": ctx.subject,
@@ -123,6 +137,7 @@ class ErpStage(Stage):
             "components": res.to_json(),
             "component_warnings": res.warnings,
             "plot_lowpass_hz": cfg.erp.plot_lowpass_hz,
+            "component_references": rerefs,
         }
         qa.write_qa_json(qa_path, self.name, checks, extra)
         outputs.append(qa_path)

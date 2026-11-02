@@ -29,6 +29,8 @@ ERP_COMPONENT_POLARITY       erp     warn if a primary mean amplitude has the op
                                      of the component's ``polarity``
 MEASURE_NO_LOCAL_PEAK        erp     warn if a peak measure fell back to the absolute extreme
 VEP_LATENCY_ATYPICAL         erp     info (pass) if the vep_p100 peak latency is > 115 ms
+ERP_REFERENCE_CHANGED        erp     info (pass): components measured with their own reference
+                                     (re-referenced copies; e.g. VEP at Oz vs Fz)
 GROUP_SUBJECTS_EXCLUDED      group   warn if a configured subject is not in the group (an upstream
                                      stage failed), listing each with its reason
 GROUP_UNDERPOWERED           group   info (pass) when the smallest p a sign-flip permutation can
@@ -263,6 +265,18 @@ def baseline_drift_check(offsets: dict[str, float]) -> QACheck:
 
 
 # --- erp -------------------------------------------------------------------------------------
+
+
+def reference_check(rerefs: dict[str, dict[str, str]]) -> QACheck:
+    """``rerefs``: component id -> {"data": ..., "component": ...} for re-referenced ones."""
+    if not rerefs:
+        return QACheck("ERP_REFERENCE_CHANGED", "pass", "every component uses the data reference")
+    shown = "; ".join(
+        f"{cid}: {r['data']} -> {r['component']}" for cid, r in sorted(rerefs.items())
+    )
+    return QACheck(
+        "ERP_REFERENCE_CHANGED", "pass", f"measured with the component's reference ({shown})"
+    )
 
 
 def erp_checks(

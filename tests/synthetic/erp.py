@@ -11,6 +11,12 @@ VEOG/HEOG at 500 Hz. The signal is pink noise and occipital alpha, with these ad
 - optional blinks: a frontal topography plus VEOG, at known samples.
 
 Each component is also stored separately, so tests can check what a stage removed or kept.
+
+``make_vep_recording`` (BLUEPRINT_PHASES section 12) uses the same background for a
+pattern-reversal VEP: reversals about every 0.5 s (2 rev/s, ISCEV; 0-100 ms jitter) of
+large and small checks, an N75/P100/N135 complex centred on Oz and an inverted frontal part
+centred on Fz, so the waveform depends on the reference (ISCEV records Oz against Fz).
+``truth.vep`` holds the exact noise-free Oz-Fz peak latencies and amplitudes per condition.
 """
 
 from __future__ import annotations
@@ -29,6 +35,9 @@ LINE_HZ = 50.0
 N170_MS, N170_SIGMA_MS = 130.0, 15.0
 AMPLITUDE_UV = {"face": -4.0, "car": -1.0}
 CODES = {"face": 1, "car": 2}
+VEP_CODES = {"large": 1, "small": 2}
+#: P100 latency per check size. Illustrative (small checks peak a little later), not norms.
+VEP_P100_MS = {"large": 100.0, "small": 108.0}
 
 
 @dataclass
@@ -48,10 +57,13 @@ class ErpTruth:
     noisy: str = "FC6"
     blink_samples: np.ndarray = field(default_factory=lambda: np.array([], dtype=int))
     blink_uV: np.ndarray | None = None
+    code_map: dict[str, int] = field(default_factory=lambda: dict(CODES))
+    vep: dict[str, dict[str, float]] = field(default_factory=dict)
+    """VEP only: condition -> {"p100_ms", "p100_uv", "n75_ms", "n135_ms"} of the Oz-Fz wave."""
 
     @property
     def codes(self) -> np.ndarray:
-        return np.array([CODES[c] for c in self.conditions])
+        return np.array([self.code_map[c] for c in self.conditions])
 
     def index(self, ch: str) -> int:
         return self.names.index(ch)
@@ -72,20 +84,10 @@ def _positions() -> dict[str, np.ndarray]:
     return {ch: pos[ch] for ch in EEG32}
 
 
-def make_erp_recording(
-    duration_s: float = 120.0,
-    *,
-    seed: int = 0,
-    blinks: bool = False,
-    dead: bool = True,
-    noisy: bool = True,
-    line_uV: float = 20.0,
-    spatial_width_m: float = 0.08,
-    independent_uV: float = 0.3,
-    topo_width_m: float = 0.05,
-) -> ErpTruth:
-    rng = np.random.default_rng(seed)
-    n = int(duration_s * ERP_SFREQ)
+def _background(
+    rng: np.random.Generator, n: int, independent_uV: float, spatial_width_m: float
+) -> tuple[list[str], list[str], dict[str, np.ndarray], np.ndarray]:
+    """32 EEG + VEOG/HEOG: spatially smooth pink noise and posterior alpha, in µV."""
     t = np.arange(n) / ERP_SFREQ
     names = list(EEG32) + list(EOG)
     types = ["eeg"] * len(EEG32) + ["eog"] * len(EOG)
@@ -105,6 +107,26 @@ def make_erp_recording(
     # Posterior alpha with a smooth topography (peak 3 µV at Oz).
     d_oz = np.array([np.linalg.norm(pos[ch] - pos["Oz"]) for ch in EEG32])
     data[:n_eeg] += 3.0 * np.exp(-((d_oz / 0.08) ** 2))[:, None] * np.sin(2 * np.pi * 10.0 * t)
+    return names, types, pos, data
+
+
+def make_erp_recording(
+    duration_s: float = 120.0,
+    *,
+    seed: int = 0,
+    blinks: bool = False,
+    dead: bool = True,
+    noisy: bool = True,
+    line_uV: float = 20.0,
+    spatial_width_m: float = 0.08,
+    independent_uV: float = 0.3,
+    topo_width_m: float = 0.05,
+) -> ErpTruth:
+    rng = np.random.default_rng(seed)
+    n = int(duration_s * ERP_SFREQ)
+    t = np.arange(n) / ERP_SFREQ
+    names, types, pos, data = _background(rng, n, independent_uV, spatial_width_m)
+    n_eeg = len(EEG32)
 
     d = np.array([np.linalg.norm(pos[ch] - pos["PO8"]) for ch in EEG32])
     topo = np.zeros(len(names))
@@ -151,6 +173,107 @@ def make_erp_recording(
     if noisy:
         data[truth.index(truth.noisy)] += 60.0 * rng.standard_normal(n)
     return truth
+
+
+def _vep_wave(t_ms: np.ndarray, p100_ms: float) -> tuple[np.ndarray, np.ndarray]:
+    """Occipital (N75, P100, N135) and frontal (inverted P100) parts, µV at the topography peak."""
+    shift = p100_ms - 100.0
+
+    def g(mu: float, sigma: float) -> np.ndarray:
+        return np.exp(-(((t_ms - mu - shift) / sigma) ** 2) / 2)
+
+    occipital = -4.0 * g(75, 8) + 10.0 * g(100, 10) - 6.0 * g(135, 12)
+    frontal = -3.0 * g(100, 14)
+    return occipital, frontal
+
+
+def make_vep_recording(duration_s: float = 120.0, *, seed: int = 0) -> ErpTruth:
+    """Pattern-reversal VEP on the ERP background (no line noise, no bad channels)."""
+    rng = np.random.default_rng(seed)
+    n = int(duration_s * ERP_SFREQ)
+    names, types, pos, data = _background(rng, n, 0.3, 0.08)
+    n_eeg = len(EEG32)
+    d_oz = np.array([np.linalg.norm(pos[ch] - pos["Oz"]) for ch in EEG32])
+    d_fz = np.array([np.linalg.norm(pos[ch] - pos["Fz"]) for ch in EEG32])
+    occ_topo = np.zeros(len(names))
+    occ_topo[:n_eeg] = np.exp(-((d_oz / 0.06) ** 2))
+    fro_topo = np.zeros(len(names))
+    fro_topo[:n_eeg] = np.exp(-((d_fz / 0.06) ** 2))
+
+    # Reversals about every 0.5 s (2 rev/s) with 0-100 ms jitter: the background alpha is a
+    # fixed 10 Hz sine, and a 0.5 s period (5 cycles) would phase-lock it into the average.
+    # Blocks of 10 reversals per check size.
+    onsets = np.arange(1.5, duration_s - 1.5, 0.5)
+    onsets = onsets + rng.uniform(0, 0.1, onsets.size)
+    samples = (onsets[onsets < duration_s - 1.5] * ERP_SFREQ).astype(int)
+    conditions = [("large", "small")[(i // 10) % 2] for i in range(len(samples))]
+    t_ms = np.arange(int(0.4 * ERP_SFREQ)) / ERP_SFREQ * 1000
+    for s, c in zip(samples, conditions, strict=True):
+        occ, fro = _vep_wave(t_ms, VEP_P100_MS[c])
+        data[:, s : s + t_ms.size] += np.outer(occ_topo, occ) + np.outer(fro_topo, fro)
+
+    truth = ErpTruth(
+        names,
+        types,
+        ERP_SFREQ,
+        data,
+        samples,
+        conditions,
+        occ_topo,
+        np.zeros_like(data),
+        code_map=dict(VEP_CODES),
+    )
+    # Exact Oz - Fz wave (noise-free), on the sample grid.
+    oz, fz = names.index("Oz"), names.index("Fz")
+    for c, p100 in VEP_P100_MS.items():
+        occ, fro = _vep_wave(t_ms, p100)
+        wave = (occ_topo[oz] - occ_topo[fz]) * occ + (fro_topo[oz] - fro_topo[fz]) * fro
+
+        def peak(lo: float, hi: float, sign: float, w: np.ndarray = wave) -> tuple[float, float]:
+            sel = (t_ms >= lo) & (t_ms <= hi)
+            i = int(np.argmax(sign * w[sel]))
+            return float(t_ms[sel][i]), float(w[sel][i])
+
+        p_ms, p_uv = peak(90, 130, 1.0)
+        truth.vep[c] = {
+            "p100_ms": p_ms,
+            "p100_uv": p_uv,
+            "n75_ms": peak(60, 90, -1.0)[0],
+            "n135_ms": peak(115, 160, -1.0)[0],
+        }
+    return truth
+
+
+def vep_config(**sections: dict) -> dict:
+    """Config for :func:`make_vep_recording` written as sourcedata/synth/sub-01_task-vep.vhdr:
+    ISCEV presets, data average-referenced (so the components' Fz reference applies)."""
+    cfg = erp_config(
+        dataset={"task": "vep", "name": "Synthetic VEP"},
+        recordings={"pattern": "sub-{subject}_task-vep.vhdr"},
+        events={"mapping": {"1": "stimulus/reversal/large", "2": "stimulus/reversal/small"}},
+    )
+    cfg["reference"] = {"online": "Cz", "scheme": "average"}
+    cfg["preproc"] = {"line_noise": {"method": "none"}, "highpass_hz": 0.1, "lowpass_hz": None}
+    cfg["artifacts"] = {"method": "none"}
+    cfg["epochs"] = {
+        "sets": {
+            "stim": {
+                "lock": "stimulus/reversal",
+                "tmin_ms": -100,
+                "tmax_ms": 300,
+                "baseline_ms": [-100, 0],
+            }
+        },
+        "reject": {"method": "thresholds", "ptp_uv": 200},
+    }
+    cfg["conditions"] = {
+        "large": ["stimulus/reversal/large"],
+        "small": ["stimulus/reversal/small"],
+    }
+    cfg["components"] = {"preset": "iscev", "use": ["vep_n75", "vep_p100", "vep_n135"]}
+    for key, val in sections.items():
+        cfg[key] = {**cfg.get(key, {}), **val}
+    return cfg
 
 
 def write_erp_brainvision(folder: Path, truth: ErpTruth, stem: str = "sub-01_task-faces") -> Path:

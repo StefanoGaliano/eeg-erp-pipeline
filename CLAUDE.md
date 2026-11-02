@@ -64,6 +64,9 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
 - ERP config sections (`config/erp_sections.py`, imported into `schema.py` for the docs) are all optional; `reference.online`
   describes the recording, `reference.scheme/channels` is the offline re-reference.
 - Component windows/ROIs are data: `src/eegunify/erp/components/*.yaml`; never hard-code a window.
+- A component's `reference` is applied (`erp/references.py`): if it differs from the data's, the erp stage measures it on
+  re-referenced copies (QA `ERP_REFERENCE_CHANGED`); `_ave.fif` keeps the dataset reference. Opt out per component with
+  `components.overrides: {id: {reference: null}}` (the `erpcore-exact` recipe does). Synthetic VEP: `make_vep_recording`/`vep_config`.
 - Never shift event onsets in ERP stages (Phase 1 already applied `onset_shift_ms`).
 - Select events only through `erp.events.select` (MNE tag matching).
 - Reference numbers (ERP CORE) only from fetched files or the paper, never typed from memory.

@@ -195,7 +195,10 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   and Group in `eegunify app`.
 - **Phase M, MATLAB parity (done, v0.5.0):** ingestion for `.set`, BrainVision and BDF (M1) and the
   ERP-lite N170 chain (M2) natively in MATLAB, matching Python (table above).
-- **Next:** optionally the 40-subject N170 (M-E6b); VEP presets.
+- **VEP presets (done):** ISCEV pattern-reversal P100/N75/N135 at Oz, measured against Fz
+  whatever the dataset's reference (component-level reference). Validated on synthetic data
+  only (P100 latency within 2 ms): no public pattern-reversal dataset has been added yet.
+- **Next:** optionally the 40-subject N170 (M-E6b).
 
 ## Repository layout
 

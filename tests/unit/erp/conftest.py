@@ -13,7 +13,14 @@ import yaml
 
 from eegunify.config.loader import parse_config
 from eegunify.config.schema import Config
-from tests.synthetic.erp import ErpTruth, erp_config, make_erp_recording, write_erp_brainvision
+from tests.synthetic.erp import (
+    ErpTruth,
+    erp_config,
+    make_erp_recording,
+    make_vep_recording,
+    vep_config,
+    write_erp_brainvision,
+)
 
 
 @pytest.fixture(scope="session")
@@ -21,10 +28,12 @@ def erp_truth() -> ErpTruth:
     return make_erp_recording(60.0)
 
 
-def _convert(root: Path, truth: ErpTruth, cfg: dict[str, Any]) -> None:
+def _convert(
+    root: Path, truth: ErpTruth, cfg: dict[str, Any], stem: str = "sub-01_task-faces"
+) -> None:
     from eegunify.pipeline import convert
 
-    write_erp_brainvision(root / "sourcedata" / "synth", truth)
+    write_erp_brainvision(root / "sourcedata" / "synth", truth, stem)
     path = root / "code" / "configs" / "synth.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
@@ -77,3 +86,16 @@ def blink_project(tmp_path: Path, blink_rawdata: Path) -> Callable[..., tuple[Pa
         return root, parse_config(erp_config(**sections))
 
     return _make
+
+
+@pytest.fixture(scope="session")
+def vep_truth() -> ErpTruth:
+    return make_vep_recording(120.0)
+
+
+@pytest.fixture(scope="session")
+def vep_rawdata(tmp_path_factory: pytest.TempPathFactory, vep_truth: ErpTruth) -> Path:
+    """Synthetic pattern-reversal VEP project (BLUEPRINT_PHASES section 12), converted once."""
+    root = tmp_path_factory.mktemp("vep")
+    _convert(root, vep_truth, vep_config(), stem="sub-01_task-vep")
+    return root

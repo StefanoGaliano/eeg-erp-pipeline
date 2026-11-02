@@ -201,6 +201,13 @@ def erpcore_exact(
         "precomputed": first["artifacts"]["precomputed"],
     }
     data["epochs"]["reject"] |= {"method": "rules", "rules": first["epochs"]["reject"]["rules"]}
+    # The reference above is ERP CORE's exact one (for N170 every recorded site, EOG
+    # electrodes included); the presets' descriptive ``reference`` (``average``) must not
+    # replace it with the good-EEG average (component-level reference, BLUEPRINT_PHASES 12).
+    comp_overrides = data["components"].setdefault("overrides", {})
+    for item in data["components"]["use"]:
+        cid = item.split("@", 1)[0]
+        comp_overrides[cid] = {**comp_overrides.get(cid, {}), "reference": None}
     data["erp"] |= {
         "peak_lowpass_hz": ERPCORE_PEAK_LOWPASS_HZ,
         "peak_lowpass_order": ERPCORE_PEAK_LOWPASS_ORDER,

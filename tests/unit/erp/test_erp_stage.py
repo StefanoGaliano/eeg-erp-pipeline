@@ -269,6 +269,12 @@ def test_erpcore_exact_recipe_from_golden_parameters(tmp_path: Path) -> None:
     assert exact.reference.apply_to_eog and exact.preproc.interpolate_after_ica
     assert exact.artifacts.eog_bipolar["VEOG_uncorr"] == ("VEOG_lower", "Fp2")  # names mapped
     assert exact.erp.peak_lowpass_hz == 20.0
+    # ERP CORE's exact reference stays: the preset's descriptive "average" is switched off.
+    from eegunify.erp.components.library import resolve
+    from eegunify.erp.references import needed
+
+    [rc] = resolve(exact.components).components.values()
+    assert rc.definition.reference is None and needed(rc.definition.reference, exact) is None
     sub17 = resolve_for_subject(exact, "017")
     assert sub17.preproc.bad_channels.extra == ["C6"]
     assert sub17.artifacts.precomputed is not None
