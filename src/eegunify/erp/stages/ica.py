@@ -25,7 +25,7 @@ import mne
 from eegunify.config.schema import Config
 from eegunify.datasets import sha256
 from eegunify.erp import qa
-from eegunify.erp.ica import IcaResult, run_ica
+from eegunify.erp.ica import IcaResult, post_clean_bads, run_ica
 from eegunify.erp.precomputed_ica import (
     apply_precomputed,
     read_eeglab_decomposition,
@@ -101,7 +101,13 @@ class IcaStage(Stage):
         if cfg.preproc.interpolate_after_ica:
             bads = list(raw.info["bads"])
             res.steps["interpolated_after_ica"] = interpolate(raw, bads, True)
+        if cfg.artifacts.post_bad_channels is not None:
+            res.steps["post_bad_channels"] = post_clean_bads(
+                raw, cfg.artifacts.post_bad_channels, cfg.reference
+            )
         checks = qa.ica_checks(res.raw, res.decision)
+        if "post_bad_channels" in res.steps:
+            checks.append(qa.post_bads_check(res.steps["post_bad_channels"]))
         if "fit_exclude" in res.steps:
             checks.append(qa.fit_excluded_check(res.steps["fit_exclude"]))
         failed = qa.worst(checks) == "fail"

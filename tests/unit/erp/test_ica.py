@@ -18,6 +18,7 @@ from eegunify.config.erp_sections import (
     ArtifactsSection,
     IcaFitExcludeSpec,
     IcaSpec,
+    PostBadChannelsSpec,
 )
 from eegunify.config.loader import parse_config
 from eegunify.config.schema import Config, ReferenceSection
@@ -29,6 +30,8 @@ from eegunify.erp.ica import (
     break_spans,
     decide,
     fit_copy,
+    post_clean_bads,
+    ptp_ratios,
     ptp_spans,
     run_ica,
 )
@@ -304,3 +307,42 @@ def test_erpcore_n170_sub035_burst_in_break_left_out_of_fit(blink_truth: ErpTrut
     raw.set_eeg_reference("average", projection=False, verbose=False)
     with pytest.raises(RuntimeError, match="One PCA component"):  # without it: no usable fit
         run_ica(raw, ArtifactsSection(), AVG)
+
+
+# --- second bad-channel pass after cleaning ----------------------------------------------------
+
+
+def test_erpcore_n170_sub003_persistently_noisy_channel_interpolated(blink_truth: ErpTruth) -> None:
+    """sub-003 Fp1 / sub-033 F7, F8: about 2.4x the median channel's peak-to-peak for the whole
+    recording, below every pyprep threshold. Here: F8 gets extra noise throughout."""
+    t = blink_truth
+    data = t.data_uV.copy()
+    i = t.index("F8")
+    rng = np.random.default_rng(3)
+    data[i] += (
+        2.5 * data[: t.types.count("eeg")].std(axis=1).mean() * rng.standard_normal(data.shape[1])
+    )
+    raw = _raw(t, data)
+    raw.set_eeg_reference("average", projection=False, verbose=False)
+    ratios = ptp_ratios(raw, 1000.0)
+    assert ratios["F8"] > 2.0
+    assert max(r for ch, r in ratios.items() if ch != "F8") < 2.0
+    out = post_clean_bads(raw, PostBadChannelsSpec(), AVG)
+    assert out["interpolated"] == ["F8"] and out["ratios"]["F8"] > 2.0
+    assert ptp_ratios(raw, 1000.0)["F8"] < 2.0  # interpolated from its neighbours
+    eeg = raw.get_data(picks="eeg")
+    assert np.abs(eeg.sum(axis=0)).max() < 1e-9  # average reference applied again
+    check = qa.post_bads_check(out)
+    assert check.id == "ICA_POST_BADS" and check.level == "pass" and "F8" in check.message
+    clean = _raw(t)
+    assert post_clean_bads(clean, PostBadChannelsSpec(), AVG)["interpolated"] == []
+
+
+def test_post_bad_channels_in_stage(blink_project: Make) -> None:
+    # ratio 1.01: some channel is always above the median, so the pass must interpolate one
+    root, cfg = blink_project(artifacts={"post_bad_channels": {"max_ptp_ratio": 1.01}})
+    outs = {o.item.stage: o for o in Runner(cfg, root).run(to="ica")}
+    assert outs["ica"].status == "ok", outs["ica"].message
+    data = json.loads(_out(root, cfg, "ica", "qa", ".json").read_text(encoding="utf-8"))
+    assert data["steps"]["post_bad_channels"]["interpolated"]
+    assert any(c["id"] == "ICA_POST_BADS" for c in data["checks"])

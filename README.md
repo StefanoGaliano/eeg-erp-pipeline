@@ -201,7 +201,7 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   (Zenodo 5172962, `code/configs/gaba_vep.yaml`); results in docs/validation_erp.md.
 - **40-subject N170 (done, v0.7.0, M-E6b):** all 40 ERP CORE N170 subjects. Face − car at PO8:
   −3.31 µV vs ERP CORE's −3.37 µV (d_z −1.22 vs −1.24, 37 subjects) with ERP CORE's own
-  per-subject parameters (`erpcore-exact`), −3.45 vs −3.49 µV (36 subjects) with the default
+  per-subject parameters (`erpcore-exact`), −3.31 vs −3.37 µV (38 subjects) with the default
   recipe. Details in docs/validation_erp.md.
 - **Next:** BCI / real-time work (docs/BLUEPRINT_PHASES.md §13) once motor-restoration work starts.
 

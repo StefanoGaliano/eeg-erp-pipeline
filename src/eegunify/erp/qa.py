@@ -22,6 +22,8 @@ ICA_BLINK_RESIDUAL           ica     warn if |VEOG-Fp1 correlation| after cleani
 ICA_BRAIN_REMOVED            ica     warn if an excluded component has ICLabel brain prob > 0.5
 ICA_FIT_EXCLUDED             ica     warn if ``artifacts.ica.fit_exclude`` left more than half of
                                      the recording out of the ICA fit
+ICA_POST_BADS                ica     warn if ``artifacts.post_bad_channels`` interpolated more than
+                                     10 % of the EEG channels after cleaning (pass lists them)
 WAVELET_VARIANCE_KEPT        ica     info (pass): variance left after wavelet thresholding (% of
                                      the EEG variance before; HAPPE's data-QC measure)
 EPOCHS_REJECTED_FRACTION     epochs  warn > 25 %, fail > 50 % of all epochs rejected (the fail
@@ -240,6 +242,22 @@ def fit_excluded_check(summary: dict[str, Any]) -> QACheck:
         f"(breaks {summary['breaks_s']} s, peak-to-peak {summary['ptp_s']} s)",
         frac,
         FIT_EXCLUDED_WARN,
+    )
+
+
+POST_BADS_WARN = 0.1
+
+
+def post_bads_check(summary: dict[str, Any]) -> QACheck:
+    chans, n = summary["interpolated"], summary["n_eeg"]
+    frac = len(chans) / n if n else 0.0
+    shown = ", ".join(f"{c} {summary['ratios'][c]}x" for c in chans) or "none"
+    return QACheck(
+        "ICA_POST_BADS",
+        "warn" if frac > POST_BADS_WARN else "pass",
+        f"{len(chans)}/{n} EEG channels interpolated after cleaning: {shown}",
+        frac,
+        POST_BADS_WARN,
     )
 
 

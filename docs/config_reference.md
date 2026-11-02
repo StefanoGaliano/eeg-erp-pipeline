@@ -61,6 +61,7 @@ Artifact correction (Phase 3).
 | `corrected_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG channels derived after ICA cleaning, ``{HEOG: [HEOG_left, HEOG_right]}`` (ERP CORE's corrected bipolars; ``eog_bipolar`` gives the uncorrected ones). |
 | `asr` | AsrSpec \| null | `null` | ASR settings; ``null`` (default) keeps ASR off. |
 | `eog_bipolar` | map[str, list[…]] | `{}` | Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. Derived by the preproc stage before any filtering, whether or not ICA runs. |
+| `post_bad_channels` | PostBadChannelsSpec \| null | `null` | Bad channels found again on the ICA-cleaned data (``null``, the default: no second pass). Catches channels persistently about 2x noisier than the rest, which pyprep's tests miss (ERP CORE N170 sub-003 Fp1, sub-033 F7/F8). |
 
 ## `AsrSpec`
 
@@ -336,6 +337,15 @@ Electrode positions.
 | `standard_name` | string | `"standard_1005"` | Any MNE built-in montage, e.g. ``biosemi64``, ``GSN-HydroCel-128``. |
 | `file` | string \| null | `null` | Position file (``.elc``, ``.sfp``, ``.bvct``, ...) relative to the recording's folder; may contain ``{subject}``. |
 | `on_missing` | `raise` \| `warn` \| `ignore` | `"warn"` | What to do with EEG channels that get no position. |
+
+## `PostBadChannelsSpec`
+
+Second bad-channel pass on the cleaned data, at the end of the ica stage (``ica`` and ``precomputed`` methods): channels that stay noisy after ICA are interpolated and the reference is applied again.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `max_ptp_ratio` | number | `2.0` | Flag a channel whose median peak-to-peak over ``window_ms`` windows exceeds this multiple of the median channel's. Scored on the 40 ERP CORE N170 subjects: at 2 it matched 19 of ERP CORE's 27 hand-picked bad channels (10 without it) and flagged 9 others; before ICA blinks put Fp1/Fp2 at 3-5x, which is why it runs after cleaning (docs/validation_erp.md). |
+| `window_ms` | number | `1000.0` | Window length of the peak-to-peak ratio. |
 
 ## `PrecomputedIcaSpec`
 

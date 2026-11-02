@@ -32,10 +32,11 @@ from eegunify.config.erp_sections import (
     ArtifactsSection,
     IcaFitExcludeSpec,
     IcaSpec,
+    PostBadChannelsSpec,
 )
 from eegunify.config.schema import ReferenceSection
 from eegunify.erp.events import matches
-from eegunify.erp.preprocess import add_bipolar_eog, rereference
+from eegunify.erp.preprocess import add_bipolar_eog, interpolate, rereference
 
 __all__ = ["add_bipolar_eog"]  # moved to preprocess (derived in preproc since 0.3.0)
 
@@ -141,6 +142,39 @@ def fit_exclusion(
         "excluded_fraction": round(excluded / total, 4) if total else 0.0,
     }
     return ann, summary
+
+
+def ptp_ratios(raw: mne.io.BaseRaw, window_ms: float) -> dict[str, float]:
+    """Per good EEG channel: median over ``window_ms`` windows of its peak-to-peak divided by
+    the median channel's peak-to-peak in the same window."""
+    picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
+    x = raw.get_data(picks=picks)
+    win = max(2, round(window_ms / 1000 * raw.info["sfreq"]))
+    n = x.shape[1] // win
+    if n == 0:
+        return {}
+    ptp = np.ptp(x[:, : n * win].reshape(len(x), n, win), axis=2)
+    med = np.median(ptp, axis=0)
+    ok = med > 0
+    ratio = np.median(ptp[:, ok] / med[ok], axis=1) if ok.any() else np.ones(len(x))
+    return {raw.ch_names[i]: float(r) for i, r in zip(picks, ratio, strict=True)}
+
+
+def post_clean_bads(
+    raw: mne.io.BaseRaw, spec: PostBadChannelsSpec, reference: ReferenceSection
+) -> dict[str, Any]:
+    """Interpolate the channels still noisy after cleaning and re-apply the reference, in place."""
+    ratios = ptp_ratios(raw, spec.window_ms)
+    flagged = sorted(ch for ch, r in ratios.items() if r > spec.max_ptp_ratio)
+    if flagged:
+        interpolate(raw, flagged, True)
+        rereference(raw, reference, reference_free=False)
+    return {
+        "max_ptp_ratio": spec.max_ptp_ratio,
+        "interpolated": flagged,
+        "ratios": {ch: round(ratios[ch], 2) for ch in flagged},
+        "n_eeg": len(ratios),
+    }
 
 
 def fit_copy(raw: mne.io.BaseRaw, spec: IcaSpec) -> mne.io.BaseRaw:

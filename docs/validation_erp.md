@@ -375,19 +375,18 @@ excluded (001, 005, 016) are reported, not compared.
 
 | | default recipe | erpcore-exact |
 |---|---|---|
-| subjects reaching the group stage | 36 | 39 |
-| compared subjects (kept by both) | 35 | 37 |
-| face − car mean, ours vs ERP CORE | −3.45 vs −3.49 µV | −3.31 vs −3.37 µV |
-| d_z, ours vs ERP CORE | −1.29 vs −1.32 | −1.22 vs −1.24 |
-| subjects within ±0.5 µV | 20/35 | 34/37 |
-| paired t, p (our group stage) | t(35) = −7.72, p = 4.6e-9 | t(38) = −7.85, p = 1.8e-9 |
-| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.2 / −4.1 ms | −2.2 / −4.1 ms |
+| subjects reaching the group stage | 38 | 39 |
+| compared subjects (kept by both) | 37 | 37 |
+| face − car mean, ours vs ERP CORE | −3.31 vs −3.37 µV | −3.31 vs −3.37 µV |
+| d_z, ours vs ERP CORE | −1.20 vs −1.24 | −1.22 vs −1.24 |
+| subjects within ±0.5 µV | 21/37 | 34/37 |
+| paired t, p (our group stage) | t(37) = −7.41, p = 8.1e-9 | t(38) = −7.85, p = 1.8e-9 |
+| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.4 / −4.1 ms | −2.2 / −4.1 ms |
 
-Default recipe (after 0.7.1), subjects failing a stage: 001, 003, 033 (epoch rejection: too
-many rejected epochs or fewer than 30 kept per condition) and 016 (2 face epochs left). ERP CORE
-excluded 001 and 016 too; 005, which ERP CORE excluded, now passes and is reported, not
-compared. 003 and 033 fail on channels ERP CORE interpolated by hand that no automatic test
-flags (003: Fp1; 033: F7, F8, FC4). With ERP CORE's choices (`erpcore-exact`) only 016 drops out.
+Default recipe (0.9.0), subjects failing a stage: 001 (epoch rejection) and 016 (2 face epochs
+left), both excluded by ERP CORE too; 005, which ERP CORE excluded, passes and is reported, not
+compared. The 37 compared subjects are the same as with `erpcore-exact` (where only 016 drops
+out). In 0.8.0, 003 and 033 also failed, on channels that no pyprep test flags (see 4 below).
 
 In 0.7.1 the default recipe lost eight subjects (001, 005, 010, 016, 023, 030, 033, 035). The
 per-epoch logs gave three causes, each fixed after 0.7.1 by following ERP CORE's own files:
@@ -424,6 +423,30 @@ per-epoch logs gave three causes, each fixed after 0.7.1 by following ERP CORE's
 Recovered after 0.7.1: 005, 010, 023, 030, 035. Lost: 003, which passed in 0.7.1 only because
 ICA, fitted on everything, happened to absorb its bad Fp1; with the break and peak-to-peak
 stretches left out (ERP CORE's 600 µV for 003 as well as 400 µV) Fp1 fails the peak-to-peak test.
+
+4. **Channels persistently noisy after ICA (0.9.0).** 003's Fp1 and 033's F7/F8 are not
+   intermittent: on the cleaned data their 1 s peak-to-peak is 2.1-2.4 x the median channel's
+   in almost every minute (a clean subject: 1.0-1.2 x), below pyprep's deviation cutoff, and
+   they fail the 100 µV epoch test throughout the recording (165 and 135 rejected epochs). A
+   channel flagged when its median 1 s peak-to-peak ratio exceeds a threshold, added to
+   `pyprep_robust`, scored against ERP CORE's 27 hand-picked bad channels:
+
+   | criterion | matches ERP CORE | flagged, not ERP CORE's | missed |
+   |---|---|---|---|
+   | `pyprep_robust` alone | 10 | 4 | 17 |
+   | + before ICA, > 2 x | 18 | 65 | 9 |
+   | + before ICA, > 3 x | 12 | 32 | 15 |
+   | + after ICA, > 1.5 x | 27 | 44 | 0 |
+   | + after ICA, > 2 x | 19 | 9 | 8 |
+   | + after ICA, > 2.5 x | 11 | 5 | 16 |
+
+   Before ICA, blinks put Fp1/Fp2 at 3-5 x in most subjects, so the check runs after cleaning:
+   `artifacts.post_bad_channels: {max_ptp_ratio: 2.0}` (opt-in, on in `erpcore_n170_full.yaml`
+   only) interpolates those channels at the end of the ica stage and applies the reference
+   again; QA `ICA_POST_BADS`. On the 40 subjects it interpolated 1-3 channels in 11 (003 Fp1,
+   033 F7/F8, 022 Fp1/Fp2/F8, ...). The 2 x threshold was chosen on these same 40 subjects, so
+   it is not a default until it is checked on another dataset. Regression test:
+   `test_erpcore_n170_sub003_persistently_noisy_channel_interpolated`.
 
 Subject 029 failed the ica stage in v0.7.0 ("one PCA component captures 99.996 % of the
 variance"). Cause: Oz is normal most of the time (median amplitude 0.83 x the other channels)

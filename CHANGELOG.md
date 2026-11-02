@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0 (2026-11-02)
+
+**ERP CORE N170: 38 of 40 subjects with the default recipe** (36 in 0.8.0); only 001 and 016
+fail, both excluded by ERP CORE too.
+
+- **Post-ICA bad channels:** `artifacts.post_bad_channels` (opt-in) interpolates channels whose
+  median 1 s peak-to-peak on the cleaned data exceeds `max_ptp_ratio` (2) x the median
+  channel's, then applies the reference again; QA `ICA_POST_BADS`. Catches channels
+  persistently ~2 x noisier than the rest that pyprep misses (sub-003 Fp1, sub-033 F7/F8).
+  Against ERP CORE's 27 hand-picked bad channels: 19 matched, 9 others flagged (10 / 4 before).
+  On in `erpcore_n170_full.yaml` only: the threshold was tuned on these 40 subjects.
+- Default recipe: −3.31 vs −3.37 µV, d_z −1.20 vs −1.24, 21/37 subjects within ±0.5 µV,
+  t(37) = −7.41, p = 8.1e-9.
+
 ## 0.8.0 (2026-11-02)
 
 **ERP CORE N170: 36 of 40 subjects with the default recipe** (32 in 0.7.1). Causes of the

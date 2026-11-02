@@ -239,6 +239,20 @@ class WaveletSpec(_Strict):
     """Coefficient shrinkage (HAPPE ERP default: soft)."""
 
 
+class PostBadChannelsSpec(_Strict):
+    """Second bad-channel pass on the cleaned data, at the end of the ica stage (``ica`` and
+    ``precomputed`` methods): channels that stay noisy after ICA are interpolated and the
+    reference is applied again."""
+
+    max_ptp_ratio: float = Field(default=2.0, gt=1)
+    """Flag a channel whose median peak-to-peak over ``window_ms`` windows exceeds this multiple
+    of the median channel's. Scored on the 40 ERP CORE N170 subjects: at 2 it matched 19 of ERP
+    CORE's 27 hand-picked bad channels (10 without it) and flagged 9 others; before ICA blinks
+    put Fp1/Fp2 at 3-5x, which is why it runs after cleaning (docs/validation_erp.md)."""
+    window_ms: float = Field(default=1000.0, gt=0)
+    """Window length of the peak-to-peak ratio."""
+
+
 class ArtifactsSection(_Strict):
     """Artifact correction (Phase 3)."""
 
@@ -261,6 +275,10 @@ class ArtifactsSection(_Strict):
     eog_bipolar: dict[str, tuple[str, str]] = Field(default_factory=dict)
     """Bipolar EOG derivations, ``{VEOG: [FP1, VEOG_lower]}`` = first minus second. Derived by
     the preproc stage before any filtering, whether or not ICA runs."""
+    post_bad_channels: PostBadChannelsSpec | None = None
+    """Bad channels found again on the ICA-cleaned data (``null``, the default: no second pass).
+    Catches channels persistently about 2x noisier than the rest, which pyprep's tests miss
+    (ERP CORE N170 sub-003 Fp1, sub-033 F7/F8)."""
 
     @model_validator(mode="after")
     def _precomputed(self) -> ArtifactsSection:

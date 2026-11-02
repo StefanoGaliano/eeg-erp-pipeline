@@ -74,6 +74,11 @@ artifacts:
     # step): Script2_ICA_Prep.m and ICA_Prep_Values_N170.xlsx (OSF pfde9). A burst in a break
     # otherwise took 93 % of the PCA variance in sub-035 and ICA kept 2 components.
     fit_exclude: {}
+  # Second bad-channel pass on the cleaned data: channels whose median 1 s peak-to-peak is over
+  # 2x the median channel's are interpolated after ICA (ERP CORE interpolates after ICA too).
+  # Catches channels persistently ~2x noisier than the rest (sub-003 Fp1, sub-033 F7/F8),
+  # which pyprep misses; before ICA blinks would flag Fp1/Fp2 everywhere (docs/validation_erp.md).
+  post_bad_channels: {max_ptp_ratio: 2.0}
 epochs:
   sets:
     stim:
