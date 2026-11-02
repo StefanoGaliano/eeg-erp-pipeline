@@ -22,7 +22,7 @@ table says how each format is tested and what is specific to it.
 | ANT Neuro eego | `.cnt` (+ `.evt`) | `.evt` | real file, cross-format vs its BrainVision export | `.cnt` told apart from Neuroscan by its RIFF magic bytes; impedance-check markers dropped |
 | Neuroscan | `.cnt` | embedded | real file | 16- vs 32-bit samples: when the header can't tell, both are read and the physiologically plausible one is kept (else `neuroscan_data_format` must be set) |
 | Curry 7 / 8 | `.dap` / `.cdt` | embedded | real files, cross-format vs the BDF original | Code 50000 (trigger off, 2 ms after every trigger) ignored |
-| EGI / Magstim | `.mff` (folder), `.raw` | annotations | real file | One stim channel per event type, so annotations are used (otherwise all but one type would be lost); `E1..E256` names kept |
+| EGI / Magstim | `.mff` (folder), `.raw` | annotations | real file; synthetic `.raw` | One stim channel per event type, so annotations are used (otherwise all but one type would be lost); `E1..E256` names kept. Segmented `.raw` holding a single segment (Net Station exports, e.g. Zenodo 5172962) is read as continuous; several segments (epoched data) are refused |
 | CSV / OpenBCI | `.csv`, `.tsv`, `.txt` | marker column | synthetic (generic CSV, OpenBCI GUI export) | Sampling rate from config, OpenBCI `%Sample Rate` header, or the time column, recorded as a note; channel names from `format.hints.csv.channel_names` |
 | BIDS sidecar events | `*_events.tsv` next to any of the above | the sidecar | real datasets (ds003645, ds006768) | Used automatically when the recording itself has no events |
 

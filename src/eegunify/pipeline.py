@@ -69,6 +69,12 @@ def default_config(path: Path, subject: str = "01") -> Config:
 def _channel_types(raw: mne.io.BaseRaw, rename_log: dict[str, str], cfg: Config) -> None:
     reader_types = dict(zip(raw.ch_names, raw.get_channel_types(), strict=True))
     types = infer_types(raw.ch_names, configured=cfg.channels.types, reader_types=reader_types)
+    for name, rt in reader_types.items():
+        # Trigger channels stay triggers: EGI event tracks are named by their code, and one
+        # called "resp" (a response track, GABA infant VEP, Zenodo 5172962) would otherwise
+        # become a respiration channel and be written as data.
+        if rt == "stim" and name not in cfg.channels.types:
+            types[name] = "stim"
     new_to_orig = {new: orig for orig, new in rename_log.items()}
     for name, ch_type in types.items():
         if ch_type == "misc" and name not in cfg.channels.types:

@@ -7,6 +7,7 @@ evoked "P1/N1" bump (+5 µV at 100 ms, -8 µV at 170 ms) after every face/car ev
 
 from __future__ import annotations
 
+import struct
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -312,3 +313,45 @@ WRITERS = {
     "xdf": write_xdf_recording,
     "csv": write_csv,
 }
+
+
+def write_egi_raw(
+    path: Path,
+    truth: Truth,
+    *,
+    segments: int = 0,
+    tracks: tuple[str, ...] = ("ev01", "ev02", "resp"),
+) -> Path:
+    """EGI Net Station simple binary ``.raw`` (big-endian float32).
+
+    ``segments=0`` writes the continuous variant (version 4); ``segments>=1`` the segmented one
+    (version 5) with the recording split into that many equal segments. Events go into one
+    track per code (``tracks[code - 1]``), 1 at the event sample; the last track (``resp``, as
+    in the GABA infant VEP files) marks a "response" 300 ms after every code-1 event.
+    """
+    data = truth.data_uV.astype(">f4")
+    n_ch, n = data.shape
+    ev = np.zeros((len(tracks), n), dtype=">f4")
+    for s, c in zip(truth.samples, truth.codes, strict=True):
+        ev[int(c) - 1, s] = 1.0
+        if c == 1:
+            ev[-1, s + int(0.3 * SFREQ)] = 1.0
+    block = np.vstack([data, ev]).astype(">f4")  # vstack returns native byte order
+    version = 4 if segments == 0 else 5
+    head = struct.pack(">i6hi5h", version, 2024, 1, 2, 3, 4, 5, 0, int(SFREQ), n_ch, 0, 0, 0)
+    codes = b"".join(t.encode("latin1")[:4].ljust(4) for t in tracks)
+    out = path.with_suffix(".raw")
+    with out.open("wb") as fh:
+        fh.write(head)
+        if segments == 0:
+            fh.write(struct.pack(">ih", n, len(tracks)) + codes)
+            fh.write(block.T.tobytes())
+            return out
+        cat = b"VEP"
+        per = n // segments
+        fh.write(struct.pack(">h", 1) + bytes([len(cat)]) + cat)
+        fh.write(struct.pack(">hih", segments, per, len(tracks)) + codes)
+        for k in range(segments):
+            fh.write(struct.pack(">hi", 1, int(k * per / SFREQ * 1000)))
+            fh.write(block[:, k * per : (k + 1) * per].T.tobytes())
+    return out

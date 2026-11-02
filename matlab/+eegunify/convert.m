@@ -43,6 +43,10 @@ for k = 1:numel(names)
         types{k} = m.types(hit).type;
         continue
     end
+    if strcmp(r.reader_types{k}, 'stim')
+        types{k} = 'stim';  % trigger channels stay triggers (an EGI track named "resp")
+        continue
+    end
     types{k} = eegunify.infer_type(names{k}, std, r.reader_types{k});
     if strcmp(types{k}, 'misc')
         types{k} = eegunify.infer_type(r.labels{k}, std, r.reader_types{k});
