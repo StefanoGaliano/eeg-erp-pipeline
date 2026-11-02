@@ -373,6 +373,40 @@ def config_validate(
     console.print(f"[green]valid[/]: {cfg.dataset.name} ({len(cfg.recordings.subjects)} subjects)")
 
 
+@config_app.command("dump")
+def config_dump(
+    config: Annotated[Path, typer.Argument(help="Dataset YAML config.")],
+    subject: Annotated[
+        str | None, typer.Option("--subject", "-s", help="Apply this subject's overrides.")
+    ] = None,
+    resolved: Annotated[
+        bool, typer.Option("--resolved", help="Also resolve the component library.")
+    ] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="JSON output (the only format).")] = True,
+    out: Annotated[Path | None, typer.Option(help="Write to a file instead of stdout.")] = None,
+    root: Annotated[Path, typer.Option(help="Project root.")] = Path("."),
+) -> None:
+    """Print the full config as JSON, with a config hash (read by the MATLAB package)."""
+    from eegunify.config.dump import dump_config
+    from eegunify.config.loader import ConfigError, load_config
+    from eegunify.erp.components.library import LibraryError
+
+    try:
+        data = dump_config(
+            load_config(config), subject=subject, resolved=resolved, project_root=root
+        )
+    except (ConfigError, LibraryError) as err:
+        console.print(f"[red]{err}")
+        raise typer.Exit(EXIT_USAGE) from err
+    text = json.dumps(data, indent=2, ensure_ascii=False)
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text + "\n", encoding="utf-8")
+        console.print(f"wrote {out} (config_hash {data['config_hash'][:12]})")
+    else:
+        typer.echo(text)
+
+
 @config_app.command("init")
 def config_init(
     path: Annotated[Path, typer.Argument(exists=True, help="One example recording.")],
