@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.1 (2026-11-02)
+
+Documentation only (docs/validation_erp.md).
+
+- **Post-ICA bad-channel check, out of sample:** on ERP CORE P3 and N2pc (subjects 015-019) no
+  channel exceeds 2 x, so no false alarm; ERP CORE's three N2pc bad channels are at 1.29-1.63 x
+  and are missed. On the GABA infants it adds no match with HAPPE's bad channels and would flag
+  face/edge sites over the full net. It stays opt-in.
+- **GABA VEP table rerun:** subjects b-e unchanged; in subject a the gross-variance check
+  (0.7.1) flags E44 and E125-E127 (35 % bad, 93/100 epochs, P100 128 ms, 2.8 µV).
+
 ## 0.9.0 (2026-11-02)
 
 **ERP CORE N170: 38 of 40 subjects with the default recipe** (36 in 0.8.0); only 001 and 016
