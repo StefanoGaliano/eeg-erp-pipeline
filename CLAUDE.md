@@ -8,6 +8,11 @@ canonical BIDS-EEG form (BrainVision files, float32, µV) that every later stage
 (ERP phases, Phase M = MATLAB parity, Phase A = Streamlit app).
 `docs/validation_datasets.md` + `code/configs/validation_datasets.yaml` list 40 real open datasets for testing.
 
+## Status
+
+Frozen at v0.9.2 (2026-11-02): every blueprint milestone is done. Bug fixes only; no new features
+or recipe changes without the user asking. BCI / real-time (BLUEPRINT_PHASES §13) is a separate project.
+
 ## Commands
 
 Environment: conda env `eegunify` (`conda env create -f environment.yml`). CI uses `uv sync --locked --extra dev`.
@@ -35,7 +40,7 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
   `python code/scripts/erpcore_grand_average.py --root N170=. --root P3=. --root N2pc=.` (after `erp run` of the three configs)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E6b done, v0.7.0)
+## ERP phases (docs/BLUEPRINT_PHASES.md; all milestones done; frozen at v0.9.2)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.

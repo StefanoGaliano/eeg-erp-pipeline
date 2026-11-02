@@ -5,6 +5,10 @@
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+**Status: complete (v0.9.2, 2026-11-02).** Every milestone in `docs/BLUEPRINT.md` and
+`docs/BLUEPRINT_PHASES.md` is done; the project is frozen and only gets bug fixes. Real-time /
+BCI work (BLUEPRINT_PHASES §13) belongs to a separate project.
+
 One pipeline from **any raw EEG recording to ERPs**, focused on visual paradigms (VEP, P1/N1,
 N170, P3).
 
