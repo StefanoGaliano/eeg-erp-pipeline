@@ -170,6 +170,23 @@ def _missing_positions(raw: mne.io.BaseRaw, names: list[str]) -> list[str]:
     return [n for n in names if n not in pos or not np.all(np.isfinite(pos[n]))]
 
 
+def gross_variance_channels(raw: mne.io.BaseRaw, ratio: float | None) -> list[str]:
+    """EEG channels whose variance exceeds ``ratio`` x the median channel variance.
+
+    Plain variance on purpose: a channel that is fine most of the time but has rare huge
+    excursions passes robust (median/IQR) and correlation-window tests, yet once average-
+    referenced it leaks into every channel and leaves ICA one dominant PCA component.
+    """
+    if ratio is None:
+        return []
+    var = raw.get_data(picks="eeg").var(axis=1)
+    med = float(np.median(var))
+    if med <= 0:
+        return []
+    names = [raw.ch_names[i] for i in mne.pick_types(raw.info, eeg=True, exclude=[])]
+    return [n for n, v in zip(names, var, strict=True) if v > ratio * med]
+
+
 def detect_bads(raw: mne.io.BaseRaw, spec: BadChannelsSpec) -> dict[str, str]:
     """Bad EEG channels -> reason. Channels already bad in rawdata are kept (``rawdata``)."""
     bads = {ch: "rawdata channels.tsv" for ch in raw.info["bads"]}
@@ -184,6 +201,8 @@ def detect_bads(raw: mne.io.BaseRaw, spec: BadChannelsSpec) -> dict[str, str]:
         return bads
     copy = raw.copy().pick("eeg", exclude="bads")
     copy.filter(BAD_DETECTION_HIGHPASS_HZ, None, verbose=False)
+    # Additive only, after the detector: its input and its reasons are unchanged.
+    gross = gross_variance_channels(copy, spec.max_variance_ratio)
     if spec.method == "lof":
         if importlib.util.find_spec("sklearn") is None:
             raise PreprocError(
@@ -191,7 +210,7 @@ def detect_bads(raw: mne.io.BaseRaw, spec: BadChannelsSpec) -> dict[str, str]:
             )
         found = mne.preprocessing.find_bad_channels_lof(copy, verbose=False)
         bads.update({ch: "lof" for ch in found if ch not in bads})
-        return bads
+        return _add_gross(bads, gross)
     missing = _missing_positions(copy, copy.ch_names)
     if missing:
         raise PreprocError(
@@ -213,6 +232,12 @@ def detect_bads(raw: mne.io.BaseRaw, spec: BadChannelsSpec) -> dict[str, str]:
             continue
         for ch in chans:
             bads.setdefault(str(ch), f"pyprep {kind.removeprefix('bad_by_')}")
+    return _add_gross(bads, gross)
+
+
+def _add_gross(bads: dict[str, str], gross: list[str]) -> dict[str, str]:
+    for ch in gross:
+        bads.setdefault(ch, "gross variance")
     return bads
 
 

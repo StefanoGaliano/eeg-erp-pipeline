@@ -21,6 +21,7 @@ from eegunify.erp.preprocess import (
     PreprocError,
     apply_filter,
     detect_bads,
+    gross_variance_channels,
     harmonics,
     interpolate,
     is_reference_free,
@@ -161,6 +162,32 @@ def test_pyprep_finds_dead_and_noisy_channel(erp_truth: ErpTruth, method: str) -
     else:  # RANSAC alone: the noisy channel is predicted badly from its neighbours
         assert erp_truth.noisy in bads
     assert all(r.startswith("pyprep") for r in bads.values())
+
+
+def _with_bursts(truth: ErpTruth, ch: str) -> mne.io.RawArray:
+    """ERP CORE N170 sub-029: Oz normal most of the time, with one stretch of hundreds of mV
+    (too short for RANSAC's 40 % bad-window rule, robust tests ignore it)."""
+    raw = _raw(truth)
+    data = raw.get_data()
+    i = raw.ch_names.index(ch)
+    n = data.shape[1]
+    rng = np.random.default_rng(29)
+    k = n // 20  # 5 % of the recording
+    data[i, n // 2 : n // 2 + k] += 0.3 * rng.standard_normal(k)  # 300 mV
+    raw._data[:] = data
+    return raw
+
+
+def test_erpcore_n170_sub029_gross_variance_channel_flagged(erp_truth: ErpTruth) -> None:
+    raw = _with_bursts(erp_truth, "Oz")
+    assert gross_variance_channels(raw, None) == []
+    assert gross_variance_channels(raw, 100.0) == ["Oz"]
+    # config_only stays manual; RANSAC (the method that missed it on 029) gets the guard
+    assert "Oz" not in detect_bads(raw.copy(), BadChannelsSpec())
+    bads = detect_bads(raw.copy(), BadChannelsSpec(method="pyprep_ransac"))
+    assert bads["Oz"] == "gross variance"
+    off = detect_bads(raw.copy(), BadChannelsSpec(method="pyprep_ransac", max_variance_ratio=None))
+    assert "Oz" not in off
 
 
 def test_detect_bads_keeps_rawdata_bads_and_needs_positions(erp_truth: ErpTruth) -> None:

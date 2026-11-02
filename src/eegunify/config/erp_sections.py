@@ -70,6 +70,11 @@ class BadChannelsSpec(_Strict):
     1 Hz high-passed copy (pyprep needs electrode positions)."""
     random_state: int = 97
     """Seed for pyprep RANSAC; part of the cache key."""
+    max_variance_ratio: float | None = Field(default=100.0, gt=1)
+    """With an automatic method, also flag a channel whose plain (non-robust) variance on the
+    1 Hz high-passed copy exceeds this multiple of the median channel's. Catches intermittent
+    huge artifacts that RANSAC and pyprep's robust tests miss because the channel looks normal
+    most of the time (ERP CORE N170 sub-029: Oz, about 10^6 x the median). ``null`` disables it."""
     max_fraction: float = Field(default=0.25, gt=0, le=1)
     """Bad EEG fraction above which ``PREPROC_BADS_FRACTION`` fails and the subject stops at
     preproc (warning above 10 %). Raise it only with a reason (noisy infant high-density data)."""

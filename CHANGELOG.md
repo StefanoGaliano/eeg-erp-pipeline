@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Bad channels:** `preproc.bad_channels.max_variance_ratio` (default 100) adds channels whose
+  plain variance exceeds 100 x the median channel's to the automatic methods' bads (reason
+  `gross variance`). Fixes ERP CORE N170 sub-029, whose Oz has rare bursts of up to 362 mV that
+  RANSAC and pyprep's robust tests missed; ICA then refused the data. The default recipe now
+  takes 32 subjects to the group stage: −3.32 vs −3.46 µV, d_z −1.21 vs −1.29,
+  t(31) = −6.87, p = 1.1e-7; 029 is −0.41 µV off ERP CORE.
+
 ## 0.7.0 (2026-11-02)
 
 **ERP CORE N170 on all 40 subjects** (M-E6b, docs/BLUEPRINT_PHASES.md OQ1 and section 14).

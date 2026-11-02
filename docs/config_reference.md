@@ -78,6 +78,7 @@ How bad channels are found before interpolation.
 |---|---|---|---|
 | `method` | `config_only` \| `pyprep_ransac` \| `pyprep_full` \| `lof` | `"config_only"` | ``config_only`` uses ``channels.bads`` alone; the others add automatic detection on a 1 Hz high-passed copy (pyprep needs electrode positions). |
 | `random_state` | integer | `97` | Seed for pyprep RANSAC; part of the cache key. |
+| `max_variance_ratio` | number \| null | `100.0` | With an automatic method, also flag a channel whose plain (non-robust) variance on the 1 Hz high-passed copy exceeds this multiple of the median channel's. Catches intermittent huge artifacts that RANSAC and pyprep's robust tests miss because the channel looks normal most of the time (ERP CORE N170 sub-029: Oz, about 10^6 x the median). ``null`` disables it. |
 | `max_fraction` | number | `0.25` | Bad EEG fraction above which ``PREPROC_BADS_FRACTION`` fails and the subject stops at preproc (warning above 10 %). Raise it only with a reason (noisy infant high-density data). |
 | `extra` | list[string] | `[]` | More bad channels for the ERP stages only (rawdata is not changed), usually per subject in ``overrides`` (e.g. the channels ERP CORE interpolated). |
 

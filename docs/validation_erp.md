@@ -375,20 +375,31 @@ excluded (001, 005, 016) are reported, not compared.
 
 | | default recipe | erpcore-exact |
 |---|---|---|
-| subjects reaching the group stage | 31 | 39 |
-| compared subjects (kept by both) | 31 | 37 |
-| face − car mean, ours vs ERP CORE | −3.32 vs −3.48 µV | −3.31 vs −3.37 µV |
-| d_z, ours vs ERP CORE | −1.19 vs −1.28 | −1.22 vs −1.24 |
-| subjects within ±0.5 µV | 15/31 | 34/37 |
-| paired t, p (our group stage) | t(30) = −6.65, p = 2.3e-7 | t(38) = −7.85, p = 1.8e-9 |
-| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.3 / −4.0 ms | −2.2 / −4.1 ms |
+| subjects reaching the group stage | 32 | 39 |
+| compared subjects (kept by both) | 32 | 37 |
+| face − car mean, ours vs ERP CORE | −3.32 vs −3.46 µV | −3.31 vs −3.37 µV |
+| d_z, ours vs ERP CORE | −1.21 vs −1.29 | −1.22 vs −1.24 |
+| subjects within ±0.5 µV | 16/32 | 34/37 |
+| paired t, p (our group stage) | t(31) = −6.87, p = 1.1e-7 | t(38) = −7.85, p = 1.8e-9 |
+| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.2 / −4.3 ms | −2.2 / −4.1 ms |
 
 Default recipe, subjects failing a stage: 001, 005, 010, 023, 030, 033, 035 (epoch rejection:
 too many rejected epochs or fewer than 30 kept per condition), 016 (2 face epochs left; ERP CORE
-excluded it too) and 029 (ICA refused: one PCA component holds 99.996 % of the variance; not
-investigated further). These
+excluded it too). These
 are the cost of automatic choices; ERP CORE chose bad channels and rejection thresholds by hand
 per subject. With their choices (`erpcore-exact`) only 016 drops out.
+
+Subject 029 failed the ica stage in v0.7.0 ("one PCA component captures 99.996 % of the
+variance"). Cause: Oz is normal most of the time (median amplitude 0.83 x the other channels)
+but has stretches of up to 362 mV in about 8 % of the samples. pyprep RANSAC flags a channel
+only when it is bad in more than 40 % of its windows, and pyprep's deviation test is robust
+(median/IQR), so neither flagged Oz; the average reference then spread it into every channel.
+Its plain variance on the 1 Hz high-passed copy is about 10^6 x the median channel's (next:
+Fp2, 11 x, blinks). Fix: `preproc.bad_channels.max_variance_ratio` (default 100) adds any
+channel above that ratio to the automatic methods' bads (reason `gross variance`); on the 40
+subjects it flags only 029's Oz, which ERP CORE also interpolated. 029 now gives −3.35 µV vs
+ERP CORE's −2.93 (−0.41, within tolerance). Regression test:
+`test_erpcore_n170_sub029_gross_variance_channel_flagged`.
 
 `erpcore-exact` deviations above 0.5 µV: 004 (+0.52), 008 (+0.92), 029 (−0.59). The parent waves
 (face, car) are each about 0.3 µV less positive than ERP CORE's on average (outside the ±0.3 µV
