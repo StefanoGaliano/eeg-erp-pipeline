@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.5.0 (2026-11-02)
+
+**Python ↔ MATLAB parity** (docs/BLUEPRINT_PHASES.md, Phase M): the same config runs natively in
+MATLAB (EEGLAB, FieldTrip, ERPLAB) and gives the same outputs as Python, checked by realdata
+tests (MATLAB tests run locally; CI has no MATLAB licence).
+
+- **Config dump:** `eegunify config dump <yaml> --json [--resolved] [-s SUB]` writes the full
+  config with subject overrides applied and components resolved, plus a `config_hash`; a
+  `matlab` block carries mappings as lists of pairs and the channel-name tables (10-05 names,
+  aliases, BioSemi 64 order), so both languages normalize names from one source.
+- **M1, ingestion parity:** `matlab/+eegunify/` (`convert`, `read_any`, `normalize_names`,
+  `infer_type`, `extract_events`, `canonical_validate`, `write_bids`) for EEGLAB `.set`,
+  BrainVision and BioSemi BDF. On ERP CORE N170 sub-015 and synthetic BrainVision/BDF files:
+  identical `events.tsv` and `channels.tsv`, data within 0.001 µV, config hash round-trip
+  (`tests/integration/test_matlab_parity.py`).
+- **M2, ERP-lite N170 parity:** recipe `erp_lite` (the dataset recipe without ICA, resampling
+  and interpolation) and `matlab/+eegunify/erp_lite.m` (bipolar EOG, ERPLAB `pop_basicfilter`,
+  re-reference, ERPLAB epochs, rejection, averages and `pop_geterpvalues`). On sub-015:
+  continuous data within 0.015 µV, identical rejected epochs, ERP RMS difference 0.0005 µV,
+  N170 mean amplitudes within 0.004 µV (`tests/integration/test_matlab_erp_lite.py`). The
+  ERPLAB code is shared with the M-E5 cross-check (`erplab_erp.m`).
+- **Fix:** preproc now filters EOG, EMG and ECG channels like the EEG (MNE's default picks
+  skipped EOG, which kept its DC offset); found by the M2 parity test. Preproc caches are
+  recomputed (`schema_version` 3). Effect on the ERP CORE comparison: P3 sub-019 (default
+  recipe) moves from −0.62 to −0.55 µV; see docs/validation_erp.md.
+- **Tests:** the realdata tests count only artifact rejections (not `NO_RESPONSE`) and list the
+  documented default-recipe deviations exactly.
+- README: "Python ↔ MATLAB parity" table.
+
 ## 0.4.0 (2026-11-01)
 
 **The ERP stages in the app** (docs/BLUEPRINT_PHASES.md, Phase A2): five pages that edit the

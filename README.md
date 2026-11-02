@@ -193,9 +193,9 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   the ERPLAB cross-check.
 - **App pages for the ERP stages (done, v0.4.0):** Preprocess, ICA review, Epochs, Components
   and Group in `eegunify app`.
-- **Phase M (MATLAB parity):** ingestion for `.set`, BrainVision and BDF (M1) and the
+- **Phase M, MATLAB parity (done, v0.5.0):** ingestion for `.set`, BrainVision and BDF (M1) and the
   ERP-lite N170 chain (M2) natively in MATLAB, matching Python (table above).
-- **Next:** release v0.5.0; optionally the 40-subject N170 (M-E6b).
+- **Next:** optionally the 40-subject N170 (M-E6b); VEP presets.
 
 ## Repository layout
 

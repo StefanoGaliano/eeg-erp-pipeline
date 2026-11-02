@@ -675,7 +675,7 @@ classes or decoding code until motor restoration work starts.
 | M-E6b | optional 40-subject N170 | M-E6a | grand average & d_z vs published |
 | A2 | **done 2026-11-01 (v0.4.0)**: app pages (section 10) → **v0.4.0** | M-E6a | AppTest green; UI config == hand config output |
 | M1 | **done 2026-11-02**: MATLAB ingestion parity (BrainVision, BDF, SET), `matlab/+eegunify`, `tests/integration/test_matlab_parity.py` | v0.1.0 | §11 tolerances |
-| M2 | **done 2026-11-02**: MATLAB ERP-lite N170 parity (`erp_lite` recipe, `matlab/+eegunify/erp_lite.m`, `tests/integration/test_matlab_erp_lite.py`) → **v0.5.0** | M-E5, M1 | §11 tolerances |
+| M2 | **done 2026-11-02 (v0.5.0)**: MATLAB ERP-lite N170 parity (`erp_lite` recipe, `matlab/+eegunify/erp_lite.m`, `tests/integration/test_matlab_erp_lite.py`) → **v0.5.0** | M-E5, M1 | §11 tolerances |
 | VEP | VEP presets + synthetic VEP + public dataset if found | M-E4 | P100 latency recovered ±2 ms on synthetic |
 
 Build steps inside each milestone follow Phase 1 discipline: schema field + code + test + docs in
