@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0 (2026-11-02)
+
+**ERP CORE N170 on all 40 subjects** (M-E6b, docs/BLUEPRINT_PHASES.md OQ1 and section 14).
+`code/configs/erpcore_n170_full.yaml` on the raw OSF recordings (pfde9), run with both recipes
+and compared with ERP CORE's published per-subject values (`pytest -m realdata_full`).
+
+- **`erpcore-exact`:** 39 subjects reach the group stage (016 keeps 2 face epochs; ERP CORE
+  excluded it too). Face − car mean amplitude at PO8 over the 37 compared subjects: −3.31 µV vs
+  ERP CORE's −3.37 µV; d_z −1.22 vs −1.24; 34/37 subjects within ±0.5 µV.
+- **Default recipe:** 31 subjects reach the group stage (automatic bad channels and rejection
+  drop more subjects than ERP CORE did); −3.32 vs −3.48 µV, d_z −1.19 vs −1.28; paired
+  t(30) = −6.65, p = 2.3e-7.
+- Peak and 50 % fractional-area latencies within 2.3 and 4.1 ms of ERP CORE's mean.
+
 ## 0.6.0 (2026-11-02)
 
 **VEP presets on synthetic and real data** (docs/BLUEPRINT_PHASES.md section 12).

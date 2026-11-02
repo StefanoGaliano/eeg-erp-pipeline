@@ -199,7 +199,11 @@ The full list is in [docs/canonical_contract.md](docs/canonical_contract.md). In
   whatever the dataset's reference (component-level reference). Validated on synthetic data
   (P100 latency within 2 ms) and run on five infants of the GABA pattern-reversal VEP
   (Zenodo 5172962, `code/configs/gaba_vep.yaml`); results in docs/validation_erp.md.
-- **Next:** optionally the 40-subject N170 (M-E6b).
+- **40-subject N170 (done, v0.7.0, M-E6b):** all 40 ERP CORE N170 subjects. Face − car at PO8:
+  −3.31 µV vs ERP CORE's −3.37 µV (d_z −1.22 vs −1.24, 37 subjects) with ERP CORE's own
+  per-subject parameters (`erpcore-exact`), −3.32 vs −3.48 µV (31 subjects) with the default
+  recipe. Details in docs/validation_erp.md.
+- **Next:** BCI / real-time work (docs/BLUEPRINT_PHASES.md §13) once motor-restoration work starts.
 
 ## Repository layout
 

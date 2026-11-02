@@ -363,3 +363,35 @@ has no Python equivalent; the numbers are close to HAPPE's in spirit, not identi
 Found on this dataset and fixed: single-segment EGI `.raw` files, an EGI event track named
 `resp` typed as a respiration channel, the temporary-file path kept in `raw.filenames`, and text
 event codes (`vep+`) in the epochs log.
+
+## M-E6b N170, all 40 subjects vs ERP CORE (2026-11-02)
+
+`code/configs/erpcore_n170_full.yaml`: the 40 raw recordings of ERP CORE's N170 OSF project
+(pfde9, fetched with `eegunify fetch erpcore-full -c N170`), same recipe as
+`erpcore_n170.yaml`. Test `tests/integration/test_erpcore_full.py` (`pytest -m realdata_full`,
+about 7 min). Measure: face − car mean amplitude at PO8, compared per subject with ERP CORE's
+published values (tolerance ±0.5 µV per subject, ±0.3 µV on the mean). Subjects ERP CORE
+excluded (001, 005, 016) are reported, not compared.
+
+| | default recipe | erpcore-exact |
+|---|---|---|
+| subjects reaching the group stage | 31 | 39 |
+| compared subjects (kept by both) | 31 | 37 |
+| face − car mean, ours vs ERP CORE | −3.32 vs −3.48 µV | −3.31 vs −3.37 µV |
+| d_z, ours vs ERP CORE | −1.19 vs −1.28 | −1.22 vs −1.24 |
+| subjects within ±0.5 µV | 15/31 | 34/37 |
+| paired t, p (our group stage) | t(30) = −6.65, p = 2.3e-7 | t(38) = −7.85, p = 1.8e-9 |
+| peak / 50 % fractional-area latency vs ERP CORE (mean) | −2.3 / −4.0 ms | −2.2 / −4.1 ms |
+
+Default recipe, subjects failing a stage: 001, 005, 010, 023, 030, 033, 035 (epoch rejection:
+too many rejected epochs or fewer than 30 kept per condition), 016 (2 face epochs left; ERP CORE
+excluded it too) and 029 (ICA refused: one PCA component holds 99.996 % of the variance; not
+investigated further). These
+are the cost of automatic choices; ERP CORE chose bad channels and rejection thresholds by hand
+per subject. With their choices (`erpcore-exact`) only 016 drops out.
+
+`erpcore-exact` deviations above 0.5 µV: 004 (+0.52), 008 (+0.92), 029 (−0.59). The parent waves
+(face, car) are each about 0.3 µV less positive than ERP CORE's on average (outside the ±0.3 µV
+mean tolerance) while the difference wave agrees within 0.06 µV: the same parent-wave offset seen
+on sub-015..019, which cancels in the contrast. Both acceptance criteria (mean within ±0.3 µV,
+d_z with ERP CORE's sign) pass for both recipes.

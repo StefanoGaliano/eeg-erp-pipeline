@@ -35,7 +35,7 @@ If `conda activate` isn't available in the shell, call the binaries directly: `~
   `python code/scripts/erpcore_grand_average.py --root N170=. --root P3=. --root N2pc=.` (after `erp run` of the three configs)
 - App: `eegunify app [--root DIR]` (Streamlit; tests in `tests/unit/test_app.py` use `AppTest`, no browser)
 
-## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E6a done, v0.3.0)
+## ERP phases (docs/BLUEPRINT_PHASES.md; M-E0 to M-E6b done, v0.7.0)
 
 - `eegunify erp run <config> [-s ..] [--from/--to/--force <stage>]`; `eegunify erp status <config>` (subject x stage cache
   table); `eegunify erp components [--preset erpcore] [--show n170]` lists the component library.
