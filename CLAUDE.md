@@ -10,7 +10,7 @@ canonical BIDS-EEG form (BrainVision files, float32, µV) that every later stage
 
 ## Status
 
-Frozen at v0.9.2 (2026-11-02): every blueprint milestone is done. Bug fixes only; no new features
+Frozen at v0.9.2 (2026-11-02), bug-fix release v0.9.3 (2026-11-05): every blueprint milestone is done. Bug fixes only; no new features
 or recipe changes without the user asking. BCI / real-time (BLUEPRINT_PHASES §13) is a separate project.
 
 ## Commands

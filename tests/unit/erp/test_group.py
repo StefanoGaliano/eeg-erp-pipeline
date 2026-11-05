@@ -199,3 +199,27 @@ def test_group_stage_refuses_unknown_erpcore_task(blink_project: Make) -> None:
     outs = {o.item.stage: o for o in Runner(cfg, root).run()}
     assert outs["group"].status == "failed"
     assert "no comparison defined for task" in outs["group"].message
+
+
+def test_ds006171_cluster_one_wave_per_subject(blink_project: Make) -> None:
+    # Start_Vision (ds006171) has two epoch sets with the same contrast (stim, stimraw): the
+    # cluster test took the contrast from every set, so each subject counted twice (0.9.2).
+    two_sets = {
+        **SECTIONS,
+        "epochs": {
+            "sets": {
+                "stim": {"lock": "stimulus/*"},
+                "stimraw": {"lock": "stimulus/*", "baseline_ms": None},
+            },
+            "reject": {"min_trials_per_condition": 10},
+        },
+    }
+    root, cfg = blink_project(
+        **two_sets,
+        group={"cluster": {"enabled": True, "contrast": "face_minus_car"}, "n_bootstrap": 200},
+    )
+    outs = {o.item.stage: o for o in Runner(cfg, root).run()}
+    assert outs["group"].status == "ok", outs["group"].message
+    out = paths.group_dir(root, cfg)
+    # one subject = one wave: too few for a cluster test, so no table is written
+    assert not (out / f"task-{cfg.dataset.task}_desc-face_minus_car_clusters.tsv").exists()

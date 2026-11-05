@@ -119,16 +119,22 @@ class GroupStage(Stage):
         n = len(inputs.subjects)
         min_p = min_permutation_p(n, spec.tail)
         if spec.enabled and spec.contrast:
-            evs = [
-                waves[spec.contrast]
-                for by_sub in per_set.values()
-                for waves in by_sub.values()
-                if spec.contrast in waves
-            ]
+            # One wave per subject: the contrast from the first epoch set (config order) that
+            # has it. Taking it from every set counted each subject once per set (0.9.2).
+            cluster_set = next(
+                (
+                    s
+                    for s in cfg.epochs.sets
+                    if any(spec.contrast in w for w in per_set.get(s, {}).values())
+                ),
+                None,
+            )
+            by_sub = per_set.get(cluster_set, {}) if cluster_set else {}
+            evs = [waves[spec.contrast] for waves in by_sub.values() if spec.contrast in waves]
             if len(evs) >= 2:
                 table, info = cluster_test(evs, cfg)
                 write_tsv(table, f"task-{task}_desc-{spec.contrast}_clusters.tsv")
-                extra["cluster"] = info
+                extra["cluster"] = {**info, "epoch_set": cluster_set}
         checks.append(qa.underpowered_check(n, min_p, cfg.group.alpha, spec.tail))
 
         if cfg.group.reference_values == "erpcore":

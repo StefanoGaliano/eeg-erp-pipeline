@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.3 (2026-11-05)
+
+- Fixed the group cluster test counting each subject once per epoch set. With two epoch sets
+  holding the same contrast (Start_Vision's `stim` and `stimraw`), every subject entered the
+  permutation test twice: `n_subjects` doubled and p-values were too small. It now takes the
+  contrast from the first epoch set (config order) that has it; the set is recorded in the
+  group provenance (`cluster.epoch_set`). The t / d_z table was not affected (it uses the
+  measures). Regression test `test_ds006171_cluster_one_wave_per_subject`.
+
 ## 0.9.2 (2026-11-02)
 
 - Fixed a stale realdata test (`test_sub015_ica_excludes_blinks`): it listed the ICA QA checks
